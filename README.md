@@ -13,6 +13,7 @@ pnpm dev
 # or
 bun dev
 ```
+zamra-mg9e1ocsx-saqibyounas-projects.vercel.app
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
