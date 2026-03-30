@@ -9,7 +9,7 @@ export default function Login() {
       {' '}
       <header className="absolute top-0 left-0 w-full z-20">
         <div className="flex items-center p-4 md:p-6">
-          <Link href="/login">
+          <Link href="/">
             <Image
               className="rounded-4xl"
               src="/Logo.jpg"
