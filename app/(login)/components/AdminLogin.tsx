@@ -80,7 +80,7 @@ export default function PlantAdminForm() {
           <h3 className="text-lg sm:text-base md:text-lg font-bold text-white leading-none">
             Admin Control
           </h3>
-          <p className="text-[10px] sm:text-[9px] md:text-[10px] text-blue-300 uppercase tracking-widest font-bold mt-1">
+          <p className="text-[10px] sm:text-[9px] md:text-[10px] text-sky-300 uppercase tracking-widest font-bold mt-1">
             Authorized Person Only
           </p>
         </div>
@@ -125,8 +125,7 @@ export default function PlantAdminForm() {
               Online
             </span>
           </div>
-        </div>
-        ={' '}
+        </div>{' '}
         <AppButton
           label="Login"
           loading={loading}
