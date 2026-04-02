@@ -1,9 +1,13 @@
-import { ChangeEvent, JSX } from 'react';
+'use client';
+
+import { ChangeEvent, JSX, Fragment } from 'react';
 import { LucideIcon } from 'lucide-react';
+import { Transition } from '@headlessui/react';
 
 interface WaterInputFieldProps {
   label: string;
-  icon: LucideIcon;
+  customicon?: () => JSX.Element;
+  icon?: LucideIcon;
   type: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -17,58 +21,75 @@ interface WaterInputFieldProps {
 
 export default function WaterInputField({
   label,
-  icon: Icon,
-  type,
   value,
   onChange,
+  icon: Icon,
+  customicon: customicon,
+  type,
   placeholder,
   error,
-  dark = false,
+  dark,
   togglePassword,
   showPassword,
   iconToggle,
 }: WaterInputFieldProps) {
   return (
-    <div className="mb-4">
+    <div className="mb-4 w-full">
       <label
-        className={`block text-sm font-medium mb-1.5 ${dark ? 'text-blue-200' : 'text-slate-700'}`}
+        className={`block mb-1 text-sm font-medium ${
+          dark ? 'text-sky-300' : 'text-slate-700'
+        }`}
       >
         {label}
       </label>
-      <div className="relative group">
-        <div
-          className={`absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors ${dark ? 'text-blue-400 group-focus-within:text-blue-300' : 'text-blue-400 group-focus-within:text-blue-600'}`}
-        >
-          <Icon size={18} />
+
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sky-600">
+          {customicon ? customicon() : Icon && <Icon size={18} />}
         </div>
         <input
           type={type}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`block w-full pl-10 pr-10 py-3 rounded-2xl border transition-all focus:outline-none ${
+          className={`block w-full ${Icon || customicon ? 'pl-12' : 'pl-3'} pr-10 py-3 rounded-2xl border transition-all focus:outline-none focus:ring-2 ${
             dark
-              ? 'bg-blue-950/50 border-blue-800 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500'
-              : 'bg-white border-slate-300 text-slate-800 focus:ring-2 focus:ring-blue-200 focus:border-blue-500'
+              ? 'bg-sky-950/50 border-sky-800 text-white  focus:border-sky-500'
+              : 'bg-white border-slate-300 text-slate-800 focus:ring-sky-400 focus:border-sky-700'
           } ${error ? 'border-red-500' : ''}`}
         />
-        {type === 'password' || type === 'text'
-          ? togglePassword && (
-              <button
-                type="button"
-                onClick={togglePassword}
-                className={`absolute inset-y-0 right-0 pr-3 flex items-center transition-colors ${dark ? 'text-blue-400 hover:text-blue-200 cursor-pointer' : 'text-slate-400 hover:text-blue-600 '}`}
-              >
-                {showPassword ? iconToggle?.show : iconToggle?.hide}
-              </button>
-            )
-          : null}
+
+        {(type === 'password' || type === 'text') && togglePassword && (
+          <button
+            type="button"
+            onClick={togglePassword}
+            className={`absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer ${
+              dark
+                ? 'text-sky-400 hover:text-sky-200'
+                : 'text-slate-400 hover:text-sky-600'
+            }`}
+          >
+            {showPassword ? iconToggle?.show : iconToggle?.hide}
+          </button>
+        )}
       </div>
-      {error && (
-        <p className="mt-1.5 pl-4 text-xs text-red-500 flex items-center gap-1 font-medium">
-          {error}
-        </p>
-      )}
+
+      <Transition
+        as={Fragment}
+        show={!!error}
+        enter="transition-opacity duration-200 "
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="transition-opacity duration-150"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        {error && (
+          <p className="mt-1 text-xs text-red-500 flex items-center gap-1 font-medium ">
+            {error}
+          </p>
+        )}
+      </Transition>
     </div>
   );
 }

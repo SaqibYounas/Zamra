@@ -9,12 +9,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
     <div className="flex h-screen">
-      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Sidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
 
-      <main className="flex-1 p-6 bg-slate-100">{children}</main>
+      <main className="flex-1 p-6 bg-slate-100 overflow-">{children}</main>
     </div>
   );
 }

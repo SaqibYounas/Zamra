@@ -1,5 +1,7 @@
 'use client';
 import { Loader2 } from 'lucide-react';
+import { Fragment } from 'react';
+import { Button as HeadlessButton } from '@headlessui/react';
 
 interface ButtonProps {
   label: string;
@@ -17,12 +19,16 @@ export default function Button({
   className = '',
 }: ButtonProps) {
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={`w-full cursor-pointer py-4 bg-sky-400  disabled:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-wider text-sm shadow-lg shadow-blue-500/10 transition-all flex items-center justify-center gap-3 cursor-pointer${className}`}
-    >
-      {loading ? <Loader2 className="animate-spin" /> : label}
-    </button>
+    <HeadlessButton as={Fragment} disabled={disabled || loading}>
+      <button
+        onClick={onClick}
+        disabled={disabled || loading}
+        className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all shadow-lg shadow-blue-500/10
+          ${loading || disabled ? 'bg-slate-800 cursor-not-allowed' : 'bg-sky-400 hover:bg-sky-500'}
+          text-white ${className}`}
+      >
+        {loading ? <Loader2 className="animate-spin" /> : label}
+      </button>
+    </HeadlessButton>
   );
 }
