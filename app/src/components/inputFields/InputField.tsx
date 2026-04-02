@@ -36,7 +36,7 @@ export default function WaterInputField({
   return (
     <div className="mb-4 w-full">
       <label
-        className={`block mb-1 text-sm font-medium ${
+        className={`block mb-1 text-sm  font-bold ${
           dark ? 'text-sky-300' : 'text-slate-700'
         }`}
       >
@@ -75,9 +75,9 @@ export default function WaterInputField({
       </div>
 
       <Transition
-        as={Fragment}
+        as="div"
         show={!!error}
-        enter="transition-opacity duration-200 "
+        enter="transition-opacity duration-200"
         enterFrom="opacity-0"
         enterTo="opacity-100"
         leave="transition-opacity duration-150"
@@ -85,7 +85,7 @@ export default function WaterInputField({
         leaveTo="opacity-0"
       >
         {error && (
-          <p className="mt-1 text-xs text-red-500 flex items-center gap-1 font-medium ">
+          <p className="mt-1 text-xs text-red-400 pl-4 flex items-center gap-1 font-bold ">
             {error}
           </p>
         )}

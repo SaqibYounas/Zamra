@@ -24,14 +24,12 @@ export default function Dropdown({
 }: DropdownProps) {
   return (
     <div className="mb-4 w-full">
-      {label && (
-        <label className="block mb-1 text-sm font-medium">{label}</label>
-      )}
+      {label && <label className="block mb-1 text-sm font-bold">{label}</label>}
 
       <Listbox value={value} onChange={onChange}>
         <div className="relative">
           <Listbox.Button className="relative w-full cursor-pointer rounded-xl border border-gray-300 bg-white py-3 pl-4 pr-10 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 sm:text-sm">
-            <span className="block truncate">{value}</span>
+            <span className="block truncate font-semibold">{value}</span>
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <ChevronDown size={20} />
             </span>
@@ -57,7 +55,7 @@ export default function Dropdown({
                   {({ selected }) => (
                     <>
                       <span
-                        className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}
+                        className={`block truncate ${selected ? 'font-bold' : 'font-normal'}`}
                       >
                         {option.label}
                       </span>
