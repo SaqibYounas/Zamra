@@ -2,7 +2,7 @@ import PlantAdminForm from './components/AdminLogin';
 import { Droplets } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import { Transition } from '@headlessui/react';
 export default function Login() {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center pt-24 p-4 md:p-8 relative overflow-hidden font-sans">
@@ -37,9 +37,16 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="w-full max-w-md mx-auto">
+        <Transition
+          appear={true}
+          show={true}
+          as="div"
+          enter="transition-opacity duration-500"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+        >
           <PlantAdminForm />
-        </div>
+        </Transition>
       </div>
     </div>
   );

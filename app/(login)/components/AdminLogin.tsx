@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Lock,
   ShieldCheck,
@@ -19,6 +20,8 @@ interface FormState {
 }
 
 export default function PlantAdminForm() {
+  const router = useRouter();
+
   const [formState, setFormState] = useState<FormState>({
     operatorId: '',
     accessToken: '',
@@ -64,8 +67,22 @@ export default function PlantAdminForm() {
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => setLoading(false), 2000);
+    if (
+      formState.operatorId === 'sufyanmalik804@zamra.pk' &&
+      formState.accessToken === 'zamra@804'
+    ) {
+      setLoading(true);
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/dashboard');
+      }, 1000);
+    } else {
+      setFormState((prev) => ({
+        ...prev,
+        emailError: 'Invalid email or password',
+        passwordError: 'Invalid email or password',
+      }));
+    }
   };
 
   return (
@@ -125,8 +142,9 @@ export default function PlantAdminForm() {
               Online
             </span>
           </div>
-        </div>{' '}
+        </div>
         <AppButton
+          onClick={handleSubmit}
           label="Login"
           loading={loading}
           className="w-full bg-sky-400 hover:bg-sky-500 text-white shadow-md hover:shadow-lg transition-all"
