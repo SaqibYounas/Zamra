@@ -13,13 +13,7 @@ import {
   ChartData,
   TooltipItem,
 } from 'chart.js';
-import {
-  Package,
-  TrendingUp,
-  Receipt,
-  Layers,
-  ArrowUpRight,
-} from 'lucide-react';
+import { TrendingUp, Receipt, Layers, ArrowUpRight } from 'lucide-react';
 import { JSX } from 'react';
 import RupeesIcon from '@/public/RupeesIcon';
 
