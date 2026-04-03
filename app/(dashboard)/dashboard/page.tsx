@@ -3,6 +3,7 @@
 import GraphCard from '../../src/components/graph/Graph';
 
 const metrics = [
+  'Monthly Profit',
   'Today Stock',
   'Total Cost',
   'Profit Today',

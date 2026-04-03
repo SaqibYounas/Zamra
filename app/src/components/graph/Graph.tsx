@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { JSX } from 'react';
+import RupeesIcon from '@/public/RupeesIcon';
 
 ChartJS.register(
   CategoryScale,
@@ -35,7 +36,8 @@ export type MetricType =
   | 'Today Stock'
   | 'Total Cost'
   | 'Profit Today'
-  | 'Overall Stock';
+  | 'Overall Stock'
+  | 'Monthly Profit';
 
 const METRIC_CONFIG: Record<
   MetricType,
@@ -65,9 +67,16 @@ const METRIC_CONFIG: Record<
     unit: ' units',
     isCurrency: false,
   },
+  'Monthly Profit': {
+    color: 'rgba(234, 179, 8, 0.85)',
+    icon: <TrendingUp className="w-5 h-5 text-yellow-600" />,
+    unit: 'Rs',
+    isCurrency: true,
+  },
 };
 
 const labels = ['500ml', '1.5L', '5L', '19L', '19L Refill'];
+const days = Array.from({ length: 30 }, (_, i) => `${i + 1}`);
 
 const generateData = (type: MetricType) => {
   switch (type) {
@@ -79,6 +88,10 @@ const generateData = (type: MetricType) => {
       return [500, 1200, 800, 600, 200];
     case 'Overall Stock':
       return [150, 120, 60, 35, 20];
+    case 'Monthly Profit':
+      return Array.from({ length: 30 }, () =>
+        Math.floor(Math.random() * 2000 + 200)
+      );
     default:
       return [];
   }
@@ -97,7 +110,7 @@ export default function GraphCard({ title }: GraphCardProps) {
   const totalValue = chartData.reduce((a, b) => a + b, 0);
 
   const data: ChartData<'bar'> = {
-    labels,
+    labels: title === 'Monthly Profit' ? days : labels,
     datasets: [
       {
         label: title,
@@ -112,6 +125,14 @@ export default function GraphCard({ title }: GraphCardProps) {
   const options: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
+
+    onHover: (event, elements) => {
+      const target = event.native?.target as HTMLElement;
+      if (target) {
+        target.style.cursor = elements.length ? 'pointer' : 'default';
+      }
+    },
+
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -119,7 +140,7 @@ export default function GraphCard({ title }: GraphCardProps) {
           label: (tooltipItem: TooltipItem<'bar'>) => {
             const value = tooltipItem.raw as number;
             return config.isCurrency
-              ? `${tooltipItem.dataset.label}: ₹${value.toLocaleString()}`
+              ? `${tooltipItem.dataset.label}: Rs ${value.toLocaleString()}`
               : `${tooltipItem.dataset.label}: ${value}${config.unit}`;
           },
         },
@@ -130,58 +151,58 @@ export default function GraphCard({ title }: GraphCardProps) {
         font: { size: 16, weight: 'bold' },
       },
     },
+
     scales: {
       y: { beginAtZero: true },
-      x: { title: { display: true, text: 'Bottle Types', font: { size: 12 } } },
+      x: {
+        title: {
+          display: true,
+          text: title === 'Monthly Profit' ? 'Days' : 'Bottle Types',
+        },
+      },
     },
   };
 
   return (
-    <div className="bg-white rounded-3xl p-4 sm:p-6 md:p-6 lg:p-8 shadow-lg border border-slate-100 hover:shadow-xl transition-all flex flex-col h-full w-full">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 mb-2 sm:mb-0">
-          <div className="p-2.5 bg-slate-50 rounded-xl">{config.icon}</div>
-          <div>
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-900">
+    <div
+      className={`bg-slate-100 rounded-3xl p-4 sm:p-6 md:p-6 lg:p-8 shadow-lg border border-slate-100 hover:shadow-xl transition-all flex flex-col h-full w-full ${
+        title === 'Monthly Profit' ? 'col-span-1 sm:col-span-2' : ''
+      }`}
+    >
+      <div className="flex flex-row items-center justify-between mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="p-2 bg-slate-50 rounded-xl shrink-0">
+            {config.icon}
+          </div>
+
+          <div className="min-w-0">
+            <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 truncate">
               {title}
             </h3>
-            <p className="text-[9px] sm:text-xs md:text-sm font-bold pl-1 text-slate-400 uppercase tracking-wider">
-              Daily Overview
+            <p className="text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
+              {title === 'Monthly Profit'
+                ? 'Monthly Overview'
+                : 'Daily Overview'}
             </p>
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">
-            {config.isCurrency ? 'Rs ' : ''}
+
+        <div className="flex flex-col items-end shrink-0">
+          <div className="text-sm sm:text-lg md:text-2xl font-bold text-sky-500 flex items-center gap-1 whitespace-nowrap">
+            {config.isCurrency && <RupeesIcon />}
             {totalValue.toLocaleString()}
           </div>
-          <div className="flex items-center text-emerald-500 text-[9px] sm:text-[10px] md:text-xs font-bold justify-end">
-            <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 md:w-4 md:h-4" />
+
+          <div className="flex items-center text-emerald-500 text-[8px] sm:text-xs font-bold">
+            <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
             <span>15%</span>
           </div>
         </div>
       </div>
 
-      <div className="grow min-h-[180px] sm:min-h-[200px] md:min-h-[220px] lg:min-h-[240px]">
+      <div className="grow min-h-[180px] sm:min-h-[260px] md:min-h-[300px]">
         <Bar data={data} options={options} />
       </div>
-    </div>
-  );
-}
-
-export function DashboardGraphGrid() {
-  const metrics: MetricType[] = [
-    'Today Stock',
-    'Total Cost',
-    'Profit Today',
-    'Overall Stock',
-  ];
-
-  return (
-    <div className="p-4 sm:p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {metrics.map((metric) => (
-        <GraphCard key={metric} title={metric} />
-      ))}
     </div>
   );
 }
