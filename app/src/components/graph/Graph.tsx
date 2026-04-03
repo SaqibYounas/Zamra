@@ -45,7 +45,7 @@ const METRIC_CONFIG: Record<
 > = {
   'Today Stock': {
     color: 'rgba(79, 70, 229, 0.85)',
-    icon: <Package className="w-5 h-5 text-indigo-600" />,
+    icon: <Layers className="w-5 h-5 text-sky-500" />,
     unit: ' units',
     isCurrency: false,
   },
@@ -63,7 +63,7 @@ const METRIC_CONFIG: Record<
   },
   'Overall Stock': {
     color: 'rgba(139, 92, 246, 0.85)',
-    icon: <Layers className="w-5 h-5 text-violet-600" />,
+    icon: <Layers className="w-5 h-5 text-sky-500" />,
     unit: ' units',
     isCurrency: false,
   },
@@ -153,11 +153,20 @@ export default function GraphCard({ title }: GraphCardProps) {
     },
 
     scales: {
-      y: { beginAtZero: true },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          font: { weight: 'bold' },
+        },
+      },
       x: {
         title: {
           display: true,
           text: title === 'Monthly Profit' ? 'Days' : 'Bottle Types',
+          font: { weight: 'bold' },
+        },
+        ticks: {
+          font: { weight: 'bold' },
         },
       },
     },
@@ -179,7 +188,7 @@ export default function GraphCard({ title }: GraphCardProps) {
             <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 truncate">
               {title}
             </h3>
-            <p className="text-[8px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider truncate">
+            <p className="text-[10px] sm:text- pl-1 font-bold text-slate-500 uppercase tracking-wider truncate">
               {title === 'Monthly Profit'
                 ? 'Monthly Overview'
                 : 'Daily Overview'}
@@ -187,20 +196,23 @@ export default function GraphCard({ title }: GraphCardProps) {
           </div>
         </div>
 
-        <div className="flex flex-col items-end shrink-0">
-          <div className="text-sm sm:text-lg md:text-2xl font-bold text-sky-500 flex items-center gap-1 whitespace-nowrap">
-            {config.isCurrency && <RupeesIcon />}
-            {totalValue.toLocaleString()}
-          </div>
+        <div className="flex flex-col items-end shrink-0 relative">
+          <div className="text-sm sm:text-lg md:text-2xl font-bold text-sky-500 flex items-center gap-1 whitespace-nowrap relative">
+            <span className="flex items-center">
+              {config.isCurrency ? <RupeesIcon /> : config.icon}
+            </span>
 
-          <div className="flex items-center text-emerald-500 text-[8px] sm:text-xs font-bold">
-            <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span>15%</span>
+            {totalValue.toLocaleString()}
+
+            <div className="absolute -top-2 bottom-8 right-0 flex items-center text-emerald-500 text-[8px] sm:text-xs font-bold gap-1">
+              <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>15%</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grow min-h-[180px] sm:min-h-[260px] md:min-h-[300px]">
+      <div className="grow min-h-45 sm:min-h-65 md:min-h-75">
         <Bar data={data} options={options} />
       </div>
     </div>

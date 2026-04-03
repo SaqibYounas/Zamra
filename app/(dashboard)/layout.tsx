@@ -20,7 +20,7 @@ export default function DashboardLayout({
         setActiveTab={setActiveTab}
       />
 
-      <main className="flex-1 p-6 bg-slate-100 overflow-">{children}</main>
+      <main className="flex-1 p- bg-slate-100 overflow-">{children}</main>
     </div>
   );
 }
