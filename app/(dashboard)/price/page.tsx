@@ -39,7 +39,7 @@ export default function WaterFormPage() {
       <div className="hidden md:block w-64"></div>
 
       <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="bg-white shadow-lg rounded-2xl p-6 md:p-10 w-full max-w-4xl">
+        <div className="bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 w-full max-w-4xl">
           <h1 className="text-2xl md:text-3xl font-bold text-center md:text-left mb-6">
             Price
           </h1>
@@ -51,7 +51,6 @@ export default function WaterFormPage() {
             onChange={(val) => handleChange('type', val)}
           />
 
-          {/* Input fields */}
           <WaterInputField
             label="Per Bottle Price"
             customicon={RsIcon}

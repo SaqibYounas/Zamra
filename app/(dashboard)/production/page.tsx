@@ -135,7 +135,7 @@ export default function ProductionPage() {
         className={`flex-1 flex items-center justify-center p-4 md:p-8 transition-all duration-300 ease-in-out
           ${state.sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}
       >
-        <div className="w-full max-w-4xl bg-white shadow-lg rounded-2xl p-6 md:p-10 flex flex-col justify-center">
+        <div className="w-full max-w-4xl bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col justify-center">
           <h1 className="text-2xl md:text-3xl font-bold text-center md:text-left mb-6">
             Production
           </h1>

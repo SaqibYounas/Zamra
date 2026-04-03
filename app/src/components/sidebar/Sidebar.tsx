@@ -1,14 +1,16 @@
 'use client';
 
 import React from 'react';
+import { Droplets, Menu, X } from 'lucide-react';
 import {
-  Droplets,
-  LayoutDashboard,
-  Package,
-  DollarSign,
-  Menu,
-  X,
-} from 'lucide-react';
+  HiOutlineHome,
+  HiOutlineLockClosed,
+  HiOutlineClipboardList,
+  HiOutlineCurrencyRupee,
+} from 'react-icons/hi';
+import { FaFileInvoiceDollar } from 'react-icons/fa';
+import { MdOutlineProductionQuantityLimits } from 'react-icons/md';
+import { TbReport } from 'react-icons/tb';
 import { usePathname, useRouter } from 'next/navigation';
 
 type SidebarProps = {
@@ -37,23 +39,46 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <LayoutDashboard size={20} />,
+      icon: <HiOutlineHome size={20} />,
       href: '/dashboard',
     },
     {
       id: 'price-management',
       label: 'Price Management',
-      icon: <DollarSign size={20} />,
+      icon: <HiOutlineCurrencyRupee size={20} />,
       href: '/price',
     },
     {
       id: 'production-quantity',
       label: 'Production Quantity',
-      icon: <Package size={20} />,
+      icon: <MdOutlineProductionQuantityLimits size={20} />,
       href: '/production',
     },
+    {
+      id: 'monthly-records',
+      label: 'Monthly Records',
+      icon: <TbReport size={20} />,
+      href: '/monthly-records',
+    },
+    {
+      id: 'bill-generate',
+      label: 'Bill Generate',
+      icon: <FaFileInvoiceDollar size={20} />,
+      href: '/bill-generate',
+    },
+    {
+      id: 'all-bills',
+      label: 'All Bills',
+      icon: <HiOutlineClipboardList size={20} />,
+      href: '/all-bills',
+    },
+    {
+      id: 'change-password',
+      label: 'Change Password',
+      icon: <HiOutlineLockClosed size={20} />,
+      href: '/change-password',
+    },
   ];
-
   const handleNavigation = (item: SidebarItem) => {
     router.push(item.href);
     setActiveTab(item.id);
@@ -70,7 +95,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <div
-        className={`fixed inset-0 bg-black/40 z-20 transition-opacity md:hidden ${sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+        className={`fixed inset-0 bg-black/40 z-20 transition-opacity md:hidden ${
+          sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+        }`}
         onClick={() => setSidebarOpen(false)}
       />
 
