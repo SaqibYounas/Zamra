@@ -6,7 +6,7 @@ interface FormInputProps {
   label?: string;
   value: string | number;
   onChange: (value: string | number) => void;
-  type?: 'text' | 'number' | 'date' | 'email';
+  type?: 'text' | 'number' | 'date' | 'email' | 'password';
   placeholder?: string;
   prefix?: string;
   className?: string;
@@ -40,7 +40,7 @@ export default function FormInput({
   return (
     <div className={`mb-3 ${className}`}>
       {label && (
-        <label className="block mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
+        <label className="block mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-(--color-muted)">
           {label}
         </label>
       )}
@@ -51,7 +51,7 @@ export default function FormInput({
           placeholder={placeholder}
           value={value}
           onChange={handleChange}
-          className={`w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-200 ${inputClassName}`}
+          className={`w-full rounded-2xl border border-surface bg-surface px-3 py-2 text-sm text-text focus-border-primary focus-ring-primary focus:outline-none ${inputClassName}`}
         />
       ) : (
         <div className="relative">
@@ -66,7 +66,7 @@ export default function FormInput({
             placeholder={placeholder}
             value={value}
             onChange={handleChange}
-            className={`w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-200 ${prefix ? 'pl-10' : ''} ${inputClassName}`}
+            className={`w-full rounded-2xl border border-surface bg-surface px-3 py-2 text-sm text-text focus-border-primary focus-ring-primary focus:outline-none ${prefix ? 'pl-10' : ''} ${inputClassName}`}
           />
         </div>
       )}

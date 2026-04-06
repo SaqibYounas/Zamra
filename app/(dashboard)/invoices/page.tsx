@@ -38,9 +38,9 @@ export default function InvoicesPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-surface-2 py-10 px-4 sm:px-6 lg:px-8">
       <main className="mx-auto flex min-h-screen max-w-4xl items-start justify-center">
-        <div className="w-full bg-slate-50 shadow-lg rounded-3xl p-6 md:p-10">
+        <div className="w-full bg-surface shadow-lg rounded-3xl p-6 md:p-10">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
               <p className="text-teal-600 uppercase tracking-[0.4em] text-[11px] font-black mb-2">
@@ -61,7 +61,7 @@ export default function InvoicesPage() {
             />
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/40">
+          <div className="rounded-3xl border border-surface bg-surface p-6 shadow-xl shadow-[rgba(15,23,42,0.1)]">
             <div className="overflow-x-auto">
               <table className="min-w-full border-separate border-spacing-y-2 text-left">
                 <thead>

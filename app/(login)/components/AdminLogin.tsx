@@ -147,7 +147,7 @@ export default function PlantAdminForm() {
           onClick={handleSubmit}
           label="Login"
           loading={loading}
-          className="w-full bg-sky-400 hover:bg-sky-500 text-white shadow-md hover:shadow-lg transition-all"
+          className="w-full btn-primary text-white shadow-md hover:shadow-lg transition-all"
         />
       </form>
     </div>

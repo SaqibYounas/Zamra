@@ -126,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleNavigation(item)}
                 className={`w-full flex items-center gap-4 py-3 rounded-xl transition-all duration-300 cursor-pointer
                   ${sidebarOpen ? 'justify-start px-4' : 'justify-center'}
-                  ${isActive ? 'bg-sky-600 text-white shadow-lg' : 'text-blue-200 hover:bg-sky-800 hover:text-white'}
+                  ${isActive ? 'bg-primary-dark text-white shadow-lg' : 'text-surface hover:bg-primary-dark hover:text-white'}
                 `}
               >
                 {item.icon}
