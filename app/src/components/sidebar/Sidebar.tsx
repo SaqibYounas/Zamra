@@ -67,10 +67,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       href: '/bill-generate',
     },
     {
-      id: 'all-bills',
-      label: 'All Bills',
+      id: 'invoices',
+      label: 'Invoices',
       icon: <HiOutlineClipboardList size={20} />,
-      href: '/all-bills',
+      href: '/invoices',
     },
     {
       id: 'change-password',
