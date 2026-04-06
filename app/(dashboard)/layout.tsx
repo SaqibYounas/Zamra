@@ -12,7 +12,7 @@ export default function DashboardLayout({
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -20,7 +20,13 @@ export default function DashboardLayout({
         setActiveTab={setActiveTab}
       />
 
-      <main className="flex-1 p- bg-slate-100 overflow-">{children}</main>
+      <main
+        className={`flex-1 bg-slate-100 transition-all duration-300 overflow-y-auto ${
+          sidebarOpen ? 'md:pl-64' : 'md:pl-20'
+        }`}
+      >
+        {children}
+      </main>
     </div>
   );
 }

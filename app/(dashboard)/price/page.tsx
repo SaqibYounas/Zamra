@@ -35,12 +35,10 @@ export default function WaterFormPage() {
   };
 
   return (
-    <div className="flex justify-center min-h-screen bg-gray-100">
-      <div className="hidden md:block w-64"></div>
-
-      <main className="flex-1 flex items-center justify-center p-4 md:p-8">
-        <div className="bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 w-full max-w-4xl">
-          <h1 className="text-2xl md:text-3xl font-bold text-center md:text-left mb-6">
+    <div className="min-h-screen bg-gray-100">
+      <main className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="w-full bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10">
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">
             Price
           </h1>
 
