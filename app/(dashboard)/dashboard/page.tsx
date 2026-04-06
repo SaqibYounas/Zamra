@@ -12,9 +12,9 @@ const metrics = [
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <main className="flex-1 md:pl-64 lg:pl-80 lg:pr-6 p-6">
-        <h1 className="lg:text-3xl sm:text-2xl font-bold text-center mt-6 md:mt-0 mb-6 text-gray-800">
+    <div className="min-h-screen bg-gray-100">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <h1 className="lg:text-3xl sm:text-2xl font-bold text-center mb-6 text-gray-800">
           Business Dashboard
         </h1>
 
