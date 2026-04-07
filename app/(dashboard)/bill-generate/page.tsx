@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import Button from '../../src/components/button/Button';
 import FormInput from '../../src/components/inputFields/FormInput';
@@ -147,12 +147,12 @@ const App = () => {
   );
 
   const [isPrinting, setIsPrinting] = useState(false);
-  const printableRef = useRef<HTMLDivElement | null>(null);
 
   const handlePrint = async () => {
     if (isPrinting) return;
     setIsPrinting(true);
-    const element = printableRef.current;
+
+    const element = document.getElementById('invoice-doc');
     if (!element) {
       setIsPrinting(false);
       return;
@@ -163,6 +163,7 @@ const App = () => {
       const html2pdf = html2pdfModule?.default ?? html2pdfModule;
       if (typeof html2pdf !== 'function') {
         console.error('html2pdf is not a function', html2pdf);
+        setIsPrinting(false);
         return;
       }
 
@@ -170,7 +171,12 @@ const App = () => {
         margin: 10,
         filename: `Invoice_${invoiceData.meta.invoiceNo}_${invoiceData.meta.date}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, allowTaint: true, useCORS: true },
+        html2canvas: {
+          scale: 2,
+          allowTaint: true,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        },
         jsPDF: {
           orientation: 'portrait' as const,
           unit: 'mm' as const,
@@ -179,75 +185,49 @@ const App = () => {
       };
 
       const clone = element.cloneNode(true) as HTMLDivElement;
-      clone.style.position = 'fixed';
-      clone.style.left = '-9999px';
+      clone.style.position = 'absolute';
+      clone.style.left = '0';
       clone.style.top = '0';
       clone.style.width = '210mm';
       clone.style.padding = '20px';
       clone.style.backgroundColor = '#ffffff';
       clone.style.color = '#0f172a';
+      clone.style.visibility = 'visible';
+      clone.style.display = 'block';
+      clone.style.zIndex = '9999';
+
+      Array.from(clone.querySelectorAll('input, textarea')).forEach((field) => {
+        const value = (field as HTMLInputElement).value || '';
+        const span = document.createElement('span');
+        span.textContent = value;
+        span.style.display = 'block';
+        span.style.width = '100%';
+        span.style.whiteSpace = 'pre-wrap';
+        span.style.fontFamily = 'inherit';
+        span.style.fontSize = 'inherit';
+        span.style.color = 'inherit';
+        span.style.background = 'transparent';
+        span.style.border = 'none';
+        field.replaceWith(span);
+      });
+
+      Array.from(clone.querySelectorAll('button')).forEach((button) => {
+        button.remove();
+      });
 
       const style = document.createElement('style');
       style.textContent = `
-        * {
-          color: #0f172a !important;
-          background: transparent !important;
-          background-color: transparent !important;
-          border-color: #cbd5e1 !important;
-          box-shadow: none !important;
-          text-shadow: none !important;
-        }
-        #invoice-doc, #invoice-doc * {
-          color: #0f172a !important;
-          background: transparent !important;
-          background-color: transparent !important;
-          border-color: #cbd5e1 !important;
-          box-shadow: none !important;
-          text-shadow: none !important;
-        }
-        #invoice-doc {
-          width: 100% !important;
-          padding: 0 !important;
-          background-color: #ffffff !important;
-        }
-        table {
-          border-collapse: collapse !important;
-          width: 100% !important;
-        }
-        th, td {
-          border: 1px solid #cbd5e1 !important;
-          background: #ffffff !important;
-        }
-        input, textarea {
-          border: none !important;
-          outline: none !important;
-          box-shadow: none !important;
-          background: transparent !important;
-          color: #0f172a !important;
-        }
+        body { background-color: #ffffff !important; }
+        * { box-shadow: none !important; text-shadow: none !important; }
+        table { border-collapse: collapse !important; width: 100% !important; }
+        th, td { border: 1px solid #cbd5e1 !important; }
+        .print\\:hidden { display: none !important; }
       `;
       clone.prepend(style);
 
-      Array.from(clone.querySelectorAll('input, textarea, select')).forEach(
-        (field) => {
-          const span = document.createElement('span');
-          const value = (field as HTMLInputElement).value ?? '';
-          span.textContent = value;
-          span.style.whiteSpace = 'pre-wrap';
-          span.style.display = 'block';
-          span.style.width = '100%';
-          field.replaceWith(span);
-        }
-      );
-
       document.body.appendChild(clone);
-      await html2pdf()
-        .set({
-          ...options,
-          html2canvas: { ...options.html2canvas, backgroundColor: '#ffffff' },
-        })
-        .from(clone)
-        .save();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      await html2pdf().set(options).from(clone).save();
       document.body.removeChild(clone);
     } catch (error) {
       console.error('PDF generation failed:', error);
@@ -270,7 +250,7 @@ const App = () => {
             label="Download PDF"
             onClick={handlePrint}
             loading={isPrinting}
-            className="w-auto rounded-xl bg-teal-600 text-white border border-teal-600 shadow-lg shadow-teal-100 hover:bg-teal-700"
+            className="w-auto rounded-xl px-5 py-3"
           />
         </div>
       </div>
@@ -751,218 +731,6 @@ const App = () => {
             Please make payment in Rs to {invoiceData.companyInfo.name}.
           </p>
           <div className="text-sm font-black text-teal-600 tracking-[0.2em] uppercase">
-            Thank You
-          </div>
-        </div>
-      </div>
-
-      <div
-        ref={printableRef}
-        className="fixed top-0 w-[210mm] p-10 bg-white text-slate-900 offscreen-invoice"
-        aria-hidden="true"
-      >
-        <div className="max-w-[210mm] mx-auto">
-          <div className="flex justify-between items-start mb-8">
-            <div className="space-y-3">
-              <div className="text-3xl font-black text-teal-700 uppercase tracking-tight">
-                Invoice
-              </div>
-              <div className="text-sm text-slate-700 font-semibold">
-                {invoiceData.companyInfo.name}
-              </div>
-              <div className="text-xs text-slate-500 leading-5">
-                {invoiceData.companyInfo.address}
-                <br />
-                {invoiceData.companyInfo.city}
-                <br />
-                {invoiceData.companyInfo.phone}
-                <br />
-                {invoiceData.companyInfo.email}
-              </div>
-            </div>
-            <div className="text-right text-xs text-slate-700 space-y-2">
-              <div className="font-black uppercase tracking-[0.2em] text-slate-500 text-[10px]">
-                Invoice Details
-              </div>
-              <div>
-                <div className="font-semibold">Date</div>
-                <div>{invoiceData.meta.date}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Invoice No.</div>
-                <div>{invoiceData.meta.invoiceNo}</div>
-              </div>
-              <div>
-                <div className="font-semibold">Customer No.</div>
-                <div>{invoiceData.meta.customerNo}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 mb-8 text-xs text-slate-700">
-            <div className="border border-slate-200 p-4 rounded-2xl">
-              <div className="font-black uppercase tracking-[0.2em] text-slate-500 text-[10px] mb-2">
-                Bill To
-              </div>
-              <div className="font-semibold">{invoiceData.billTo.attn}</div>
-              <div>{invoiceData.billTo.name}</div>
-              <div>{invoiceData.billTo.address}</div>
-              <div>{invoiceData.billTo.city}</div>
-              <div>{invoiceData.billTo.phone}</div>
-              <div>{invoiceData.billTo.email}</div>
-            </div>
-            <div className="border border-slate-200 p-4 rounded-2xl">
-              <div className="font-black uppercase tracking-[0.2em] text-slate-500 text-[10px] mb-2">
-                Ship To
-              </div>
-              <div className="font-semibold">{invoiceData.shipTo.attn}</div>
-              <div>{invoiceData.shipTo.name}</div>
-              <div>{invoiceData.shipTo.address}</div>
-              <div>{invoiceData.shipTo.city}</div>
-              <div>{invoiceData.shipTo.phone}</div>
-            </div>
-          </div>
-
-          <div className="overflow-hidden rounded-3xl border border-slate-200 mb-8">
-            <table className="w-full border-collapse text-xs">
-              <thead className="bg-teal-500 text-white text-[10px] uppercase tracking-[0.2em]">
-                <tr>
-                  <th className="px-3 py-3 text-left">P.O. No.</th>
-                  <th className="px-3 py-3 text-left">Ship Date</th>
-                  <th className="px-3 py-3 text-left">Ship Via</th>
-                  <th className="px-3 py-3 text-left">Salesperson</th>
-                  <th className="px-3 py-3 text-left">F.O.B.</th>
-                  <th className="px-3 py-3 text-left">Terms</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white text-slate-700">
-                <tr>
-                  <td className="border border-slate-200 px-3 py-2">
-                    {invoiceData.logisticInfo.poNo}
-                  </td>
-                  <td className="border border-slate-200 px-3 py-2">
-                    {invoiceData.logisticInfo.shipDate}
-                  </td>
-                  <td className="border border-slate-200 px-3 py-2">
-                    {invoiceData.logisticInfo.shipVia}
-                  </td>
-                  <td className="border border-slate-200 px-3 py-2">
-                    {invoiceData.logisticInfo.salesperson}
-                  </td>
-                  <td className="border border-slate-200 px-3 py-2">
-                    {invoiceData.logisticInfo.fob}
-                  </td>
-                  <td className="border border-slate-200 px-3 py-2">
-                    {invoiceData.logisticInfo.terms}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mb-8 overflow-hidden rounded-3xl border border-slate-200">
-            <table className="w-full border-collapse text-xs text-slate-700">
-              <thead className="bg-slate-100 text-slate-600 uppercase tracking-[0.2em] text-[10px]">
-                <tr>
-                  <th className="border border-slate-200 px-3 py-3 text-left">
-                    Item No.
-                  </th>
-                  <th className="border border-slate-200 px-3 py-3 text-left">
-                    Bottle Type / Name
-                  </th>
-                  <th className="border border-slate-200 px-3 py-3 text-right">
-                    Qty
-                  </th>
-                  <th className="border border-slate-200 px-3 py-3 text-right">
-                    Rate (Rs)
-                  </th>
-                  <th className="border border-slate-200 px-3 py-3 text-right">
-                    Total (Rs)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoiceData.items.map((item) => (
-                  <tr key={item.id} className="bg-white">
-                    <td className="border border-slate-200 px-3 py-2">
-                      {item.no}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2">
-                      {item.description}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-right">
-                      {item.qty}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-right">
-                      Rs{item.unitPrice.toFixed(2)}
-                    </td>
-                    <td className="border border-slate-200 px-3 py-2 text-right">
-                      Rs{(item.qty * item.unitPrice).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex justify-between gap-8 items-start">
-            <div className="w-1/2 text-xs text-slate-700">
-              <div className="font-black uppercase tracking-[0.2em] text-slate-500 text-[10px] mb-2">
-                Remarks
-              </div>
-              <div className="border border-slate-200 rounded-2xl p-4 bg-slate-50">
-                {invoiceData.remarks}
-              </div>
-            </div>
-            <div className="w-1/2 max-w-sm">
-              <div className="rounded-3xl border border-slate-200 overflow-hidden text-xs">
-                <div className="grid grid-cols-2 bg-slate-100 text-slate-600 uppercase tracking-[0.2em] text-[10px]">
-                  <div className="p-3">Subtotal</div>
-                  <div className="p-3 text-right">Rs{subtotal.toFixed(2)}</div>
-                </div>
-                <div className="grid grid-cols-2 border-t border-slate-200 bg-white">
-                  <div className="p-3">Tax ({invoiceData.taxRate}%)</div>
-                  <div className="p-3 text-right">Rs{taxAmount.toFixed(2)}</div>
-                </div>
-                <div className="grid grid-cols-2 border-t border-slate-200 bg-white">
-                  <div className="p-3">Shipping</div>
-                  <div className="p-3 text-right">
-                    Rs{invoiceData.shipping.toFixed(2)}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 border-t border-slate-200 bg-white">
-                  <div className="p-3">Other</div>
-                  <div className="p-3 text-right">
-                    Rs{invoiceData.other.toFixed(2)}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 border-t border-slate-200 bg-slate-50">
-                  <div className="p-3 font-black uppercase text-slate-700">
-                    Paid
-                  </div>
-                  <div className="p-3 text-right">
-                    Rs{invoiceData.payment.paidAmount.toFixed(2)}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 border-t border-slate-200 bg-slate-100">
-                  <div className="p-3 font-black uppercase text-slate-700">
-                    Remaining
-                  </div>
-                  <div className="p-3 text-right">
-                    Rs{balanceDue.toFixed(2)}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 border-t border-slate-200 bg-teal-700 text-white">
-                  <div className="p-3 font-black uppercase">Total</div>
-                  <div className="p-3 text-right font-black">
-                    Rs{totalAmount.toFixed(2)}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-10 text-center text-slate-500 text-[10px] uppercase tracking-[0.2em]">
             Thank You
           </div>
         </div>

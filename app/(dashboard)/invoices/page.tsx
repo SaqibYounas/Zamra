@@ -38,9 +38,9 @@ export default function InvoicesPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-surface-2 py-10 px-4 sm:px-6 lg:px-8">
-      <main className="mx-auto flex min-h-screen max-w-4xl items-start justify-center">
-        <div className="w-full bg-surface shadow-lg rounded-3xl p-6 md:p-10">
+    <div className="min-h-screen bg-surface-2 flex flex-col items-center justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8">
+      <main className="w-full max-w-4xl">
+        <div className="bg-surface shadow-lg rounded-3xl p-6 md:p-10">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
             <div>
               <p className="text-teal-600 uppercase tracking-[0.4em] text-[11px] font-black mb-2">
@@ -57,7 +57,7 @@ export default function InvoicesPage() {
             <Button
               label="Create New Invoice"
               onClick={() => router.push('/bill-generate')}
-              className="md:w-auto"
+              className="md:w-auto p-6 cursor-pointer"
             />
           </div>
 
@@ -120,7 +120,7 @@ export default function InvoicesPage() {
                       <td className="px-4 py-4 text-right">
                         <button
                           onClick={() => router.push('/bill-generate')}
-                          className="inline-flex items-center justify-center rounded-2xl bg-sky-600 px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-white transition hover:bg-sky-700"
+                          className="inline-flex items-center justify-center rounded-2xl bg-(--color-primary) hover:bg-(--color-primary-strong) px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-white transition"
                         >
                           View
                         </button>
