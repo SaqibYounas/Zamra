@@ -9,7 +9,7 @@ interface ErrorProps {
 
 export default function ErrorPage({ error, reset }: ErrorProps) {
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-slate-100  flex items-center justify-center px-4 py-10">
       <div className="max-w-3xl w-full rounded-4xl border border-slate-200 bg-white p-10 shadow-xl shadow-slate-200/40">
         <div className="text-center">
           <p className="text-teal-600 text-sm font-black uppercase tracking-[0.4em] mb-4">

@@ -32,8 +32,8 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-2 py-10 px-4 sm:px-6 lg:px-8">
-      <main className="mx-auto max-w-4xl rounded-3xl bg-surface p-6 shadow-xl shadow-[rgba(15,23,42,0.15)]">
+    <div className="min-h-screen bg-surface-2 flex items-center justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8">
+      <main className="w-full max-w-2xl rounded-3xl bg-surface p-6 sm:p-8 shadow-xl shadow-[rgba(15,23,42,0.15)]">
         <div className="mb-8 flex flex-col gap-3">
           <p className="text-teal-600 uppercase tracking-[0.4em] text-[11px] font-black">
             Account Settings
