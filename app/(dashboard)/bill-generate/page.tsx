@@ -1,134 +1,287 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import Button from '../../src/components/button/Button';
-import FormInput from '../../src/components/inputFields/FormInput';
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+interface CompanyInfo {
+  name: string;
+  address: string;
+  city: string;
+  phone: string;
+  email: string;
+  poc: string;
+}
+
+interface MetaInfo {
+  date: string;
+  invoiceNo: string;
+}
+
+interface BillToInfo {
+  attn: string;
+  name: string;
+  address: string;
+  city: string;
+  phone: string;
+  email: string;
+}
+
+interface ShipToInfo {
+  attn: string;
+  name: string;
+  address: string;
+  city: string;
+  phone: string;
+}
+
+interface LogisticInfo {
+  poNo: string;
+  shipDate: string;
+  shipVia: string;
+  salesperson: string;
+  fob: string;
+  terms: string;
+}
+
+interface InvoiceItem {
+  id: number;
+  no: string;
+  description: string;
+  qty: number;
+  unitPrice: number;
+}
+
+interface PaymentInfo {
+  paidAmount: number;
+}
+
+interface InvoiceData {
+  companyInfo: CompanyInfo;
+  meta: MetaInfo;
+  billTo: BillToInfo;
+  shipTo: ShipToInfo;
+  logisticInfo: LogisticInfo;
+  items: InvoiceItem[];
+  previousDue: number;
+  payment: PaymentInfo;
+  taxRate: number;
+  shipping: number;
+  other: number;
+}
+
+interface PdfEngine {
+  jsPDF: new (options?: Record<string, unknown>) => unknown;
+  html2canvas: (
+    element: HTMLElement,
+    options?: Record<string, unknown>
+  ) => Promise<HTMLCanvasElement>;
+}
+
+type ObjectSectionKey =
+  | 'companyInfo'
+  | 'meta'
+  | 'billTo'
+  | 'shipTo'
+  | 'logisticInfo'
+  | 'payment';
+
+const LOGISTIC_FIELDS: { key: keyof LogisticInfo; label: string }[] = [
+  { key: 'poNo', label: 'P.O. NO.' },
+  { key: 'shipDate', label: 'DISPATCH DATE' },
+  { key: 'shipVia', label: 'SHIP VIA' },
+  { key: 'salesperson', label: 'REP' },
+  { key: 'fob', label: 'F.O.B.' },
+  { key: 'terms', label: 'TERMS' },
+];
+
+const todayISO = () => new Date().toISOString().split('T')[0];
+
+interface InfoRowProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  type?: string;
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({
+  label,
+  value,
+  onChange,
+  disabled = false,
+  type = 'text',
+}) => (
+  <div className="flex items-baseline gap-2">
+    <span className="w-[64px] shrink-0 text-black font-bold text-[11px]">
+      {label}
+    </span>
+    <input
+      type={type}
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+      className={`flex-1 min-w-0 border-none focus:ring-0 text-[11px] font-medium bg-transparent p-0 m-0 ${
+        disabled ? 'text-slate-400 opacity-60' : 'text-slate-700'
+      }`}
+    />
+  </div>
+);
+
+const initialInvoiceData: InvoiceData = {
+  companyInfo: {
+    name: 'Zamra Water Planet',
+    address: '123 Main Street, Industrial Area',
+    city: 'Lahore, Pakistan',
+    phone: '+92 321 4567890',
+    email: 'hello@zamrawater.com',
+    poc: 'Sufyan Malik',
+  },
+  meta: {
+    date: todayISO(),
+    invoiceNo: 'ZAM-246',
+  },
+  billTo: {
+    attn: 'Accounts Dept',
+    name: 'Client Company Pvt Ltd',
+    address: '456 Gulberg Main Boulevard',
+    city: 'Lahore',
+    phone: '042-3571122',
+    email: 'billing@clientcompany.com',
+  },
+  shipTo: {
+    attn: 'Store Manager',
+    name: 'Client Company Warehouse',
+    address: 'Plot 12, Sundar Industrial Estate',
+    city: 'Lahore',
+    phone: '042-3571123',
+  },
+  logisticInfo: {
+    poNo: 'PO-998',
+    shipDate: todayISO(),
+    shipVia: 'Company Van',
+    salesperson: 'Admin',
+    fob: 'Destination',
+    terms: 'Net 30',
+  },
+  items: [
+    {
+      id: 1,
+      no: '1',
+      description: '500ml Premium Bottle (Box of 24)',
+      qty: 10,
+      unitPrice: 50.0,
+    },
+    {
+      id: 2,
+      no: '2',
+      description: '1.5L Premium Bottle (Box of 12)',
+      qty: 5,
+      unitPrice: 80.0,
+    },
+    {
+      id: 3,
+      no: '3',
+      description: '19L Corporate Water Gallon',
+      qty: 2,
+      unitPrice: 250.0,
+    },
+  ],
+  previousDue: 0,
+  payment: { paidAmount: 0 },
+  taxRate: 3.8,
+  shipping: 30.0,
+  other: 15.0,
+};
 
 const App = () => {
-  const [invoiceData, setInvoiceData] = useState({
-    companyInfo: {
-      name: 'Zamra Water',
-      address: '123 Main Street',
-      city: 'Hamilton, OH 44416',
-      phone: '(321) 456-7890',
-      email: 'hello@zamrawater.com',
-      poc: 'Sufyan Malik',
-    },
-    meta: {
-      date: '2026-04-04',
-      invoiceNo: 'A246',
-      customerNo: '114H',
-    },
-    billTo: {
-      attn: 'Name / Dept',
-      name: 'Client Company',
-      address: '456 Client St',
-      city: 'City, State Zip',
-      phone: '(987) 654-3210',
-      email: 'client@email.com',
-    },
-    shipTo: {
-      attn: 'Name / Dept',
-      name: 'Client Company',
-      address: '456 Client St',
-      city: 'City, State Zip',
-      phone: '(987) 654-3210',
-    },
-    logisticInfo: {
-      poNo: 'PO-998',
-      shipDate: '2026-04-10',
-      shipVia: 'Ground',
-      salesperson: 'Admin',
-      fob: 'Destination',
-      terms: 'Net 30',
-    },
-    items: [
-      {
-        id: 1,
-        no: '1',
-        description: '500ml Bottle',
-        qty: 10,
-        unitPrice: 50.0,
-      },
-      {
-        id: 2,
-        no: '2',
-        description: '1.5L Bottle',
-        qty: 5,
-        unitPrice: 80.0,
-      },
-      {
-        id: 3,
-        no: '3',
-        description: '19L Bottle',
-        qty: 2,
-        unitPrice: 250.0,
-      },
-    ],
-    payment: {
-      paidAmount: 0,
-    },
-    remarks: 'Please make payment in Rs to Zamra Water.',
-    taxRate: 3.8,
-    shipping: 30.0,
-    other: 15.0,
-  });
+  const [isShippingSame, setIsShippingSame] = useState(false);
+  const [invoiceData, setInvoiceData] =
+    useState<InvoiceData>(initialInvoiceData);
+  const [isPrinting, setIsPrinting] = useState(false);
+  const [pdfEngine, setPdfEngine] = useState<PdfEngine | null>(null);
 
-  const handleInputChange = (
-    section: string,
-    field: string | null,
-    value: string | number
-  ) => {
-    if (field === null) {
-      setInvoiceData((prev) => ({
-        ...prev,
-        remarks: value as string,
-      }));
-      return;
-    }
-    setInvoiceData((prev) => {
-      const newData = { ...prev };
-      const sectionKey = section as keyof typeof newData;
-      if (
-        typeof newData[sectionKey] === 'object' &&
-        newData[sectionKey] !== null
-      ) {
-        (newData[sectionKey] as Record<string, string | number>)[field] = value;
-      }
-      return newData;
-    });
-  };
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    Promise.all([import('jspdf'), import('html2canvas-pro')])
+      .then(([jsPDFModule, html2canvasModule]) => {
+        setPdfEngine({
+          jsPDF: jsPDFModule.jsPDF ?? jsPDFModule.default,
+          html2canvas: html2canvasModule.default,
+        });
+      })
+      .catch((err) => console.error('PDF engine failed to load:', err));
+  }, []);
 
-  const handleItemChange = (
-    id: number,
-    field: string,
-    value: string | number
-  ) => {
+  useEffect(() => {
+    if (!isShippingSame) return;
     setInvoiceData((prev) => ({
       ...prev,
-      items: prev.items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      ),
+      shipTo: {
+        attn: prev.billTo.attn,
+        name: prev.billTo.name,
+        address: prev.billTo.address,
+        city: prev.billTo.city,
+        phone: prev.billTo.phone,
+      },
     }));
-  };
+  }, [isShippingSame, invoiceData.billTo]);
 
-  const addItem = () => {
-    const newItem = {
-      id: Date.now(),
-      no: '',
-      description: '',
-      qty: 0,
-      unitPrice: 0,
-    };
-    setInvoiceData((prev) => ({ ...prev, items: [...prev.items, newItem] }));
-  };
+  const handleInputChange = useCallback(
+    <K extends ObjectSectionKey>(
+      section: K,
+      field: keyof InvoiceData[K],
+      value: string | number
+    ) => {
+      setInvoiceData((prev) => ({
+        ...prev,
+        [section]: { ...prev[section], [field]: value },
+      }));
+    },
+    []
+  );
 
-  const removeItem = (id: number) => {
+  const handleItemChange = useCallback(
+    (
+      id: number,
+      field: keyof Omit<InvoiceItem, 'id'>,
+      value: string | number
+    ) => {
+      setInvoiceData((prev) => ({
+        ...prev,
+        items: prev.items.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item
+        ),
+      }));
+    },
+    []
+  );
+
+  const addItem = useCallback(() => {
+    setInvoiceData((prev) => ({
+      ...prev,
+      items: [
+        ...prev.items,
+        {
+          id: Date.now(),
+          no: (prev.items.length + 1).toString(),
+          description: '',
+          qty: 0,
+          unitPrice: 0,
+        },
+      ],
+    }));
+  }, []);
+
+  const removeItem = useCallback((id: number) => {
     setInvoiceData((prev) => ({
       ...prev,
       items: prev.items.filter((item) => item.id !== id),
     }));
-  };
+  }, []);
 
   const subtotal = invoiceData.items.reduce(
     (acc, item) => acc + item.qty * item.unitPrice,
@@ -139,517 +292,611 @@ const App = () => {
     subtotal +
     taxAmount +
     Number(invoiceData.shipping) +
-    Number(invoiceData.other);
-
+    Number(invoiceData.other) +
+    Number(invoiceData.previousDue);
   const balanceDue = Math.max(
     0,
     totalAmount - Number(invoiceData.payment.paidAmount)
   );
 
-  const [isPrinting, setIsPrinting] = useState(false);
+  const BASE_ITEM_COUNT = 5;
+  const itemCount = invoiceData.items.length;
+  const spacingScale = Math.min(
+    2.2,
+    Math.max(0.6, 1 + (BASE_ITEM_COUNT - itemCount) * 0.25)
+  );
+  const sectionSpacing = {
+    header: Math.round(24 * spacingScale),
+    billShip: Math.round(20 * spacingScale),
+    logistics: Math.round(20 * spacingScale),
+    itemsBottom: Math.round(16 * spacingScale),
+    totalsTop: Math.round(16 * spacingScale),
+  };
 
   const handlePrint = async () => {
     if (isPrinting) return;
-    setIsPrinting(true);
-
-    const element = document.getElementById('invoice-doc');
-    if (!element) {
-      setIsPrinting(false);
+    if (!pdfEngine) {
+      alert('PDF engine is still loading — please try again in a moment.');
       return;
     }
 
-    try {
-      const html2pdfModule = await import('html2pdf.js');
-      const html2pdf = html2pdfModule?.default ?? html2pdfModule;
-      if (typeof html2pdf !== 'function') {
-        console.error('html2pdf is not a function', html2pdf);
-        setIsPrinting(false);
+    const source = document.getElementById('invoice-doc');
+    if (!source) return;
+
+    setIsPrinting(true);
+
+    const clone = source.cloneNode(true) as HTMLElement;
+    clone.style.width = '800px';
+    clone.style.maxWidth = 'none';
+    clone.style.height = '1120px';
+    clone.style.minHeight = '1120px';
+    clone.style.background = '#ffffff';
+
+    Array.from(clone.querySelectorAll('*')).forEach((el) => {
+      const element = el as HTMLElement;
+      element.style.setProperty('color-space', 'srgb', 'important');
+    });
+    clone.querySelectorAll('[data-pdf-exclude]').forEach((el) => el.remove());
+
+    clone.querySelectorAll('input, textarea').forEach((field) => {
+      const el = field as HTMLInputElement | HTMLTextAreaElement;
+      if (el.type === 'checkbox') {
+        el.remove();
         return;
       }
+      const span = document.createElement('span');
+      span.textContent = el.value;
+      span.className = el.className;
+      span.style.border = 'none';
+      span.style.display = 'inline-block';
+      span.style.whiteSpace = 'pre-wrap';
+      el.replaceWith(span);
+    });
 
-      const options = {
-        margin: 10,
-        filename: `Invoice_${invoiceData.meta.invoiceNo}_${invoiceData.meta.date}.pdf`,
-        image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          allowTaint: true,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        },
-        jsPDF: {
-          orientation: 'portrait' as const,
-          unit: 'mm' as const,
-          format: 'a4' as const,
-        },
-      };
+    const host = document.createElement('div');
+    host.style.position = 'fixed';
+    host.style.top = '0';
+    host.style.left = '-9999px';
+    host.style.zIndex = '-1';
+    host.appendChild(clone);
+    document.body.appendChild(host);
 
-      const clone = element.cloneNode(true) as HTMLDivElement;
-      clone.style.position = 'absolute';
-      clone.style.left = '0';
-      clone.style.top = '0';
-      clone.style.width = '210mm';
-      clone.style.padding = '20px';
-      clone.style.backgroundColor = '#ffffff';
-      clone.style.color = '#0f172a';
-      clone.style.visibility = 'visible';
-      clone.style.display = 'block';
-      clone.style.zIndex = '9999';
-
-      Array.from(clone.querySelectorAll('input, textarea')).forEach((field) => {
-        const value = (field as HTMLInputElement).value || '';
-        const span = document.createElement('span');
-        span.textContent = value;
-        span.style.display = 'block';
-        span.style.width = '100%';
-        span.style.whiteSpace = 'pre-wrap';
-        span.style.fontFamily = 'inherit';
-        span.style.fontSize = 'inherit';
-        span.style.color = 'inherit';
-        span.style.background = 'transparent';
-        span.style.border = 'none';
-        field.replaceWith(span);
+    try {
+      const canvas = await pdfEngine.html2canvas(clone, {
+        scale: 2.2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
       });
 
-      Array.from(clone.querySelectorAll('button')).forEach((button) => {
-        button.remove();
+      interface InstanceWithInternalPageSize {
+        internal: {
+          pageSize: {
+            getWidth: () => number;
+            getHeight: () => number;
+          };
+        };
+        addImage: (
+          data: string,
+          format: string,
+          x: number,
+          y: number,
+          w: number,
+          h: number
+        ) => void;
+        addPage: () => void;
+        save: (filename: string) => void;
+      }
+
+      const pdf = new (pdfEngine.jsPDF as unknown as new (
+        options?: Record<string, unknown>
+      ) => InstanceWithInternalPageSize)({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
       });
 
-      const style = document.createElement('style');
-      style.textContent = `
-        body { background-color: #ffffff !important; }
-        * { box-shadow: none !important; text-shadow: none !important; }
-        table { border-collapse: collapse !important; width: 100% !important; }
-        th, td { border: 1px solid #cbd5e1 !important; }
-        .print\\:hidden { display: none !important; }
-      `;
-      clone.prepend(style);
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const usableWidth = pageWidth - margin * 2;
+      const usableHeight = pageHeight - margin * 2;
 
-      document.body.appendChild(clone);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      await html2pdf().set(options).from(clone).save();
-      document.body.removeChild(clone);
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      if (imgHeight <= usableHeight) {
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+        pdf.addImage(imgData, 'JPEG', margin, margin, imgWidth, imgHeight);
+      } else {
+        const pageHeightInCanvasPx = (usableHeight * canvas.width) / imgWidth;
+        let renderedHeight = 0;
+        let pageIndex = 0;
+
+        while (renderedHeight < canvas.height) {
+          const sliceHeight = Math.min(
+            pageHeightInCanvasPx,
+            canvas.height - renderedHeight
+          );
+
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sliceHeight;
+          const ctx = pageCanvas.getContext('2d');
+          ctx?.drawImage(
+            canvas,
+            0,
+            renderedHeight,
+            canvas.width,
+            sliceHeight,
+            0,
+            0,
+            canvas.width,
+            sliceHeight
+          );
+
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 1.0);
+          const pageImgHeight = (sliceHeight * imgWidth) / canvas.width;
+
+          if (pageIndex > 0) pdf.addPage();
+          pdf.addImage(
+            pageImgData,
+            'JPEG',
+            margin,
+            margin,
+            imgWidth,
+            pageImgHeight
+          );
+
+          renderedHeight += sliceHeight;
+          pageIndex += 1;
+        }
+      }
+
+      pdf.save(`Invoice_${invoiceData.meta.invoiceNo || 'draft'}.pdf`);
     } catch (error) {
       console.error('PDF generation failed:', error);
+      alert('Could not generate the PDF. Please try again.');
     } finally {
+      if (document.body.contains(host)) {
+        document.body.removeChild(host);
+      }
       setIsPrinting(false);
     }
   };
 
   return (
-    <div className="min-h-screen mt-4 sm:mt-8 md:mt-10 lg:mt-0 bg-slate-100 p-4 md:p-10 font-sans print:bg-white print:p-0 md:ml-20">
-      <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center print:hidden">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Bill Generate</h2>
-          <p className="text-slate-500 text-sm">
-            Edit bottle type, quantity, and Rupee totals.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button
-            label="Download PDF"
-            onClick={handlePrint}
-            loading={isPrinting}
-            className="w-auto rounded-xl px-5 py-3"
-          />
-        </div>
+    <div className="min-h-screen mt-16 md:mt-20 lg:mt-0 bg-slate-50/40 p-4 md:p-8 font-sans print:bg-white print:p-0 md:ml-16">
+      {/* ACTION BAR */}
+      <div className="max-w-4xl mx-auto mb-4 flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200/60 shadow-sm print:hidden">
+        <h2 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+          <span className="w-1.5 h-3.5 bg-teal-600 rounded-full" />
+          POS Terminal Engine
+        </h2>
+        {/* 🛡️ FIXED LABEL PROPERTY PROPS TYPE FROM ELEMENT TO STRING */}
+        <Button
+          label={isPrinting ? 'Compiling Document...' : 'Download Invoice'}
+          onClick={handlePrint}
+          loading={isPrinting}
+          className={`rounded-lg px-4 py-2 text-xs font-semibold tracking-wide transition-all ${
+            isPrinting
+              ? 'bg-teal-700/80 text-teal-100 cursor-not-allowed'
+              : 'bg-teal-600 text-white hover:bg-teal-700'
+          }`}
+        />
       </div>
 
+      {/* INVOICE SHEET */}
       <div
         id="invoice-doc"
-        className="max-w-4xl mx-auto bg-white shadow-2xl p-8 md:p-12 print:shadow-none print:p-10 min-h-screen flex flex-col"
+        className="max-w-4xl mx-auto bg-white p-6 md:p-12 print:p-0 h-[1120px] min-h-[1120px] flex flex-col text-slate-800 text-xs border border-slate-300 shadow-sm print:shadow-none"
       >
-        <div className="flex justify-between items-start mb-10">
-          <div className="space-y-3 w-full max-w-xl">
-            <h1 className="text-3xl font-black text-teal-700 tracking-tight mb-4 uppercase">
-              Invoice Template
+        {/* HEADER */}
+        <div
+          className="border-b border-slate-100 pb-4"
+          style={{ marginBottom: sectionSpacing.header }}
+        >
+          <div className="flex justify-between items-baseline mb-3">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
+              {invoiceData.companyInfo.name}
             </h1>
-            <FormInput
-              label="Company Name"
-              value={invoiceData.companyInfo.name}
-              onChange={(value) =>
-                handleInputChange('companyInfo', 'name', value)
-              }
-              placeholder="Company Name"
-              title="Company Name"
-            />
-            <FormInput
-              label="Owner"
-              value={invoiceData.companyInfo.poc}
-              onChange={(value) =>
-                handleInputChange('companyInfo', 'poc', value)
-              }
-              placeholder="Point of Contact"
-              title="Point of Contact"
-            />
-            <FormInput
-              label="Address"
-              value={invoiceData.companyInfo.address}
-              onChange={(value) =>
-                handleInputChange('companyInfo', 'address', value)
-              }
-              placeholder="Address"
-            />
-            <FormInput
-              label="City"
-              value={invoiceData.companyInfo.city}
-              onChange={(value) =>
-                handleInputChange('companyInfo', 'city', value)
-              }
-              placeholder="City, State, Zip"
-            />
-            <FormInput
-              label="Phone"
-              value={invoiceData.companyInfo.phone}
-              onChange={(value) =>
-                handleInputChange('companyInfo', 'phone', value)
-              }
-              placeholder="Phone"
-            />
-            <FormInput
-              label="Email"
-              value={invoiceData.companyInfo.email}
-              onChange={(value) =>
-                handleInputChange('companyInfo', 'email', value)
-              }
-              placeholder="Email"
-              type="email"
-            />
+            <div className="flex gap-6 text-[11px] font-mono text-slate-500">
+              <div>
+                <span className="font-sans text-black font-bold">Date:</span>{' '}
+                <input
+                  type="date"
+                  value={invoiceData.meta.date}
+                  onChange={(e) =>
+                    handleInputChange('meta', 'date', e.target.value)
+                  }
+                  className="w-24 text-slate-700 font-bold font-mono focus:ring-0 text-[11px]"
+                />
+              </div>
+              <div>
+                <span className="font-sans text-black font-bold">
+                  Invoice No:
+                </span>{' '}
+                <input
+                  value={invoiceData.meta.invoiceNo}
+                  onChange={(e) =>
+                    handleInputChange('meta', 'invoiceNo', e.target.value)
+                  }
+                  className="w-16 text-teal-600 font-black font-mono focus:ring-0 text-[11px]"
+                  title="Invoice Tracking ID"
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="w-64 space-y-3">
-            <FormInput
-              label="Date"
-              type="date"
-              value={invoiceData.meta.date}
-              onChange={(value) => handleInputChange('meta', 'date', value)}
-              title="Invoice Date"
-              inputClassName="text-center text-xs py-1.5"
-            />
-            <FormInput
-              label="Invoice No."
-              value={invoiceData.meta.invoiceNo}
-              onChange={(value) =>
-                handleInputChange('meta', 'invoiceNo', value)
-              }
-              placeholder="Invoice No"
-              inputClassName="text-center text-xs py-1.5"
-            />
-            <FormInput
-              label="Customer No."
-              value={invoiceData.meta.customerNo}
-              onChange={(value) =>
-                handleInputChange('meta', 'customerNo', value)
-              }
-              placeholder="Customer No"
-              inputClassName="text-center text-xs py-1.5"
-            />
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 font-medium pt-1 border-t border-slate-50">
+            <div>
+              <span className="text-black font-bold">Manager:</span>{' '}
+              <input
+                value={invoiceData.companyInfo.poc}
+                onChange={(e) =>
+                  handleInputChange('companyInfo', 'poc', e.target.value)
+                }
+                className="w-24 text-slate-700 font-medium focus:ring-0 text-[11px]"
+              />
+            </div>
+            <div>
+              <span className="text-black font-bold">Address:</span>{' '}
+              <input
+                value={invoiceData.companyInfo.address}
+                onChange={(e) =>
+                  handleInputChange('companyInfo', 'address', e.target.value)
+                }
+                className="w-48 text-slate-700 font-medium focus:ring-0 text-[11px]"
+              />
+            </div>
+            <div>
+              <span className="text-black font-bold">City:</span>{' '}
+              <input
+                value={invoiceData.companyInfo.city}
+                onChange={(e) =>
+                  handleInputChange('companyInfo', 'city', e.target.value)
+                }
+                className="w-24 text-slate-700 font-medium focus:ring-0 text-[11px]"
+              />
+            </div>
+            <div>
+              <span className="text-black font-bold">Desk:</span>{' '}
+              <input
+                value={invoiceData.companyInfo.phone}
+                onChange={(e) =>
+                  handleInputChange('companyInfo', 'phone', e.target.value)
+                }
+                className="w-28 text-slate-700 font-medium focus:ring-0 text-[11px]"
+              />
+            </div>
+            <div>
+              <span className="text-black font-bold">Email:</span>{' '}
+              <input
+                value={invoiceData.companyInfo.email}
+                onChange={(e) =>
+                  handleInputChange('companyInfo', 'email', e.target.value)
+                }
+                type="email"
+                className="w-36 text-slate-700 font-medium focus:ring-0 text-[11px]"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 mb-10">
-          <div>
-            <h3 className="bg-teal-600 text-white text-[10px] font-black py-1 px-3 uppercase tracking-widest mb-2">
+        {/* SHIPPING SYNC TOGGLE */}
+        <div
+          data-pdf-exclude
+          className="flex items-center gap-2 mb-4 bg-slate-50 p-2 rounded-lg print:hidden border border-slate-100"
+        >
+          <input
+            id="sameAsBilling"
+            type="checkbox"
+            className="w-3.5 h-3.5 text-teal-600 border-slate-200 rounded focus:ring-teal-500 cursor-pointer accent-teal-600"
+            checked={isShippingSame}
+            onChange={(e) => setIsShippingSame(e.target.checked)}
+          />
+          <label
+            htmlFor="sameAsBilling"
+            className="text-[10px] font-medium text-slate-500 cursor-pointer select-none"
+          >
+            Shipping address same as billing address
+          </label>
+        </div>
+
+        {/* BILL TO / SHIP TO */}
+        <div
+          className="grid grid-cols-2 gap-8 relative"
+          style={{ marginBottom: sectionSpacing.billShip }}
+        >
+          <div className="flex flex-col">
+            <h3 className="text-teal-600 text-[10px] font-black uppercase tracking-wider mb-2 border-b border-slate-100 pb-0.5">
               Bill To
             </h3>
-            <div className="space-y-3">
-              <FormInput
+            <div className="space-y-1.5">
+              <InfoRow
                 label="Attention"
                 value={invoiceData.billTo.attn}
-                onChange={(value) => handleInputChange('billTo', 'attn', value)}
-                placeholder="ATTN: Name / Dept"
+                onChange={(v) => handleInputChange('billTo', 'attn', v)}
               />
-              <FormInput
+              <InfoRow
                 label="Company"
                 value={invoiceData.billTo.name}
-                onChange={(value) => handleInputChange('billTo', 'name', value)}
-                placeholder="Company Name"
+                onChange={(v) => handleInputChange('billTo', 'name', v)}
               />
-              <FormInput
+              <InfoRow
                 label="Address"
                 value={invoiceData.billTo.address}
-                onChange={(value) =>
-                  handleInputChange('billTo', 'address', value)
-                }
-                placeholder="Address"
+                onChange={(v) => handleInputChange('billTo', 'address', v)}
               />
-              <FormInput
+              <InfoRow
                 label="City"
                 value={invoiceData.billTo.city}
-                onChange={(value) => handleInputChange('billTo', 'city', value)}
-                placeholder="City, State Zip"
+                onChange={(v) => handleInputChange('billTo', 'city', v)}
               />
-              <FormInput
+              <InfoRow
                 label="Phone"
                 value={invoiceData.billTo.phone}
-                onChange={(value) =>
-                  handleInputChange('billTo', 'phone', value)
-                }
-                placeholder="Phone"
+                onChange={(v) => handleInputChange('billTo', 'phone', v)}
               />
-              <FormInput
+              <InfoRow
                 label="Email"
-                value={invoiceData.billTo.email}
-                onChange={(value) =>
-                  handleInputChange('billTo', 'email', value)
-                }
-                placeholder="Email"
                 type="email"
+                value={invoiceData.billTo.email}
+                onChange={(v) => handleInputChange('billTo', 'email', v)}
               />
             </div>
           </div>
-          <div>
-            <h3 className="bg-teal-600 text-white text-[10px] font-black py-1 px-3 uppercase tracking-widest mb-2">
+
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-slate-200" />
+
+          <div className="flex flex-col">
+            <h3 className="text-teal-600 text-[10px] font-black uppercase tracking-wider mb-2 border-b border-slate-100 pb-0.5">
               Ship To
             </h3>
-            <div className="space-y-3">
-              <FormInput
+            <div className="space-y-1.5">
+              <InfoRow
                 label="Attention"
                 value={invoiceData.shipTo.attn}
-                onChange={(value) => handleInputChange('shipTo', 'attn', value)}
-                placeholder="ATTN: Name / Dept"
+                onChange={(v) => handleInputChange('shipTo', 'attn', v)}
+                disabled={isShippingSame}
               />
-              <FormInput
+              <InfoRow
                 label="Company"
                 value={invoiceData.shipTo.name}
-                onChange={(value) => handleInputChange('shipTo', 'name', value)}
-                placeholder="Company Name"
+                onChange={(v) => handleInputChange('shipTo', 'name', v)}
+                disabled={isShippingSame}
               />
-              <FormInput
+              <InfoRow
                 label="Address"
                 value={invoiceData.shipTo.address}
-                onChange={(value) =>
-                  handleInputChange('shipTo', 'address', value)
-                }
-                placeholder="Address"
+                onChange={(v) => handleInputChange('shipTo', 'address', v)}
+                disabled={isShippingSame}
               />
-              <FormInput
+              <InfoRow
                 label="City"
                 value={invoiceData.shipTo.city}
-                onChange={(value) => handleInputChange('shipTo', 'city', value)}
-                placeholder="City, State Zip"
+                onChange={(v) => handleInputChange('shipTo', 'city', v)}
+                disabled={isShippingSame}
               />
-              <FormInput
+              <InfoRow
                 label="Phone"
                 value={invoiceData.shipTo.phone}
-                onChange={(value) =>
-                  handleInputChange('shipTo', 'phone', value)
-                }
-                placeholder="Phone"
+                onChange={(v) => handleInputChange('shipTo', 'phone', v)}
+                disabled={isShippingSame}
               />
             </div>
           </div>
         </div>
 
-        <table className="w-full border-collapse mb-8">
-          <thead>
-            <tr className="bg-teal-500 text-white">
-              {[
-                'P.O. NO.',
-                'SHIP DATE',
-                'SHIP VIA',
-                'SALESPERSON',
-                'F.O.B.',
-                'TERMS',
-              ].map((h) => (
-                <th
-                  key={h}
-                  className="border border-teal-600 px-2 py-2 text-[10px] font-black uppercase tracking-tighter"
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {Object.keys(invoiceData.logisticInfo).map((key) => (
-                <td key={key} className="border border-teal-100 p-0">
-                  <input
-                    className="w-full border-none focus:ring-0 text-center text-[11px] py-2"
-                    value={
-                      invoiceData.logisticInfo[
-                        key as keyof typeof invoiceData.logisticInfo
-                      ]
-                    }
-                    onChange={(e) =>
-                      handleInputChange('logisticInfo', key, e.target.value)
-                    }
-                    title={key}
-                  />
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-
-        <div className="grow flex flex-col">
-          <div className="flex justify-end mb-2 print:hidden">
-            <button
-              onClick={addItem}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-50 text-teal-700 font-bold rounded-lg text-[10px] hover:bg-teal-100 transition-all border border-teal-200"
-            >
-              <Plus className="w-3 h-3" /> Add New Item
-            </button>
-          </div>
-
-          <table className="w-full border-collapse mb-6">
+        {/* LOGISTICS ROW */}
+        <div
+          className="overflow-x-auto border-b border-slate-100"
+          style={{ marginBottom: sectionSpacing.logistics }}
+        >
+          <table className="w-full border-collapse table-fixed min-w-[500px]">
             <thead>
-              <tr className="bg-teal-500 text-white">
-                <th className="border border-teal-600 px-3 py-2 text-[10px] font-black uppercase w-20">
-                  Item No.
-                </th>
-                <th className="border border-teal-600 px-3 py-2 text-[10px] font-black uppercase text-left">
-                  Bottle Type / Name
-                </th>
-                <th className="border border-teal-600 px-3 py-2 text-[10px] font-black uppercase w-20">
-                  Qty
-                </th>
-                <th className="border border-teal-600 px-3 py-2 text-[10px] font-black uppercase w-24">
-                  Rate (Rs)
-                </th>
-                <th className="border border-teal-600 px-3 py-2 text-[10px] font-black uppercase w-28">
-                  Total (Rs)
-                </th>
-                <th className="border border-teal-600 px-2 py-2 w-10 print:hidden bg-slate-50 text-slate-400"></th>
+              <tr className="text-black text-[9px] font-bold tracking-wider text-center border-b border-slate-100">
+                {LOGISTIC_FIELDS.map(({ key, label }) => (
+                  <th
+                    key={key}
+                    className="pb-1 text-center font-bold bg-transparent text-black border-none uppercase"
+                  >
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {invoiceData.items.map((item) => (
-                <tr key={item.id} className="group">
-                  <td className="border border-teal-100 p-0">
+              <tr>
+                {LOGISTIC_FIELDS.map(({ key, label }) => (
+                  <td key={key} className="p-0 border-none">
                     <input
-                      className="w-full border-none focus:ring-0 text-center text-xs py-2"
-                      value={item.no}
+                      className="w-full border-none focus:ring-0 text-center text-[11px] py-1 text-slate-700 bg-transparent font-medium"
+                      value={invoiceData.logisticInfo[key]}
                       onChange={(e) =>
-                        handleItemChange(item.id, 'no', e.target.value)
+                        handleInputChange('logisticInfo', key, e.target.value)
                       }
-                      title="Item No"
+                      title={label}
                     />
                   </td>
-                  <td className="border border-teal-100 p-0">
-                    <input
-                      className="w-full border-none focus:ring-0 text-left px-3 text-xs py-2"
-                      value={item.description}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'description', e.target.value)
-                      }
-                      placeholder="Description"
-                      title="Description"
-                    />
-                  </td>
-                  <td className="border border-teal-100 p-0">
-                    <input
-                      type="number"
-                      className="w-full border-none focus:ring-0 text-center text-xs py-2"
-                      value={item.qty}
-                      onChange={(e) =>
-                        handleItemChange(item.id, 'qty', Number(e.target.value))
-                      }
-                      title="Quantity"
-                    />
-                  </td>
-                  <td className="border border-teal-100 p-0">
-                    <div className="flex items-center px-2">
-                      <span className="text-xs text-slate-400">Rs</span>
-                      <input
-                        type="number"
-                        className="w-full border-none focus:ring-0 text-right text-xs py-2"
-                        value={item.unitPrice}
-                        onChange={(e) =>
-                          handleItemChange(
-                            item.id,
-                            'unitPrice',
-                            Number(e.target.value)
-                          )
-                        }
-                        title="Rate (Rs)"
-                      />
-                    </div>
-                  </td>
-                  <td className="border border-teal-100 text-right px-3 text-xs font-bold text-slate-700 bg-slate-50/30">
-                    Rs{(item.qty * item.unitPrice).toFixed(2)}
-                  </td>
-                  <td className="border border-teal-100 text-center print:hidden group-hover:bg-rose-50 transition-colors">
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-slate-300 hover:text-rose-600 transition-colors"
-                      title="Delete item"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mx-auto" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {[...Array(Math.max(0, 8 - invoiceData.items.length))].map(
-                (_, i) => (
-                  <tr key={`empty-${i}`}>
-                    <td className="border border-teal-100 py-4"></td>
-                    <td className="border border-teal-100 py-4"></td>
-                    <td className="border border-teal-100 py-4"></td>
-                    <td className="border border-teal-100 py-4"></td>
-                    <td className="border border-teal-100 py-4 bg-slate-50/30"></td>
-                    <td className="border border-teal-100 py-4 print:hidden"></td>
-                  </tr>
-                )
-              )}
+                ))}
+              </tr>
             </tbody>
           </table>
         </div>
 
-        <div className="flex justify-between items-start mt-auto pt-6 border-t-2 border-teal-100">
-          <div className="w-1/2">
-            <FormInput
-              label="Remarks / Instructions"
-              value={invoiceData.remarks}
-              onChange={(value) => handleInputChange('', null, value)}
-              placeholder="Remarks / Instructions"
-              textarea
-              rows={4}
-              inputClassName="bg-transparent"
-            />
+        {/* ITEMS */}
+        <div className="flex flex-col">
+          <div data-pdf-exclude className="flex justify-end mb-1 print:hidden">
+            <button
+              type="button"
+              onClick={addItem}
+              aria-label="Add line item"
+              className="flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-600 font-bold rounded text-[10px] hover:bg-slate-100 border border-slate-200/60 shadow-sm transition-all"
+            >
+              <Plus className="w-3 h-3" /> Add Item
+            </button>
           </div>
 
-          <div className="w-1/3">
-            <div className="grid grid-cols-2 border border-teal-100 overflow-hidden rounded-lg">
-              <div className="bg-teal-500 text-white text-[10px] font-black p-2 uppercase flex items-center">
-                Subtotal
-              </div>
-              <div className="p-2 text-right text-xs font-bold text-slate-700 bg-white border-l border-teal-100">
-                Rs{subtotal.toFixed(2)}
-              </div>
-
-              <div className="bg-teal-50 px-2 py-1 border-t border-teal-100 flex items-center justify-between">
-                <span className="text-[9px] font-black text-teal-800 uppercase">
-                  Tax
-                </span>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    className="w-10 border-none bg-white focus:ring-0 text-[10px] p-0 font-bold text-teal-700 text-right rounded"
-                    value={invoiceData.taxRate}
-                    onChange={(e) =>
-                      setInvoiceData((p) => ({
-                        ...p,
-                        taxRate: Number(e.target.value),
-                      }))
-                    }
-                    title="Tax Rate"
+          <div style={{ marginBottom: sectionSpacing.itemsBottom }}>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="text-black text-[10px] font-bold border-b-2 border-slate-200 uppercase tracking-wider">
+                  <th className="pb-2 w-12 text-center bg-transparent text-black border-none">
+                    Id
+                  </th>
+                  <th className="pb-2 text-left bg-transparent text-black border-none">
+                    Description
+                  </th>
+                  <th className="pb-2 w-16 text-center bg-transparent text-black border-none">
+                    Qty
+                  </th>
+                  <th className="pb-2 w-24 text-right bg-transparent text-black border-none">
+                    Unit Rate
+                  </th>
+                  <th className="pb-2 w-28 text-right bg-transparent text-black border-none">
+                    Amount
+                  </th>
+                  <th
+                    data-pdf-exclude
+                    className="w-8 print:hidden bg-transparent border-none"
                   />
-                  <span className="text-[9px] font-bold text-teal-700">%</span>
-                </div>
-              </div>
-              <div className="p-2 text-right text-xs text-slate-600 bg-white border-t border-l border-teal-100">
-                Rs{taxAmount.toFixed(2)}
-              </div>
+                </tr>
+              </thead>
+              <tbody className="text-slate-700">
+                {invoiceData.items.map((item) => (
+                  <tr key={item.id} className="group hover:bg-slate-50/20">
+                    <td className="p-0 text-center border-b border-slate-100">
+                      <input
+                        className="w-full border-none focus:ring-0 text-center text-[11px] py-1.5 bg-transparent"
+                        value={item.no}
+                        onChange={(e) =>
+                          handleItemChange(item.id, 'no', e.target.value)
+                        }
+                        title="Index ID"
+                      />
+                    </td>
+                    <td className="p-0 border-b border-slate-100">
+                      <input
+                        className="w-full border-none focus:ring-0 text-left px-2 text-[11px] py-1.5 bg-transparent"
+                        value={item.description}
+                        onChange={(e) =>
+                          handleItemChange(
+                            item.id,
+                            'description',
+                            e.target.value
+                          )
+                        }
+                        placeholder="Item description..."
+                        title="Item Description"
+                      />
+                    </td>
+                    <td className="p-0 text-center border-b border-slate-100">
+                      <input
+                        type="number"
+                        className="w-full border-none focus:ring-0 text-center text-[11px] py-1.5 bg-transparent font-medium"
+                        value={item.qty}
+                        onChange={(e) =>
+                          handleItemChange(
+                            item.id,
+                            'qty',
+                            Number(e.target.value)
+                          )
+                        }
+                        title="Quantity"
+                      />
+                    </td>
+                    <td className="p-0 border-b border-slate-100">
+                      <div className="flex items-center justify-end px-1">
+                        <span className="text-[10px] text-slate-400 mr-1 font-bold">
+                          Rs
+                        </span>
+                        <input
+                          type="number"
+                          className="w-16 border-none focus:ring-0 text-right text-[11px] py-1.5 bg-transparent font-medium"
+                          value={item.unitPrice}
+                          onChange={(e) =>
+                            handleItemChange(
+                              item.id,
+                              'unitPrice',
+                              Number(e.target.value)
+                            )
+                          }
+                          title="Unit Price"
+                        />
+                      </div>
+                    </td>
+                    <td className="text-right px-1 text-[11px] font-semibold text-slate-700 border-b border-slate-100">
+                      <span className="font-bold">Rs</span>{' '}
+                      {(item.qty * item.unitPrice).toFixed(2)}
+                    </td>
+                    <td
+                      data-pdf-exclude
+                      className="text-center print:hidden border-b border-slate-100 group-hover:bg-rose-50/30 transition-colors"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        aria-label="Remove line item"
+                        className="text-slate-300 hover:text-rose-600 p-1 rounded"
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-3 h-3 mx-auto" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-              <div className="bg-teal-50 p-2 text-[10px] font-black text-teal-800 uppercase border-t border-teal-100">
-                Shipping
-              </div>
-              <div className="p-1 text-right bg-white border-t border-l border-teal-100">
+        {/* TOTALS */}
+        <div
+          className="flex justify-end"
+          style={{ marginTop: sectionSpacing.totalsTop }}
+        >
+          <div className="w-full sm:w-72 space-y-2 text-[11px]">
+            <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-100">
+              <span className="text-black font-bold">Subtotal:</span>
+              <span className="font-mono text-slate-700 font-semibold">
+                <span className="font-sans font-bold">Rs</span>{' '}
+                {subtotal.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center text-slate-500 pb-1 border-b border-slate-100">
+              <span className="flex items-center gap-1 text-black font-bold">
+                Tax (
                 <input
                   type="number"
-                  className="w-full border-none focus:ring-0 text-xs p-1 text-right"
+                  className="w-6 text-center text-teal-600 font-bold p-0 text-[11px] bg-transparent"
+                  value={invoiceData.taxRate}
+                  onChange={(e) =>
+                    setInvoiceData((p) => ({
+                      ...p,
+                      taxRate: Number(e.target.value),
+                    }))
+                  }
+                  title="Tax rate"
+                />
+                %):
+              </span>
+              <span className="font-mono text-slate-600 font-medium">
+                <span className="font-sans font-bold">Rs</span>{' '}
+                {taxAmount.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center text-slate-500 pb-1 border-b border-slate-100">
+              <span className="text-black font-bold">Shipping:</span>
+              <div className="flex items-center font-mono">
+                <span className="text-[10px] text-slate-400 mr-0.5 font-bold">
+                  Rs
+                </span>
+                <input
+                  type="number"
+                  className="w-16 text-right p-0 text-[11px] font-mono font-medium text-slate-700 bg-transparent"
                   value={invoiceData.shipping}
                   onChange={(e) =>
                     setInvoiceData((p) => ({
@@ -657,17 +904,20 @@ const App = () => {
                       shipping: Number(e.target.value),
                     }))
                   }
-                  title="Shipping"
+                  title="Shipping cost"
                 />
               </div>
+            </div>
 
-              <div className="bg-teal-50 p-2 text-[10px] font-black text-teal-800 uppercase border-t border-teal-100">
-                Other
-              </div>
-              <div className="p-1 text-right bg-white border-t border-l border-teal-100">
+            <div className="flex justify-between items-center text-slate-500 pb-1 border-b border-slate-100">
+              <span className="text-black font-bold">Misc Charges:</span>
+              <div className="flex items-center font-mono">
+                <span className="text-[10px] text-slate-400 mr-0.5 font-bold">
+                  Rs
+                </span>
                 <input
                   type="number"
-                  className="w-full border-none focus:ring-0 text-xs p-1 text-right"
+                  className="w-16 text-right p-0 text-[11px] font-mono font-medium text-slate-700 bg-transparent"
                   value={invoiceData.other}
                   onChange={(e) =>
                     setInvoiceData((p) => ({
@@ -675,63 +925,78 @@ const App = () => {
                       other: Number(e.target.value),
                     }))
                   }
-                  title="Other Charges"
+                  title="Other charges"
                 />
               </div>
+            </div>
 
-              <div className="bg-slate-100 text-slate-800 text-[10px] font-black p-2 uppercase flex items-center border-t border-teal-100">
-                Paid
+            <div className="flex justify-between items-center text-rose-600 pb-1 border-b border-slate-100 font-semibold">
+              <span className="text-black font-bold">Previous Due:</span>
+              <div className="flex items-center font-mono">
+                <span className="text-[10px] text-rose-400 mr-0.5 font-bold">
+                  Rs
+                </span>
+                <input
+                  type="number"
+                  className="w-16 text-right p-0 text-[11px] font-mono font-bold text-rose-600 bg-transparent"
+                  value={invoiceData.previousDue}
+                  onChange={(e) =>
+                    setInvoiceData((p) => ({
+                      ...p,
+                      previousDue: Number(e.target.value),
+                    }))
+                  }
+                  title="Previous balance due"
+                />
               </div>
-              <div className="p-2 text-right bg-white border-t border-l border-teal-100">
-                <div className="flex items-center justify-end gap-1">
-                  <span className="text-xs text-slate-400">Rs</span>
-                  <input
-                    type="number"
-                    className="w-full border-none focus:ring-0 text-xs p-1 text-right"
-                    value={invoiceData.payment.paidAmount}
-                    onChange={(e) =>
-                      handleInputChange(
-                        'payment',
-                        'paidAmount',
-                        Number(e.target.value)
-                      )
-                    }
-                    title="Amount Paid"
-                  />
-                </div>
-              </div>
+            </div>
 
-              <div className="bg-slate-200 text-slate-800 text-[10px] font-black p-2 uppercase flex items-center border-t border-teal-100">
-                Remaining
+            <div className="flex justify-between items-center text-slate-500 pb-1 border-b border-slate-100">
+              <span className="text-black font-bold">Amount Paid:</span>
+              <div className="flex items-center font-mono bg-emerald-50/20 px-1 rounded">
+                <span className="text-[10px] text-slate-400 mr-0.5 font-bold">
+                  Rs
+                </span>
+                <input
+                  type="number"
+                  className="w-16 text-right p-0 text-[11px] font-mono font-bold text-emerald-700 bg-transparent"
+                  value={invoiceData.payment.paidAmount}
+                  onChange={(e) =>
+                    handleInputChange(
+                      'payment',
+                      'paidAmount',
+                      Number(e.target.value)
+                    )
+                  }
+                  title="Amount paid"
+                />
               </div>
-              <div className="p-3 text-right text-base font-black text-slate-900 bg-slate-50 border-t border-l border-teal-100">
-                Rs
-                {balanceDue.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </div>
+            </div>
 
-              <div className="bg-teal-700 text-white text-xs font-black p-3 uppercase flex items-center border-t border-teal-800">
-                Total
-              </div>
-              <div className="p-3 text-right text-base font-black text-slate-900 bg-teal-50 border-t border-l border-teal-800">
-                Rs
-                {totalAmount.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </div>
+            <div className="flex justify-between text-slate-800 font-bold pb-1 border-b border-slate-100">
+              <span className="text-black font-bold">Balance Due:</span>
+              <span className="font-mono text-rose-600">
+                <span className="font-sans font-bold">Rs</span>{' '}
+                {balanceDue.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center pt-2 text-slate-900 border-t-2 border-slate-900">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-black">
+                Total:
+              </span>
+              <span className="font-mono text-sm font-black text-slate-900">
+                <span className="font-sans font-bold">Rs</span>{' '}
+                {totalAmount.toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-[10px] italic text-slate-400 mb-2">
-            Please make payment in Rs to {invoiceData.companyInfo.name}.
-          </p>
-          <div className="text-sm font-black text-teal-600 tracking-[0.2em] uppercase">
-            Thank You
+        {/* FOOTER - ALIGNED DIRECTLY TO BOTTOM OF SHEET */}
+        <div className="text-center pt-4 border-t border-slate-50 mt-auto">
+          <div className="text-[10px] font-black text-teal-600 tracking-[0.4em] uppercase">
+            Thank You For Your Business
           </div>
         </div>
       </div>
@@ -739,16 +1004,6 @@ const App = () => {
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        @media print {
-          body { background-color: white !important; margin: 0 !important; padding: 0 !important; }
-          .min-h-screen { min-height: auto !important; padding: 0 !important; }
-          input, textarea { border: none !important; outline: none !important; box-shadow: none !important; }
-          .print\\:hidden { display: none !important; }
-          .shadow-2xl { box-shadow: none !important; }
-          #invoice-doc { width: 100% !important; margin: 0 !important; padding: 40px !important; }
-        }
-        .offscreen-invoice { left: -9999px; }
-        
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
           -webkit-appearance: none;
@@ -756,6 +1011,12 @@ const App = () => {
         }
         input[type=number] {
           -moz-appearance: textfield;
+        }
+        @media print {
+          #invoice-doc {
+            height: 1120px !important;
+            min-height: 1120px !important;
+          }
         }
       `,
         }}
