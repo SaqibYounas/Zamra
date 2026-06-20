@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, FileDown } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import Button from '../../src/components/button/Button';
 
 // ---------------------------------------------------------------------------
@@ -73,7 +73,6 @@ interface InvoiceData {
   other: number;
 }
 
-// 🛡️ STRICT ANTI-ANY ESLINT COMPLIANT TYPE DEFINITIONS
 interface PdfEngine {
   jsPDF: new (options?: Record<string, unknown>) => unknown;
   html2canvas: (
@@ -101,13 +100,21 @@ const LOGISTIC_FIELDS: { key: keyof LogisticInfo; label: string }[] = [
 
 const todayISO = () => new Date().toISOString().split('T')[0];
 
-const InfoRow: React.FC<{
+interface InfoRowProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
   type?: string;
-}> = ({ label, value, onChange, disabled = false, type = 'text' }) => (
+}
+
+const InfoRow: React.FC<InfoRowProps> = ({
+  label,
+  value,
+  onChange,
+  disabled = false,
+  type = 'text',
+}) => (
   <div className="flex items-baseline gap-2">
     <span className="w-[64px] shrink-0 text-black font-bold text-[11px]">
       {label}
@@ -325,8 +332,6 @@ const App = () => {
     clone.style.minHeight = '1120px';
     clone.style.background = '#ffffff';
 
-    // Anti-crash modern color fallbacks setup
-    // Anti-crash modern color fallbacks setup
     Array.from(clone.querySelectorAll('*')).forEach((el) => {
       const element = el as HTMLElement;
       element.style.setProperty('color-space', 'srgb', 'important');
@@ -364,7 +369,6 @@ const App = () => {
         logging: false,
       });
 
-      // 🛡️ REMOVED THE LAST INTERNALLY HIDDEN LITERAL 'any' CAST TO SATISFY ESLINT PROPS
       interface InstanceWithInternalPageSize {
         internal: {
           pageSize: {
@@ -454,7 +458,9 @@ const App = () => {
       console.error('PDF generation failed:', error);
       alert('Could not generate the PDF. Please try again.');
     } finally {
-      document.body.removeChild(host);
+      if (document.body.contains(host)) {
+        document.body.removeChild(host);
+      }
       setIsPrinting(false);
     }
   };
@@ -467,20 +473,9 @@ const App = () => {
           <span className="w-1.5 h-3.5 bg-teal-600 rounded-full" />
           POS Terminal Engine
         </h2>
+        {/* 🛡️ FIXED LABEL PROPERTY PROPS TYPE FROM ELEMENT TO STRING */}
         <Button
-          label={
-            isPrinting ? (
-              <div className="flex items-center gap-1.5 text-xs">
-                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Compiling Document...</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 text-xs">
-                <FileDown className="w-3.5 h-3.5" />
-                <span>Download Invoice</span>
-              </div>
-            )
-          }
+          label={isPrinting ? 'Compiling Document...' : 'Download Invoice'}
           onClick={handlePrint}
           loading={isPrinting}
           className={`rounded-lg px-4 py-2 text-xs font-semibold tracking-wide transition-all ${
