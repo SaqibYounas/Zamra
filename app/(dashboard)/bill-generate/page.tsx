@@ -326,12 +326,11 @@ const App = () => {
     clone.style.background = '#ffffff';
 
     // Anti-crash modern color fallbacks setup
+    // Anti-crash modern color fallbacks setup
     Array.from(clone.querySelectorAll('*')).forEach((el) => {
       const element = el as HTMLElement;
-      element.style.colorSpace = 'srgb';
       element.style.setProperty('color-space', 'srgb', 'important');
     });
-
     clone.querySelectorAll('[data-pdf-exclude]').forEach((el) => el.remove());
 
     clone.querySelectorAll('input, textarea').forEach((field) => {
