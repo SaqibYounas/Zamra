@@ -7,6 +7,7 @@ import {
   HiOutlineLockClosed,
   HiOutlineClipboardList,
   HiOutlineCurrencyRupee,
+  HiOutlineOfficeBuilding,
 } from 'react-icons/hi';
 import { FaFileInvoiceDollar } from 'react-icons/fa';
 import { MdOutlineProductionQuantityLimits } from 'react-icons/md';
@@ -71,6 +72,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: 'Invoices',
       icon: <HiOutlineClipboardList size={20} />,
       href: '/invoices',
+    },
+    {
+      id: 'company-info',
+      label: 'Company Info',
+      icon: <HiOutlineOfficeBuilding size={20} />,
+      href: '/company-info',
     },
     {
       id: 'change-password',
