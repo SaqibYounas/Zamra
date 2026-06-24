@@ -1,75 +1,46 @@
 'use client';
 
-import { ChangeEvent } from 'react';
+import React from 'react';
+import { Field, Label, Input, Description } from '@headlessui/react';
 
 interface FormInputProps {
-  label?: string;
-  value: string | number;
-  onChange: (value: string | number) => void;
-  type?: 'text' | 'number' | 'date' | 'email' | 'password';
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
   placeholder?: string;
-  prefix?: string;
-  className?: string;
-  inputClassName?: string;
-  title?: string;
-  textarea?: boolean;
-  rows?: number;
+  type?: string;
+  error?: string; // Optional message string for inline error flags
 }
 
 export default function FormInput({
   label,
   value,
   onChange,
+  placeholder = '',
   type = 'text',
-  placeholder,
-  prefix,
-  className = '',
-  inputClassName = '',
-  title,
-  textarea = false,
-  rows = 3,
+  error = '',
 }: FormInputProps) {
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const nextValue =
-      type === 'number' ? Number(event.target.value) : event.target.value;
-    onChange(nextValue);
-  };
-
   return (
-    <div className={`mb-3 ${className}`}>
-      {label && (
-        <label className="block mb-1 text-[11px] font-black uppercase tracking-[0.2em] text-(--color-muted)">
-          {label}
-        </label>
+    <Field className="flex flex-col gap-1.5 w-full">
+      <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+        {label}
+      </Label>
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-700 outline-none transition-all focus:ring-2 ${
+          error
+            ? 'border-rose-500 focus:ring-rose-500/20'
+            : 'border-slate-200 focus:ring-teal-500/20 focus:border-teal-500'
+        }`}
+      />
+      {error && (
+        <Description className="text-[11px] font-semibold text-rose-600 mt-0.5">
+          {error}
+        </Description>
       )}
-      {textarea ? (
-        <textarea
-          rows={rows}
-          title={title}
-          placeholder={placeholder}
-          value={value}
-          onChange={handleChange}
-          className={`w-full rounded-2xl border border-surface bg-surface px-3 py-2 text-sm text-text focus-border-primary focus-ring-primary focus:outline-none ${inputClassName}`}
-        />
-      ) : (
-        <div className="relative">
-          {prefix && (
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs text-slate-400">
-              {prefix}
-            </span>
-          )}
-          <input
-            type={type}
-            title={title}
-            placeholder={placeholder}
-            value={value}
-            onChange={handleChange}
-            className={`w-full rounded-2xl border border-surface bg-surface px-3 py-2 text-sm text-text focus-border-primary focus-ring-primary focus:outline-none ${prefix ? 'pl-10' : ''} ${inputClassName}`}
-          />
-        </div>
-      )}
-    </div>
+    </Field>
   );
 }
