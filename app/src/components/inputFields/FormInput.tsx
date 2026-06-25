@@ -9,7 +9,8 @@ interface FormInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   type?: string;
-  error?: string; // Optional message string for inline error flags
+  error?: string;
+  name?: string;
 }
 
 export default function FormInput({
