@@ -17,6 +17,7 @@ interface WaterInputFieldProps {
   togglePassword?: () => void;
   showPassword?: boolean;
   iconToggle?: { show: JSX.Element; hide: JSX.Element };
+  name?: string;
 }
 
 export default function WaterInputField({
