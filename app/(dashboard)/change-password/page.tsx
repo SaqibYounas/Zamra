@@ -12,6 +12,12 @@ interface PasswordForm {
   confirmPassword: string;
 }
 
+interface ChangePasswordResponse {
+  success?: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
+
 export default function ChangePasswordPage() {
   const [formData, setFormData] = useState<PasswordForm>({
     oldPassword: '',
@@ -21,6 +27,7 @@ export default function ChangePasswordPage() {
 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (field: keyof PasswordForm, value: string) => {
@@ -37,7 +44,7 @@ export default function ChangePasswordPage() {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     setMessage('');
@@ -67,17 +74,38 @@ export default function ChangePasswordPage() {
       setFieldErrors({
         confirmPassword: 'New password and confirmation logic do not match.',
       });
-
       setError('New password and confirmation do not match.');
       return;
     }
 
-    setFieldErrors({});
-    const reponse = setFormData({
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    });
+    try {
+      setLoading(true);
+
+      const response = (await changePassword(
+        formData.oldPassword,
+        formData.newPassword
+      )) as ChangePasswordResponse;
+
+      if (response && response.success === false) {
+        setError(
+          response.message || 'An error occurred while changing the password.'
+        );
+      } else {
+        setMessage(response.message || 'Password updated successfully.');
+        setFormData({
+          oldPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      }
+    } catch (err) {
+      const errorObject = err as Error;
+      setError(
+        errorObject?.message || 'An error occurred while changing the password.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,7 +117,7 @@ export default function ChangePasswordPage() {
           </h1>
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           <WaterInputField
             name="oldPassword"
             label="Current Password"
@@ -135,7 +163,12 @@ export default function ChangePasswordPage() {
             </p>
           )}
 
-          <Button label="Save Password" type="submit" className="w-full mt-6" />
+          <Button
+            label={loading ? 'Saving...' : 'Save Password'}
+            type="submit"
+            className="w-full mt-6"
+            disabled={loading}
+          />
         </form>
       </main>
     </div>

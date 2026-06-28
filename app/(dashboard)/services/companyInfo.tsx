@@ -1,14 +1,22 @@
 import axios, { AxiosError } from 'axios';
 
+interface CompanyInfoRequestBody {
+  companyName?: string;
+  ownerName?: string;
+  city: string;
+  contact: string;
+  address: string;
+  email: string;
+}
+
 interface ErrorResponse {
   error: string;
 }
 
-export async function changePassword(oldPassword: string, newPassword: string) {
+export async function saveCompanyInfo(data: CompanyInfoRequestBody) {
   try {
-    const response = await axios.post('/api/update', {
-      oldPassword,
-      newPassword,
+    const response = await axios.post('/api/company-info', {
+      ...data,
     });
 
     return response.data;
