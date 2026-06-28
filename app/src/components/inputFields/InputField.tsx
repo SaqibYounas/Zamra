@@ -57,7 +57,7 @@ export default function WaterInputField({
             dark
               ? 'bg-sky-950/50 border-sky-800 text-white  focus:border-sky-500'
               : 'bg-white border-slate-300 text-slate-800 focus:ring-sky-400 focus:border-sky-700'
-          } ${error ? 'border-red-500' : ''}`}
+          } ${error ? 'border-red-500 ' : ''}`}
         />
 
         {(type === 'password' || type === 'text') && togglePassword && (
@@ -86,7 +86,7 @@ export default function WaterInputField({
         leaveTo="opacity-0"
       >
         {error && (
-          <p className="mt-1 text-xs text-red-400 pl-4 flex items-center gap-1 font-bold ">
+          <p className="mt-1.5 text-xs text-red-400 pl-4 flex items-center gap-1 font-bold ">
             {error}
           </p>
         )}
