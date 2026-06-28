@@ -1,4 +1,5 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -9,12 +10,15 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
+
 import WaterInputField from '../../src/components/inputFields/InputField';
 import AppButton from '../../src/components/button/Button';
+import { validateEmail } from '../utils/helpers';
+import { loginUser } from '../services/api';
 
 interface FormState {
-  operatorId: string;
-  accessToken: string;
+  email: string;
+  password: string;
   emailError: string;
   passwordError: string;
 }
@@ -23,41 +27,39 @@ export default function PlantAdminForm() {
   const router = useRouter();
 
   const [formState, setFormState] = useState<FormState>({
-    operatorId: '',
-    accessToken: '',
+    email: '',
+    password: '',
     emailError: '',
     passwordError: '',
   });
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const validateEmail = (email: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleChange = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === 'operatorId' && { emailError: '' }),
-      ...(field === 'accessToken' && { passwordError: '' }),
+      ...(field === 'email' && { emailError: '' }),
+      ...(field === 'password' && { passwordError: '' }),
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let hasError = false;
     const errors: Partial<FormState> = {};
 
-    if (!formState.operatorId) {
+    if (!formState.email) {
       errors.emailError = 'Email is required';
       hasError = true;
-    } else if (!validateEmail(formState.operatorId)) {
-      errors.emailError = 'Invalid email address';
+    } else if (!validateEmail(formState.email)) {
+      errors.emailError = 'Invalid email';
       hasError = true;
     }
 
-    if (!formState.accessToken) {
+    if (!formState.password) {
       errors.passwordError = 'Password is required';
       hasError = true;
     }
@@ -67,42 +69,50 @@ export default function PlantAdminForm() {
       return;
     }
 
-    if (
-      formState.operatorId === 'sufyanmalik804@zamra.pk' &&
-      formState.accessToken === 'zamra@804'
-    ) {
-      setLoading(true);
-      setTimeout(() => {
-        setLoading(false);
-        router.push('/dashboard');
-      }, 1000);
+    setLoading(true);
+
+    const login = await loginUser(formState.email, formState.password);
+
+    setLoading(false);
+
+    if (login.success) {
+      router.push('/dashboard');
     } else {
-      setFormState((prev) => ({
-        ...prev,
-        emailError: 'Invalid email or password',
-        passwordError: 'Invalid email or password',
-      }));
+      if (login.message.includes('Email')) {
+        setFormState((prev) => ({
+          ...prev,
+          emailError: login.message,
+        }));
+      } else if (login.message.includes('Password')) {
+        setFormState((prev) => ({
+          ...prev,
+          passwordError: login.message,
+        }));
+      }
     }
   };
 
   return (
-    <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl xl:max-w-3xl p-4 sm:p-6 md:p-8 lg:p-10 bg-linear-to-br from-slate-900/90 to-slate-800/90 rounded-3xl shadow-xl border border-slate-700/50 relative overflow-hidden">
+    <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto p-4 sm:p-6 md:p-8 lg:p-10 bg-linear-to-br from-slate-900/90 to-slate-800/90 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-700/50 relative overflow-hidden">
       <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-blue-500 to-transparent opacity-20"></div>
 
-      <div className="flex items-center gap-3 mb-6 sm:mb-8 md:mb-10">
-        <div className="p-2.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-xl">
-          <Factory size={22} />
+      <div className="flex items-center gap-3 mb-5 sm:mb-7 md:mb-10">
+        <div className="p-2 sm:p-2.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-lg sm:rounded-xl">
+          <Factory size={20} className="sm:w-[22px] sm:h-[22px]" />
         </div>
+
         <div>
-          <h3 className="text-lg sm:text-base md:text-lg font-bold text-white leading-none">
+          <h3 className="text-base sm:text-lg md:text-xl font-bold text-white leading-tight">
             Admin Control
           </h3>
-          <p className="text-[10px] sm:text-[9px] md:text-[10px] text-sky-300 uppercase tracking-widest font-bold mt-1">
+
+          <p className="text-[10px] sm:text-xs md:text-sm text-sky-300 uppercase tracking-widest font-semibold mt-1">
             Authorized Person Only
           </p>
         </div>
       </div>
 
+      {/* FORM */}
       <form
         onSubmit={handleSubmit}
         className="space-y-4 sm:space-y-5 md:space-y-6"
@@ -113,41 +123,47 @@ export default function PlantAdminForm() {
           icon={ShieldCheck}
           type="text"
           placeholder="abc@email.com"
-          value={formState.operatorId}
-          onChange={(e) => handleChange('operatorId', e.target.value)}
+          value={formState.email}
+          onChange={(e) => handleChange('email', e.target.value)}
           error={formState.emailError}
         />
+
         <WaterInputField
           dark
           label="Password"
           icon={Lock}
           type={showPassword ? 'text' : 'password'}
           placeholder="Enter the Password"
-          value={formState.accessToken}
-          onChange={(e) => handleChange('accessToken', e.target.value)}
+          value={formState.password}
+          onChange={(e) => handleChange('password', e.target.value)}
           togglePassword={() => setShowPassword(!showPassword)}
           showPassword={showPassword}
           iconToggle={{ show: <EyeOff size={18} />, hide: <Eye size={18} /> }}
           error={formState.passwordError}
         />
-        <div className="p-3 sm:p-4 md:p-4 bg-slate-700/40 border border-slate-600/40 rounded-2xl">
-          <div className="flex items-center gap-2 text-blue-300 text-xs mb-1">
-            <CloudRain size={14} /> <span>System Status</span>
+
+        <div className="p-3 sm:p-4 bg-slate-700/40 border border-slate-600/40 rounded-xl sm:rounded-2xl">
+          <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1">
+            <CloudRain size={14} />
+            <span>System Status</span>
           </div>
+
           <div className="flex justify-between items-center">
-            <span className="text-[10px] sm:text-[9px] md:text-[10px] text-slate-400 pl-6">
+            <span className="text-[10px] sm:text-xs text-slate-400 pl-5 sm:pl-6">
               Filtration Units
             </span>
-            <span className="text-[10px] sm:text-[9px] md:text-[10px] font-bold text-green-400">
+
+            <span className="text-[10px] sm:text-xs font-bold text-green-400">
               Online
             </span>
           </div>
         </div>
+
         <AppButton
           onClick={handleSubmit}
           label="Login"
           loading={loading}
-          className="w-full btn-primary text-white shadow-md hover:shadow-lg transition-all"
+          className="w-full text-sm sm:text-base btn-primary text-white shadow-md hover:shadow-lg transition-all"
         />
       </form>
     </div>
