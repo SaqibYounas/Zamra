@@ -3,9 +3,13 @@ import axios, { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-interface updatePassRequestBody {
-  currentPassword?: string;
-  newPassword?: string;
+interface CompanyInfoRequestBody {
+  companyName?: string;
+  ownerName?: string;
+  city: string;
+  contact: string;
+  address: string;
+  email: string;
 }
 
 interface BackendErrorResponse {
@@ -14,16 +18,21 @@ interface BackendErrorResponse {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as updatePassRequestBody;
-    const { currentPassword, newPassword } = body;
+    const body = (await request.json()) as CompanyInfoRequestBody;
+    const { companyName, ownerName, city, contact, address, email } = body;
+
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
     const response = await axios.post(
       `${BACKEND_API}/auth/update`,
       {
-        currentPassword,
-        newPassword,
+        companyName,
+        ownerName,
+        city,
+        contact,
+        address,
+        email,
       },
       {
         headers: {

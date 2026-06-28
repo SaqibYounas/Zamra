@@ -86,7 +86,7 @@ export default function WaterInputField({
         leaveTo="opacity-0"
       >
         {error && (
-          <p className="mt-1.5 text-xs text-red-400 pl-4 flex items-center gap-1 font-bold ">
+          <p className="mt-1.5 text-xs text-red-500 pl-4 flex items-center gap-1 font-bold ">
             {error}
           </p>
         )}

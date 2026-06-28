@@ -18,7 +18,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all shadow-lg shadow-[rgba(56,189,248,0.15)]
+      className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all shadow-lg shadow-[rgba(56,189,248,0.15)] cursor-pointer
         ${loading || disabled ? 'bg-(--color-disabled) cursor-not-allowed' : 'bg-(--color-primary) hover:bg-(--color-primary-strong)'}
         text-white ${className}`}
       {...props}
