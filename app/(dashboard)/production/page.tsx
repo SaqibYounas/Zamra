@@ -28,7 +28,8 @@ export default function ProductionPage() {
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    setFormData((prev) => ({ ...prev, [field]: cleanValue }));
   };
 
   const renderFields = () => {
@@ -38,7 +39,7 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Total Pet"
-              type="number"
+              type="text"
               value={formData.totalPet || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
@@ -46,7 +47,7 @@ export default function ProductionPage() {
             />
             <WaterInputField
               label="Bottle per Pet (12)"
-              type="number"
+              type="text"
               value={formData.perPet || '12'}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('perPet', e.target.value)
@@ -60,7 +61,7 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Total Pet"
-              type="number"
+              type="text"
               value={formData.totalPet || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
@@ -68,7 +69,7 @@ export default function ProductionPage() {
             />
             <WaterInputField
               label="Bottle per Pet (6)"
-              type="number"
+              type="text"
               value={formData.perPet || '6'}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('perPet', e.target.value)
@@ -81,7 +82,7 @@ export default function ProductionPage() {
         return (
           <WaterInputField
             label="Total Bottles"
-            type="number"
+            type="text"
             value={formData.totalPet || ''}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleChange('totalPet', e.target.value)
@@ -94,7 +95,7 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Quantity"
-              type="number"
+              type="text"
               value={formData.totalPet || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
@@ -102,8 +103,8 @@ export default function ProductionPage() {
             />
             <WaterInputField
               label="Price per Bottle"
-              type="number"
-              value={formData.perBottlePrice || ''} // Matches interface
+              type="text"
+              value={formData.perBottlePrice || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('perBottlePrice', e.target.value)
               }
@@ -115,7 +116,7 @@ export default function ProductionPage() {
         return (
           <WaterInputField
             label="Total Refill Today"
-            type="number"
+            type="text"
             value={formData.totalPet || ''}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleChange('totalPet', e.target.value)
@@ -131,12 +132,34 @@ export default function ProductionPage() {
   const handleSubmit = async () => {
     setError('');
     setMessage('');
+
+    if (!formData.totalPet || formData.totalPet.trim() === '') {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (
+      (type === '500ml' || type === '1.5L') &&
+      (!formData.perPet || formData.perPet.trim() === '')
+    ) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (
+      type === '19L' &&
+      (!formData.perBottlePrice || formData.perBottlePrice.trim() === '')
+    ) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
     try {
       setLoading(true);
 
       const payload: StockMangRequestBody = {
         bottleType: type,
-        totalPet: formData.totalPet || '0',
+        totalPet: formData.totalPet,
       };
 
       if (formData.perBottlePrice) {
@@ -178,24 +201,24 @@ export default function ProductionPage() {
 
           {renderFields()}
 
+          {error && (
+            <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
+              {error}
+            </p>
+          )}
+
+          {message && (
+            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+              {message}
+            </p>
+          )}
+
           <Button
             label={loading ? 'Submitting...' : 'Submit'}
             onClick={handleSubmit}
             disabled={loading}
             className="mt-2 self-center md:self-start"
           />
-
-          {error && (
-            <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100 mt-2">
-              {error}
-            </p>
-          )}
-
-          {message && (
-            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100 mt-2">
-              {message}
-            </p>
-          )}
         </div>
       </main>
     </div>
