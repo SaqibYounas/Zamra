@@ -179,7 +179,6 @@ export default function CompanyInformation() {
               error={fieldErrors.email}
             />
 
-            {/* Messages */}
             {error && (
               <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
                 {error}

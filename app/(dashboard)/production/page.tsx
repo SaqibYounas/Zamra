@@ -5,18 +5,31 @@ import WaterInputField from '../../src/components/inputFields/InputField';
 import Button from '../../src/components/button/Button';
 import Dropdown from '../../src/components/dropdown/Dropdown';
 import { waterTypes } from '../data/waterTypes';
+import { saveStock } from '../services/stockManagement';
+
+interface StockMangRequestBody {
+  bottleType?: string;
+  totalPet: string;
+  perBottlePrice?: string;
+}
 
 export default function ProductionPage() {
-  const [type, setType] = useState(waterTypes[0].value);
+  const [type, setType] = useState(waterTypes[0]?.value || '');
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleTypeChange = (value: string) => {
     setType(value);
     setFormData({});
+    setError('');
+    setMessage('');
   };
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    setFormData((prev) => ({ ...prev, [field]: cleanValue }));
   };
 
   const renderFields = () => {
@@ -26,15 +39,15 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Total Pet"
-              type="number"
-              value={formData.totalBottle || ''}
+              type="text"
+              value={formData.totalPet || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalBottle', e.target.value)
+                handleChange('totalPet', e.target.value)
               }
             />
             <WaterInputField
               label="Bottle per Pet (12)"
-              type="number"
+              type="text"
               value={formData.perPet || '12'}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('perPet', e.target.value)
@@ -48,7 +61,7 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Total Pet"
-              type="number"
+              type="text"
               value={formData.totalPet || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
@@ -56,7 +69,7 @@ export default function ProductionPage() {
             />
             <WaterInputField
               label="Bottle per Pet (6)"
-              type="number"
+              type="text"
               value={formData.perPet || '6'}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('perPet', e.target.value)
@@ -69,10 +82,10 @@ export default function ProductionPage() {
         return (
           <WaterInputField
             label="Total Bottles"
-            type="number"
-            value={formData.totalBottle || ''}
+            type="text"
+            value={formData.totalPet || ''}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              handleChange('totalBottle', e.target.value)
+              handleChange('totalPet', e.target.value)
             }
           />
         );
@@ -82,18 +95,18 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Quantity"
-              type="number"
-              value={formData.quantity || ''}
+              type="text"
+              value={formData.totalPet || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('quantity', e.target.value)
+                handleChange('totalPet', e.target.value)
               }
             />
             <WaterInputField
-              label="Total Price"
-              type="number"
-              value={formData.totalPrice || ''}
+              label="Price per Bottle"
+              type="text"
+              value={formData.perBottlePrice || ''}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalPrice', e.target.value)
+                handleChange('perBottlePrice', e.target.value)
               }
             />
           </>
@@ -103,10 +116,10 @@ export default function ProductionPage() {
         return (
           <WaterInputField
             label="Total Refill Today"
-            type="number"
-            value={formData.refill || ''}
+            type="text"
+            value={formData.totalPet || ''}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              handleChange('refill', e.target.value)
+              handleChange('totalPet', e.target.value)
             }
           />
         );
@@ -116,16 +129,66 @@ export default function ProductionPage() {
     }
   };
 
-  const handleSubmit = () => {
-    console.log({ type, ...formData });
-    alert('Submitted!');
+  const handleSubmit = async () => {
+    setError('');
+    setMessage('');
+
+    if (!formData.totalPet || formData.totalPet.trim() === '') {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (
+      (type === '500ml' || type === '1.5L') &&
+      (!formData.perPet || formData.perPet.trim() === '')
+    ) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    if (
+      type === '19L' &&
+      (!formData.perBottlePrice || formData.perBottlePrice.trim() === '')
+    ) {
+      setError('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const payload: StockMangRequestBody = {
+        bottleType: type,
+        totalPet: formData.totalPet,
+      };
+
+      if (formData.perBottlePrice) {
+        payload.perBottlePrice = formData.perBottlePrice;
+      }
+
+      const response = await saveStock(payload);
+
+      if (response && response.success === false) {
+        setError(response.message || 'Failed to update stock information.');
+      } else {
+        setMessage(
+          response.message || 'Stock information updated successfully.'
+        );
+        setFormData({});
+      }
+    } catch (err) {
+      const errorObject = err as Error;
+      setError(errorObject?.message || 'An unexpected error occurred.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col justify-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-6">
+        <div className="w-full bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col justify-center gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-center mb-2">
             Production
           </h1>
 
@@ -138,10 +201,23 @@ export default function ProductionPage() {
 
           {renderFields()}
 
+          {error && (
+            <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
+              {error}
+            </p>
+          )}
+
+          {message && (
+            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+              {message}
+            </p>
+          )}
+
           <Button
-            label="Submit"
+            label={loading ? 'Submitting...' : 'Submit'}
             onClick={handleSubmit}
-            className="mt-6 self-center md:self-start"
+            disabled={loading}
+            className="mt-2 self-center md:self-start"
           />
         </div>
       </main>
