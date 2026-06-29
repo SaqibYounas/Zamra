@@ -1,19 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar } from 'lucide-react';
 import WaterInputField from '../../src/components/inputFields/InputField';
 import Button from '../../src/components/button/Button';
 import Dropdown from '../../src/components/dropdown/Dropdown';
 import RsIcon from '@/public/RupeesIcon';
 import { waterTypes } from '../data/waterTypes';
+import { savePrice } from '../services/priceManagement';
 
 interface WaterFormData {
   type: string;
   price: string;
   labelCap: string;
   otherExpense: string;
-  date: string;
 }
 
 export default function WaterFormPage() {
@@ -22,16 +21,40 @@ export default function WaterFormPage() {
     price: '',
     labelCap: '',
     otherExpense: '',
-    date: new Date().toISOString().slice(0, 16),
   });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleChange = (field: keyof WaterFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    alert('Data submitted! Check console.');
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      const response = await savePrice(formData);
+      setLoading(false);
+      if (response && response.success === false) {
+        setError(response.message || 'Failed to update company information.');
+      } else {
+        setMessage(
+          response.message || 'Company information updated successfully.'
+        );
+        setFormData({
+          type: waterTypes[0].value,
+          price: '',
+          labelCap: '',
+          otherExpense: '',
+        });
+      }
+    } catch (err) {
+      const errorObject = err as Error;
+      setError(errorObject?.message || 'An unexpected error occurred.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -73,15 +96,24 @@ export default function WaterFormPage() {
             onChange={(e) => handleChange('otherExpense', e.target.value)}
             placeholder="Enter other expenses"
           />
-          <WaterInputField
-            label="Date & Time"
-            icon={Calendar}
-            type="datetime-local"
-            value={formData.date}
-            onChange={(e) => handleChange('date', e.target.value)}
-          />
 
-          <Button label="Submit" onClick={handleSubmit} className="mt-6" />
+          {error && (
+            <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
+              {error}
+            </p>
+          )}
+          {message && (
+            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+              {message}
+            </p>
+          )}
+          <Button
+            onClick={handleSubmit}
+            label={loading ? 'Saving Changes...' : 'Save Changes'}
+            type="submit"
+            className="w-full py-3 text-sm sm:text-base"
+            disabled={loading}
+          />
         </div>
       </main>
     </div>
