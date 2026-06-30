@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 interface updatePassRequestBody {
-  currentPassword?: string;
-  newPassword?: string;
+  oldPassword: string;
+  newPassword: string;
 }
 
 interface BackendErrorResponse {
@@ -15,15 +15,15 @@ interface BackendErrorResponse {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as updatePassRequestBody;
-    const { currentPassword, newPassword } = body;
+    const { oldPassword, newPassword } = body;
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-
+    console.log(oldPassword, newPassword);
     const response = await axios.post(
       `${BACKEND_API}/auth/update`,
       {
-        currentPassword,
-        newPassword,
+        password: oldPassword,
+        newpassword: newPassword,
       },
       {
         headers: {
