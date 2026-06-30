@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 interface StockMangRequestBody {
-  bottleType?: string;
+  bottleType: string;
   totalPet: string;
-  perBottlePrice?: string;
+  bottleperPet: string;
 }
 
 interface BackendErrorResponse {
@@ -16,17 +16,16 @@ interface BackendErrorResponse {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as StockMangRequestBody;
-    const { bottleType, totalPet, perBottlePrice } = body;
-
+    const { bottleType, totalPet, bottleperPet } = body;
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-
+    console.log(body);
     const response = await axios.post(
-      `${BACKEND_API}/auth/update`,
+      `${BACKEND_API}/daily-stock/create`,
       {
         bottleType,
         totalPet,
-        perBottlePrice,
+        bottlePerPet: bottleperPet,
       },
       {
         headers: {
