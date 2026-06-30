@@ -28,19 +28,38 @@ export async function POST(request: Request) {
       password,
     });
 
-    const data = response.data as unknown;
+    const data = response.data;
 
-    return NextResponse.json(data);
+    const res = NextResponse.json({
+      success: true,
+      user: data.user,
+    });
+
+    res.cookies.set({
+      name: 'token',
+      value: data.access_token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24,
+    });
+
+    return res;
   } catch (error) {
     const axiosError = error as AxiosError<BackendErrorResponse>;
-    console.error(
-      'Login Error:',
-      axiosError.response?.data || axiosError.message
-    );
+
     const errorMessage =
       axiosError.response?.data?.message || 'Something went wrong';
+
     const errorStatus = axiosError.response?.status || 500;
 
-    return NextResponse.json({ error: errorMessage }, { status: errorStatus });
+    return NextResponse.json(
+      {
+        success: false,
+        message: errorMessage,
+      },
+      { status: errorStatus }
+    );
   }
 }
