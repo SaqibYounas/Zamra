@@ -74,7 +74,6 @@ export default function ChangePasswordPage() {
       setFieldErrors({
         confirmPassword: 'New password and confirmation logic do not match.',
       });
-      setError('New password and confirmation do not match.');
       return;
     }
 

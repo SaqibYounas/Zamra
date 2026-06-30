@@ -20,15 +20,14 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CompanyInfoRequestBody;
     const { companyName, ownerName, city, contact, address, email } = body;
-
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
     const response = await axios.post(
-      `${BACKEND_API}/auth/update`,
+      `${BACKEND_API}/company/register`,
       {
-        companyName,
-        ownerName,
+        name: companyName,
+        owner: ownerName,
         city,
         contact,
         address,
