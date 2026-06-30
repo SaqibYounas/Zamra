@@ -72,21 +72,23 @@ export default function PlantAdminForm() {
     setLoading(true);
 
     const login = await loginUser(formState.email, formState.password);
-
+    console.log(login);
     setLoading(false);
 
     if (login.success) {
       router.push('/dashboard');
     } else {
-      if (login.message.includes('Email')) {
+      const message = login.message || '';
+
+      if (message.includes('Email')) {
         setFormState((prev) => ({
           ...prev,
-          emailError: login.message,
+          emailError: message,
         }));
-      } else if (login.message.includes('Password')) {
+      } else if (message.includes('Password')) {
         setFormState((prev) => ({
           ...prev,
-          passwordError: login.message,
+          passwordError: message,
         }));
       }
     }

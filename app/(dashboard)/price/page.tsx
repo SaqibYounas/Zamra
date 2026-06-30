@@ -17,7 +17,7 @@ interface WaterFormData {
 
 export default function WaterFormPage() {
   const [formData, setFormData] = useState<WaterFormData>({
-    type: waterTypes[0]?.value || '',
+    type: '500ml',
     price: '',
     labelCap: '',
     otherExpense: '',

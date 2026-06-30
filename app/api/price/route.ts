@@ -4,10 +4,10 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 interface PriceMangRequestBody {
-  bottleType?: string;
-  perBottlePrice?: string;
-  labelCapPrice: string;
-  otherExpenses: string;
+  type?: string;
+  price?: string;
+  labelCap: string;
+  otherExpense: string;
 }
 
 interface BackendErrorResponse {
@@ -17,18 +17,17 @@ interface BackendErrorResponse {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as PriceMangRequestBody;
-    const { bottleType, perBottlePrice, labelCapPrice, otherExpenses } = body;
+    const { type, price, labelCap, otherExpense } = body;
 
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-
     const response = await axios.post(
-      `${BACKEND_API}/auth/update`,
+      `${BACKEND_API}/price/create`,
       {
-        bottleType,
-        perBottlePrice,
-        labelCapPrice,
-        otherExpenses,
+        bottleType: type,
+        perBottlePrice: price,
+        labelCapPrice: labelCap,
+        otherExpenses: otherExpense,
       },
       {
         headers: {
