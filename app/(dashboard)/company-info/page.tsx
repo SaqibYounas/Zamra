@@ -13,8 +13,6 @@ interface CompanyInfoResponse {
 }
 
 export default function CompanyInformation() {
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const [payload, setPayload] = useState({
@@ -38,8 +36,6 @@ export default function CompanyInformation() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setMessage('');
-    setError('');
 
     const localErrors: Record<string, string> = {};
 
@@ -75,11 +71,6 @@ export default function CompanyInformation() {
       })) as CompanyInfoResponse;
 
       if (response && response.success === false) {
-        setError(response.message || 'Failed to update company information.');
-      } else {
-        setMessage(
-          response.message || 'Company information updated successfully.'
-        );
         setPayload({
           name: '',
           owner: '',
@@ -91,7 +82,7 @@ export default function CompanyInformation() {
       }
     } catch (err) {
       const errorObject = err as Error;
-      setError(errorObject?.message || 'An unexpected error occurred.');
+      console.error(errorObject?.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -178,18 +169,6 @@ export default function CompanyInformation() {
               placeholder="Enter Company Email"
               error={fieldErrors.email}
             />
-
-            {error && (
-              <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
-                {error}
-              </p>
-            )}
-
-            {message && (
-              <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                {message}
-              </p>
-            )}
 
             <Button
               label={loading ? 'Saving Changes...' : 'Save Changes'}

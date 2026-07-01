@@ -7,6 +7,7 @@ import Dropdown from '../../src/components/dropdown/Dropdown';
 import RsIcon from '@/public/RupeesIcon';
 import { waterTypes } from '../data/waterTypes';
 import { savePrice } from '../services/priceManagement';
+import { showApiToast } from '@/app/src/lib/apiToast';
 
 interface WaterFormData {
   type: string;
@@ -23,9 +24,7 @@ export default function WaterFormPage() {
     otherExpense: '',
   });
 
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
   const handleTypeChange = (val: string) => {
     setFormData({
@@ -34,8 +33,6 @@ export default function WaterFormPage() {
       labelCap: '',
       otherExpense: '',
     });
-    setError('');
-    setMessage('');
   };
 
   const handleChange = (field: keyof WaterFormData, value: string) => {
@@ -44,15 +41,12 @@ export default function WaterFormPage() {
   };
 
   const handleSubmit = async () => {
-    setError('');
-    setMessage('');
-
     if (
       !formData.price.trim() ||
       !formData.labelCap.trim() ||
       !formData.otherExpense.trim()
     ) {
-      setError('Please fill in all required fields.');
+      showApiToast('Please fill in all required fields.', 'error');
       return;
     }
 
@@ -61,11 +55,6 @@ export default function WaterFormPage() {
       const response = await savePrice(formData);
 
       if (response && response.success === false) {
-        setError(response.message || 'Failed to update price information.');
-      } else {
-        setMessage(
-          response.message || 'Price information updated successfully.'
-        );
         setFormData({
           type: waterTypes[0]?.value || '',
           price: '',
@@ -75,7 +64,7 @@ export default function WaterFormPage() {
       }
     } catch (err) {
       const errorObject = err as Error;
-      setError(errorObject?.message || 'An unexpected error occurred.');
+      console.error(errorObject?.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -122,18 +111,6 @@ export default function WaterFormPage() {
             onChange={(e) => handleChange('otherExpense', e.target.value)}
             placeholder="Enter other expenses"
           />
-
-          {error && (
-            <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100 mt-2">
-              {error}
-            </p>
-          )}
-
-          {message && (
-            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100 mt-2">
-              {message}
-            </p>
-          )}
 
           <Button
             onClick={handleSubmit}
