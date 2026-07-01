@@ -6,6 +6,7 @@ import Button from '../../src/components/button/Button';
 import Dropdown from '../../src/components/dropdown/Dropdown';
 import { waterTypes } from '../data/waterTypes';
 import { saveStock } from '../services/stockManagement';
+import { showApiToast } from '@/app/src/lib/apiToast';
 
 interface StockFormData {
   totalPet: string;
@@ -28,11 +29,8 @@ export default function ProductionPage() {
     bottleperPet: '',
   });
 
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
 
-  // ✅ FIX: proper type-safe update
   const handleChange = (field: keyof StockFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -48,9 +46,6 @@ export default function ProductionPage() {
       perPet: '',
       bottleperPet: '',
     });
-
-    setError('');
-    setMessage('');
   };
 
   const renderFields = () => {
@@ -151,11 +146,8 @@ export default function ProductionPage() {
   };
 
   const handleSubmit = async () => {
-    setError('');
-    setMessage('');
-
     if (!formData.totalPet.trim()) {
-      setError('Please fill in all required fields.');
+      showApiToast('Please fill in all required fields.', 'error');
       return;
     }
 
@@ -163,12 +155,12 @@ export default function ProductionPage() {
       (type === '500ml' || type === '1.5L') &&
       !formData.bottleperPet.trim()
     ) {
-      setError('Please fill in all required fields.');
+      showApiToast('Please fill in all required fields.', 'error');
       return;
     }
 
     if (type === '19L' && !formData.bottleperPet.trim()) {
-      setError('Please fill in all required fields.');
+      showApiToast('Please fill in all required fields.', 'error');
       return;
     }
 
@@ -187,12 +179,11 @@ export default function ProductionPage() {
       const response = await saveStock(payload);
 
       if (response?.success === false) {
-        setError(response.message || 'Failed to update stock information.');
-      } else {
-        setMessage(
-          response.message || 'Stock information updated successfully.'
+        showApiToast(
+          response.message || 'Failed to update stock information.',
+          'error'
         );
-
+      } else {
         setFormData({
           totalPet: '',
           perPet: '',
@@ -201,7 +192,7 @@ export default function ProductionPage() {
       }
     } catch (err) {
       const errorObject = err as Error;
-      setError(errorObject.message || 'An unexpected error occurred.');
+      console.error(errorObject.message || 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
@@ -223,18 +214,6 @@ export default function ProductionPage() {
           />
 
           {renderFields()}
-
-          {error && (
-            <p className="text-xs text-center font-bold text-rose-600 bg-rose-50 p-3 rounded-xl">
-              {error}
-            </p>
-          )}
-
-          {message && (
-            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl">
-              {message}
-            </p>
-          )}
 
           <Button
             label={loading ? 'Submitting...' : 'Submit'}

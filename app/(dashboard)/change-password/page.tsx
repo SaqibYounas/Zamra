@@ -5,6 +5,7 @@ import { KeyRound, Lock, ShieldCheck } from 'lucide-react';
 import WaterInputField from '../../src/components/inputFields/InputField';
 import Button from '../../src/components/button/Button';
 import { changePassword } from '../services/changePassword';
+import { showApiToast } from '@/app/src/lib/apiToast';
 
 interface PasswordForm {
   oldPassword: string;
@@ -25,8 +26,6 @@ export default function ChangePasswordPage() {
     confirmPassword: '',
   });
 
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -46,9 +45,6 @@ export default function ChangePasswordPage() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
-    setMessage('');
-    setError('');
 
     const localErrors: Record<string, string> = {};
 
@@ -86,11 +82,6 @@ export default function ChangePasswordPage() {
       )) as ChangePasswordResponse;
 
       if (response && response.success === false) {
-        setError(
-          response.message || 'An error occurred while changing the password.'
-        );
-      } else {
-        setMessage(response.message || 'Password updated successfully.');
         setFormData({
           oldPassword: '',
           newPassword: '',
@@ -99,8 +90,10 @@ export default function ChangePasswordPage() {
       }
     } catch (err) {
       const errorObject = err as Error;
-      setError(
-        errorObject?.message || 'An error occurred while changing the password.'
+      showApiToast(
+        errorObject?.message ||
+          'An error occurred while changing the password.',
+        'error'
       );
     } finally {
       setLoading(false);
@@ -149,18 +142,6 @@ export default function ChangePasswordPage() {
             placeholder="Repeat new password"
             error={fieldErrors.confirmPassword}
           />
-
-          {error && (
-            <p className="text-xs text-center font-bold text-red-600 bg-red-50 p-3 rounded-xl border border-red-100">
-              {error}
-            </p>
-          )}
-
-          {message && (
-            <p className="text-xs text-center font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100 animate-fadeIn">
-              {message}
-            </p>
-          )}
 
           <Button
             label={loading ? 'Saving...' : 'Save Password'}

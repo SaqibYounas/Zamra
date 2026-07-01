@@ -1,54 +1,62 @@
-<<<<<<< version-1.0
-# Zamra Water Plant Admin Dashboard
+# Zamra Frontend
 
-![Zamra Logo](public/Logo.jpg)
+This is the frontend application for the Zamra Water Plant admin panel, built with Next.js and React.
 
-A **Next.js** admin dashboard for **Zamra Water Plant**, built with **React**, **Tailwind CSS**, and **Lucide Icons**, to manage daily operations, generate reports, and track plant data efficiently.
+## Overview
 
----
+The app provides a dashboard experience for managing:
+- admin login
+- company information
+- prices
+- production/stock data
+- password updates
+- invoice and billing-related flows
 
-## 🚀 Features
+## Tech Stack
 
-- **Real-time Plant Data**: Monitor water production, filtration units, and delivery status.
-- **Daily PDF Reports**: Generate downloadable reports for sales, deliveries, and invoices.
-- **WhatsApp Notifications**: Send daily reports and bills to stakeholders directly.
-- **Secure Admin Login**: Only authorized personnel can access the dashboard.
-- **Responsive Design**: Fully optimized for desktop, tablet, and mobile devices.
-- **Modern UI Components**: Input fields, buttons, and status panels styled with Tailwind CSS and Lucide Icons.
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- Axios
+- Lucide React
+- Chart.js and react-chartjs-2
+- jspdf and html2canvas-pro
 
----
+## Project Structure
 
-## 📂 Project Structure
-app/
-├─ page.tsx # Main login/dashboard page
-├─ globals.css # Tailwind + global styles
-components/
-├─ AdminLogin.tsx # Admin login form
-├─ inputFields/ # Custom input field components
-├─ button/ # Reusable button components
-public/
-├─ Logo.jpg # Zamra Plant logo & favicon
+- app/ - app router pages, layouts, and API route handlers
+  - (dashboard)/ - protected dashboard pages
+  - (login)/ - login experience
+  - api/ - Next.js API route proxies to the backend
+  - src/ - shared frontend components, utilities, and toast logic
+- public/ - static assets such as images and icons
 
+## Getting Started
 
-# 🛠 Usage
-Login as an admin using authorized credentials.
-Monitor Plant Status: Check filtration units and water production.
-Generate Reports: Download daily PDF reports for operations and sales.
-Send WhatsApp Notifications: Automatically send daily reports or bills.
-Manage Deliveries: Track delivery schedules and statuses.
+Install dependencies:
 
-# 🌐 Technologies Used
-Next.js
- – Server-side rendering and React framework
-React
- – Frontend library
-Tailwind CSS
- – Utility-first CSS framework
-Lucide Icons
- – Icon library
-Google Fonts
- – Geist and Geist Mono fonts
+```bash
+npm install
+```
 
+Run the development server:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
->>>>>>> master
+```bash
+npm run dev
+```
+
+Open http://localhost:3000 in your browser.
+
+## Available Scripts
+
+- npm run dev - start the development server
+- npm run build - create a production build
+- npm run start - run the production build
+- npm run lint - run ESLint checks
+
+## Notes
+
+- The frontend communicates with the backend through the Next.js API route handlers under app/api.
+- A global toast notification system is included for API responses and form feedback.
+- Some pages use client-side state and server-side route proxies for secure backend communication.

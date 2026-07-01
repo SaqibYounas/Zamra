@@ -19,6 +19,16 @@ export async function POST(request: Request) {
     const body = (await request.json()) as PriceMangRequestBody;
     const { type, price, labelCap, otherExpense } = body;
 
+    if (!type || !price || !labelCap || !otherExpense) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Please fill in all required fields before submitting.',
+        },
+        { status: 400 }
+      );
+    }
+
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
     const response = await axios.post(

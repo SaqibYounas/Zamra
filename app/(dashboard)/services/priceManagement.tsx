@@ -20,10 +20,13 @@ export async function savePrice(data: PriceMangRequestBody) {
     return response.data;
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>;
+    const payload = err.response?.data as
+      | { error?: string; message?: string }
+      | undefined;
 
     return {
       success: false,
-      message: err.response?.data?.error || 'Server error',
+      message: payload?.message || payload?.error || 'Server error',
     };
   }
 }
