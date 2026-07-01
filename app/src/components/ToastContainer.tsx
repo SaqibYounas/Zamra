@@ -17,7 +17,9 @@ export function ToastContainer() {
       }, 5000);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   if (toasts.length === 0) {
