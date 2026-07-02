@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Sidebar from '../src/components/sidebar/Sidebar';
+import { ChatbotWidget } from '../src/components/chatbot/ChatbotWidget';
 
 export default function DashboardLayout({
   children,
@@ -12,7 +13,7 @@ export default function DashboardLayout({
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden relative">
       <Sidebar
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
@@ -27,6 +28,8 @@ export default function DashboardLayout({
       >
         {children}
       </main>
+
+      <ChatbotWidget />
     </div>
   );
 }
