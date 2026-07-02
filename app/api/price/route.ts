@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   } catch (error) {
     const axiosError = error as AxiosError<BackendErrorResponse>;
     console.error(
-      'Update Password Error:',
+      'Price Error:',
       axiosError.response?.data || axiosError.message
     );
     const errorMessage =
