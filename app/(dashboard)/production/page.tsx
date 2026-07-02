@@ -60,6 +60,7 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
+              placeholder="Enter Total Pet"
             />
             <WaterInputField
               label="Bottle per Pet (12)"
@@ -68,6 +69,7 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
+              placeholder="Enter Bottle Per Pet"
             />
           </>
         );

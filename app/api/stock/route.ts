@@ -40,7 +40,34 @@ export async function POST(request: Request) {
   } catch (error) {
     const axiosError = error as AxiosError<BackendErrorResponse>;
     console.error(
-      'Update Password Error:',
+      'Stock Created Error:',
+      axiosError.response?.data || axiosError.message
+    );
+    const errorMessage =
+      axiosError.response?.data?.message || 'Something went wrong';
+    const errorStatus = axiosError.response?.status || 500;
+
+    return NextResponse.json({ error: errorMessage }, { status: errorStatus });
+  }
+}
+
+export async function GET() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    const response = await axios.get(`${BACKEND_API}/daily-stock`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : '',
+      },
+    });
+
+    const data = response.data as unknown;
+
+    return NextResponse.json(data);
+  } catch (error) {
+    const axiosError = error as AxiosError<BackendErrorResponse>;
+    console.error(
+      'Stock Fetch Error:',
       axiosError.response?.data || axiosError.message
     );
     const errorMessage =

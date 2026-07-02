@@ -16,6 +16,11 @@ import {
 import { TrendingUp, Receipt, Layers, ArrowUpRight } from 'lucide-react';
 import { JSX } from 'react';
 import RupeesIcon from '@/public/RupeesIcon';
+import {
+  MetricType,
+  StockMetrics,
+  StockBottleType,
+} from '../../../(dashboard)/types/types';
 
 ChartJS.register(
   CategoryScale,
@@ -25,13 +30,6 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-
-export type MetricType =
-  | 'Today Stock'
-  | 'Total Cost'
-  | 'Profit Today'
-  | 'Overall Stock'
-  | 'Monthly Profit';
 
 const METRIC_CONFIG: Record<
   MetricType,
@@ -69,38 +67,46 @@ const METRIC_CONFIG: Record<
   },
 };
 
-const labels = ['500ml', '1.5L', '5L', '19L', '19L Refill'];
+const labels: StockBottleType[] = ['500ml', '1.5L', '5L', '19L', '19L Refill'];
 const days = Array.from({ length: 30 }, (_, i) => `${i + 1}`);
-
-const generateData = (type: MetricType) => {
-  switch (type) {
-    case 'Today Stock':
-      return [120, 80, 50, 30, 15];
-    case 'Total Cost':
-      return [2400, 4000, 2500, 1800, 500];
-    case 'Profit Today':
-      return [500, 1200, 800, 600, 200];
-    case 'Overall Stock':
-      return [150, 120, 60, 35, 20];
-    case 'Monthly Profit':
-      return Array.from({ length: 30 }, () =>
-        Math.floor(Math.random() * 2000 + 200)
-      );
-    default:
-      return [];
-  }
-};
 
 interface GraphCardProps {
   title: MetricType;
+  rawStockData?: StockMetrics;
 }
 
-export default function GraphCard({ title }: GraphCardProps) {
+export default function GraphCard({ title, rawStockData }: GraphCardProps) {
   const config = METRIC_CONFIG[title];
-
   if (!config) return null;
 
-  const chartData = generateData(title);
+  const processChartData = (): number[] => {
+    if (!rawStockData) return [];
+
+    switch (title) {
+      case 'Today Stock':
+        return labels.map((size) => rawStockData.todayStock?.[size] || 0);
+
+      case 'Total Cost':
+        return labels.map((size) => rawStockData.costs?.[size] || 0);
+
+      case 'Profit Today':
+        return labels.map((size) => rawStockData.profitToday?.[size] || 0);
+
+      case 'Overall Stock':
+        return labels.map((size) => rawStockData.overallStock?.[size] || 0);
+
+      case 'Monthly Profit':
+        return (
+          rawStockData.monthlyProfitHistory ||
+          Array.from({ length: 30 }, () => 0)
+        );
+
+      default:
+        return [];
+    }
+  };
+
+  const chartData = processChartData();
   const totalValue = chartData.reduce((a, b) => a + b, 0);
 
   const data: ChartData<'bar'> = {
@@ -119,14 +125,12 @@ export default function GraphCard({ title }: GraphCardProps) {
   const options: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
-
     onHover: (event, elements) => {
       const target = event.native?.target as HTMLElement;
       if (target) {
         target.style.cursor = elements.length ? 'pointer' : 'default';
       }
     },
-
     plugins: {
       legend: { display: false },
       tooltip: {
@@ -145,13 +149,10 @@ export default function GraphCard({ title }: GraphCardProps) {
         font: { size: 16, weight: 'bold' },
       },
     },
-
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          font: { weight: 'bold' },
-        },
+        ticks: { font: { weight: 'bold' } },
       },
       x: {
         title: {
@@ -159,9 +160,7 @@ export default function GraphCard({ title }: GraphCardProps) {
           text: title === 'Monthly Profit' ? 'Days' : 'Bottle Types',
           font: { weight: 'bold' },
         },
-        ticks: {
-          font: { weight: 'bold' },
-        },
+        ticks: { font: { weight: 'bold' } },
       },
     },
   };
@@ -177,12 +176,11 @@ export default function GraphCard({ title }: GraphCardProps) {
           <div className="p-2 bg-slate-50 rounded-xl shrink-0">
             {config.icon}
           </div>
-
           <div className="min-w-0">
             <h3 className="text-sm sm:text-base md:text-lg font-bold text-slate-900 truncate">
               {title}
             </h3>
-            <p className="text-[10px] sm:text- pl-1 font-bold text-slate-500 uppercase tracking-wider truncate">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider truncate">
               {title === 'Monthly Profit'
                 ? 'Monthly Overview'
                 : 'Daily Overview'}
@@ -195,9 +193,7 @@ export default function GraphCard({ title }: GraphCardProps) {
             <span className="flex items-center">
               {config.isCurrency ? <RupeesIcon /> : config.icon}
             </span>
-
             {totalValue.toLocaleString()}
-
             <div className="absolute -top-2 bottom-8 right-0 flex items-center text-emerald-500 text-[8px] sm:text-xs font-bold gap-1">
               <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>15%</span>

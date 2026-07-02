@@ -32,12 +32,19 @@ export function ChatbotWidget() {
 
     setIsTyping(true);
     try {
-      const response = await axios.post('/api/chatbot', {
-        message: cleanInput,
-      });
+      const response = await axios.post(
+        '/api/chatbot',
+        {
+          message: cleanInput,
+        },
+        {
+          headers: {
+            'x-skip-api-toast': 'true',
+          },
+        }
+      );
       const replyText =
-        response.data?.text ||
-        'Response profile linked with NestJS /rag/query inference.';
+        response.data?.answer || response.data?.message || 'Response received';
 
       setMessages((prev) => [...prev, { text: replyText, isBot: true }]);
     } catch (error) {

@@ -44,7 +44,25 @@ export function setupApiToastInterceptors() {
 
   axios.interceptors.response.use(
     (response) => {
+      const requestUrl = response?.config?.url;
+      const skipToast =
+        response?.config?.headers?.['x-skip-api-toast'] ||
+        response?.config?.headers?.['X-Skip-Api-Toast'];
+
+      // If backend indicates unauthorized, redirect to login
       const payload = response?.data;
+      const statusCode = response?.status || payload?.status;
+      if (statusCode === 401) {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return response;
+      }
+
+      if (skipToast || requestUrl?.includes('/api/chatbot')) {
+        return response;
+      }
+
       const isFailure = payload?.success === false || payload?.error;
       const message =
         payload?.message ||
@@ -58,6 +76,24 @@ export function setupApiToastInterceptors() {
       return response;
     },
     (error) => {
+      const requestUrl = error?.config?.url;
+      const skipToast =
+        error?.config?.headers?.['x-skip-api-toast'] ||
+        error?.config?.headers?.['X-Skip-Api-Toast'];
+
+      // If unauthorized, redirect to login
+      const status = error?.response?.status;
+      if (status === 401) {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+
+      if (skipToast || requestUrl?.includes('/api/chatbot')) {
+        return Promise.reject(error);
+      }
+
       const payload = error?.response?.data;
       const message =
         payload?.message ||

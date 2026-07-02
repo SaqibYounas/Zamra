@@ -71,3 +71,28 @@ export type ObjectSectionKey =
   | 'shipTo'
   | 'logisticInfo'
   | 'payment';
+
+export type MetricType =
+  | 'Monthly Profit'
+  | 'Today Stock'
+  | 'Total Cost'
+  | 'Profit Today'
+  | 'Overall Stock';
+
+export type StockBottleType = '500ml' | '1.5L' | '5L' | '19L' | '19L Refill';
+
+export type StockMetrics = {
+  todayStock?: Record<StockBottleType, number>;
+  costs?: Record<StockBottleType, number>;
+  profitToday?: Record<StockBottleType, number>;
+  overallStock?: Record<StockBottleType, number>;
+  monthlyProfitHistory?: number[];
+};
+
+export type StockMetricss = {
+  todayStock?: Record<string, number>;
+  costs?: Record<string, number>;
+  profitToday?: Record<string, number>;
+  overallStock?: Record<string, number>;
+  monthlyProfitHistory?: number[];
+};
