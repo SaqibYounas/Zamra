@@ -49,7 +49,6 @@ export function setupApiToastInterceptors() {
         response?.config?.headers?.['x-skip-api-toast'] ||
         response?.config?.headers?.['X-Skip-Api-Toast'];
 
-      // If backend indicates unauthorized, redirect to login
       const payload = response?.data;
       const statusCode = response?.status || payload?.status;
       if (statusCode === 401) {
@@ -81,7 +80,6 @@ export function setupApiToastInterceptors() {
         error?.config?.headers?.['x-skip-api-toast'] ||
         error?.config?.headers?.['X-Skip-Api-Toast'];
 
-      // If unauthorized, redirect to login
       const status = error?.response?.status;
       if (status === 401) {
         if (typeof window !== 'undefined') {

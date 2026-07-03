@@ -87,7 +87,7 @@ export function ChatbotWidget() {
                 <h4 className="font-semibold text-sm tracking-wide text-slate-100">
                   Zamra Water Plant
                 </h4>
-                <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1 mt-0.5">
+                <p className="text-[11px]  text-slate-400 font-medium flex items-center gap-1 mt-0.5">
                   AI Assistant Copilot
                 </p>
               </div>
