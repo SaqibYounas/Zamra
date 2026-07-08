@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-300 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-16 w-16 rounded-full border-4 border-slate-300 border-t-blue-600 animate-spin" />
           <p className="text-gray-600 font-semibold text-lg">
