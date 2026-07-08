@@ -4,6 +4,7 @@ export type ApiToastType = 'success' | 'error' | 'info';
 
 export interface ApiToast {
   id: number;
+  title: string;
   message: string;
   type: ApiToastType;
 }
@@ -11,14 +12,53 @@ export interface ApiToast {
 const listeners = new Set<(toast: ApiToast) => void>();
 let hasSetup = false;
 
-function dispatchToast(message: string, type: ApiToastType = 'info') {
+function getToastTitle(type: ApiToastType, fallback: string) {
+  if (type === 'success') return 'Success';
+  if (type === 'error') return 'Error';
+  return fallback;
+}
+
+function formatToastMessage(message: string, fallback: string) {
+  const cleaned = message?.trim();
+  if (!cleaned) return fallback;
+
+  const normalized = cleaned
+    .replace(/\s+/g, ' ')
+    .replace(/\b([A-Z]{2,})\b/g, ' $1 ')
+    .trim();
+
+  if (/network error|failed to fetch|connect/i.test(normalized)) {
+    return 'Connection issue. Please check your internet and try again.';
+  }
+
+  if (/timeout/i.test(normalized)) {
+    return 'The request took too long. Please try again.';
+  }
+
+  if (/unauthorized|session expired|login again/i.test(normalized)) {
+    return 'Your session has expired. Please sign in again.';
+  }
+
+  if (/forbidden|not allowed|permission/i.test(normalized)) {
+    return 'You do not have permission to perform this action.';
+  }
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
+function dispatchToast(
+  message: string,
+  type: ApiToastType = 'info',
+  title?: string
+) {
   if (typeof window === 'undefined') {
     return;
   }
 
   const toast: ApiToast = {
     id: Date.now() + Math.random(),
-    message,
+    title: title || getToastTitle(type, 'Notice'),
+    message: formatToastMessage(message, 'Request completed successfully'),
     type,
   };
 
@@ -31,8 +71,12 @@ export function subscribeApiToast(listener: (toast: ApiToast) => void) {
   return () => listeners.delete(listener);
 }
 
-export function showApiToast(message: string, type: ApiToastType = 'info') {
-  dispatchToast(message, type);
+export function showApiToast(
+  message: string,
+  type: ApiToastType = 'info',
+  title?: string
+) {
+  dispatchToast(message, type, title);
 }
 
 export function setupApiToastInterceptors() {
@@ -53,6 +97,11 @@ export function setupApiToastInterceptors() {
       const statusCode = response?.status || payload?.status;
       if (statusCode === 401) {
         if (typeof window !== 'undefined') {
+          dispatchToast(
+            'Your session has expired. Please sign in again.',
+            'info',
+            'Session expired'
+          );
           window.location.href = '/login';
         }
         return response;
@@ -69,7 +118,7 @@ export function setupApiToastInterceptors() {
         payload?.successMessage ||
         payload?.detail ||
         payload?.msg ||
-        'Request completed successfully';
+        (isFailure ? 'Request failed' : 'Request completed successfully');
 
       dispatchToast(message, isFailure ? 'error' : 'success');
       return response;
@@ -83,6 +132,11 @@ export function setupApiToastInterceptors() {
       const status = error?.response?.status;
       if (status === 401) {
         if (typeof window !== 'undefined') {
+          dispatchToast(
+            'Your session has expired. Please sign in again.',
+            'info',
+            'Session expired'
+          );
           window.location.href = '/login';
         }
         return Promise.reject(error);

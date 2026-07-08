@@ -6,6 +6,7 @@ import axios from 'axios';
 
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
@@ -16,12 +17,66 @@ export function ChatbotWidget() {
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    if (!isOpen && !isClosing) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        widgetRef.current &&
+        !widgetRef.current.contains(event.target as Node)
+      ) {
+        closeChat();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, isClosing]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const openChat = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+
+    setIsClosing(false);
+    setIsOpen(true);
+  };
+
+  const closeChat = () => {
+    if (!isOpen && !isClosing) return;
+
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+    }
+
+    setIsClosing(true);
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+      closeTimeoutRef.current = null;
+    }, 220);
+  };
 
   const handleSendMessage = async (textToSend: string) => {
     const cleanInput = textToSend.trim();
@@ -61,9 +116,12 @@ export function ChatbotWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans antialiased selection:bg-blue-500/30">
+    <div
+      ref={widgetRef}
+      className="fixed bottom-6 right-6 z-50 font-sans antialiased selection:bg-blue-500/30"
+    >
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => (isOpen || isClosing ? closeChat() : openChat())}
         className={`flex items-center justify-center w-14 h-14 text-white rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer focus:ring-4 focus:ring-blue-500/40 ${
           isOpen ? 'bg-slate-900 rotate-90' : 'bg-blue-600 hover:bg-blue-700'
         }`}
@@ -75,8 +133,12 @@ export function ChatbotWidget() {
         )}
       </button>
 
-      {isOpen && (
-        <div className="absolute bottom-20 right-0 w-85 sm:w-[400px] h-[550px] bg-white border border-slate-200/80 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 transform scale-100 origin-bottom-right">
+      {(isOpen || isClosing) && (
+        <div
+          className={`absolute bottom-20 right-0 w-85 sm:w-[400px] h-[550px] bg-white border border-slate-200/80 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right ${
+            isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+          }`}
+        >
           <div className="bg-blue-900 px-5 py-4 text-white flex items-center justify-between border-b border-slate-800">
             <div className="flex items-center space-x-3">
               <div className="relative flex items-center justify-center w-10 h-10 bg-blue-600/10 rounded-xl border border-blue-500/20">

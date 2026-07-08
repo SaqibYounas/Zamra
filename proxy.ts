@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function proxy(req: NextRequest) {
-  // const token = req.cookies.get('token')?.value;
+  const token = req.cookies.get('token')?.value;
 
-  // if (!token) {
-  //   return NextResponse.redirect(new URL('/', req.url));
-  // }
+  if (!token) {
+    return NextResponse.redirect(new URL('/', req.url));
+  }
 
   return NextResponse.next();
 }
@@ -20,6 +20,6 @@ export const config = {
     '/bill-generate',
     '/invoices',
     '/company-info',
-    '/Backendchange-password',
+    '/change-password',
   ],
 };

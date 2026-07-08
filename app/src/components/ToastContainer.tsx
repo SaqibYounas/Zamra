@@ -31,7 +31,7 @@ export function ToastContainer() {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`animate-[slideIn_0.3s_ease-out] rounded-xl border px-4 py-3 text-sm font-medium shadow-xl backdrop-blur-md ${
+          className={`animate-[slideIn_0.3s_ease-out] rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-md ${
             toast.type === 'error'
               ? 'border-red-200 bg-gradient-to-r from-rose-600 to-red-500 text-white'
               : toast.type === 'info'
@@ -39,9 +39,14 @@ export function ToastContainer() {
                 : 'border-emerald-200 bg-gradient-to-r from-emerald-600 to-green-500 text-white'
           }`}
         >
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full bg-white/80" />
-            <span>{toast.message}</span>
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-white/80" />
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold">{toast.title}</p>
+              <p className="mt-0.5 text-sm leading-5 text-white/95">
+                {toast.message}
+              </p>
+            </div>
           </div>
         </div>
       ))}
