@@ -32,8 +32,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/favicon.ico" />
-
         <meta property="og:title" content="Zamra Water Plant Admin" />
         <meta
           property="og:description"
@@ -44,7 +42,7 @@ export default function RootLayout({
         <meta property="og:site_name" content="Zamra Water Plant" />
         <meta name="author" content="Owner: Sufyan Malik" />
       </head>
-      <body className="min-h-full flex flex-col font-sans">
+      <body className="min-h-full flex flex-col font-sans ">
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>

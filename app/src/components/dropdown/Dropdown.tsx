@@ -48,7 +48,7 @@ export default function Dropdown({
                   value={option.value}
                   className={({ active }) =>
                     `cursor-pointer select-none relative py-2 pl-10 pr-4 ${
-                      active ? 'bg-sky-100 text-sky-900' : 'text-gray-900'
+                      active ? 'bg-sky-100 text-sky-900' : '-gray-900'
                     }`
                   }
                 >
