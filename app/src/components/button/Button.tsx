@@ -18,8 +18,8 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || loading}
-      className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase text-sm tracking-wider transition-all shadow-lg shadow-[rgba(56,189,248,0.15)] cursor-pointer
-        ${loading || disabled ? 'bg-(--color-disabled) cursor-not-allowed' : 'bg-(--color-primary) hover:bg-(--color-primary-strong)'}
+      className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold uppercase text-sm tracking-[0.2em] transition-all shadow-md cursor-pointer
+        ${loading || disabled ? 'bg-(--color-disabled) cursor-not-allowed' : 'btn-primary hover:-translate-y-0.5'}
         text-white ${className}`}
       {...props}
     >

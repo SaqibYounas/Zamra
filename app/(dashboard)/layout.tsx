@@ -33,7 +33,7 @@ export default function DashboardLayout({
       />
 
       <main
-        className={`flex-1 bg-slate-500 transition-all duration-300 overflow-y-auto ${
+        className={`flex-1 bg-(--color-surface-2) transition-all duration-300 overflow-y-auto ${
           sidebarOpen ? 'md:pl-64' : 'md:pl-20'
         }`}
       >

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import GraphCard from '../../src/components/graph/Graph';
 import { getStock } from '../services/stockManagement';
 import { MetricType, StockMetrics } from '../types/types';
+import { Loader2 } from 'lucide-react';
 
 const metrics: MetricType[] = [
   'Monthly Profit',
@@ -46,19 +47,18 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-300 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 rounded-full border-4 border-slate-300 border-t-blue-600 animate-spin" />
-          <p className="text-gray-600 font-semibold text-lg">
-            Loading dashboard data...
-          </p>
+          <span className="text-5xl animate-bounce">💧</span>
+
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-white ">
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <h1 className="lg:text-3xl sm:text-2xl font-bold text-center mb-6 text-gray-800">
           Business Dashboard
