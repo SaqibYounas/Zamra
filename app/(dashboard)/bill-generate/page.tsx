@@ -9,7 +9,6 @@ import {
   DropdownState,
 } from './components/InvoiceForm';
 import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../types/types';
-
 const todayISO = () => new Date().toISOString().split('T')[0];
 
 const initialInvoiceData: InvoiceData = {
