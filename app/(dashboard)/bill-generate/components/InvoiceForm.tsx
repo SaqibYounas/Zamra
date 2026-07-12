@@ -1,331 +1,532 @@
 'use client';
+
 import React from 'react';
-import { Plus, Trash2, FileText, CheckSquare, Square } from 'lucide-react';
-import FormInput from '../../../src/components/inputFields/FormInput';
+import {
+  Plus,
+  Trash2,
+  FileText,
+  CheckSquare,
+  Square,
+  Calendar,
+} from 'lucide-react';
+import WaterInputField from '../../../src/components/inputFields/InputField';
 import Button from '../../../src/components/button/Button';
+import RsIcon from '@/public/RupeesIcon';
 import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../../types/types';
+
+export interface CustomerRecord {
+  id: number | string;
+  name: string;
+  attn?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface ShippingRecord {
+  id: number | string;
+  name: string;
+  attn?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+}
+
+export interface FormStatus {
+  isShippingSame: boolean;
+  isPrinting: boolean;
+  error: string;
+  successMessage: string;
+  fieldErrors: Record<string, string>;
+}
+
+export interface DropdownState {
+  customers: CustomerRecord[];
+  shippingProfiles: ShippingRecord[];
+  selectedCustomerId: string;
+  selectedShippingId: string;
+  loading: boolean;
+  error: string;
+}
+
+export const LOGISTIC_FIELDS = [
+  { key: 'poNo', label: 'P.O. NO.', placeholder: 'e.g. PO-998' },
+  { key: 'shipVia', label: 'SHIP VIA', placeholder: 'e.g. Company Van' },
+  { key: 'salesperson', label: 'REP', placeholder: 'e.g. Admin' },
+  { key: 'fob', label: 'F.O.B.', placeholder: 'e.g. Destination' },
+  { key: 'terms', label: 'TERMS', placeholder: 'e.g. Net 30' },
+];
 
 interface InvoiceFormProps {
   invoiceData: InvoiceData;
-  isShippingSame: boolean;
-  isPrinting: boolean;
-  setIsShippingSame: (val: boolean) => void;
-  handleInputChange: (
+  status: FormStatus;
+  dropdowns: DropdownState;
+  balanceDue: number;
+  onShippingSameToggle: () => void;
+  onCustomerSelect: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onShippingSelect: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onInputChange: (
     section: ObjectSectionKey,
     field: string,
     value: string | number
   ) => void;
-  handleItemChange: (
+  onItemChange: (
     id: number,
     field: keyof Omit<InvoiceItem, 'id'>,
     value: string | number
   ) => void;
-  addItem: () => void;
-  removeItem: (id: number) => void;
-  setInvoiceData: React.Dispatch<React.SetStateAction<InvoiceData>>;
-  handlePrint: () => void;
+  onAddItem: () => void;
+  onRemoveItem: (id: number) => void;
+  onLedgerChange: (
+    field: 'taxRate' | 'shipping' | 'other' | 'previousDue',
+    value: number
+  ) => void;
+  onSubmit: (e: React.FormEvent) => void;
 }
 
 export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   invoiceData,
-  isShippingSame,
-  isPrinting,
-  setIsShippingSame,
-  handleInputChange,
-  handleItemChange,
-  addItem,
-  removeItem,
-  setInvoiceData,
-  handlePrint,
+  status,
+  dropdowns,
+  balanceDue,
+  onShippingSameToggle,
+  onCustomerSelect,
+  onShippingSelect,
+  onInputChange,
+  onItemChange,
+  onAddItem,
+  onRemoveItem,
+  onLedgerChange,
+  onSubmit,
 }) => {
+  const { isShippingSame, isPrinting, error, successMessage, fieldErrors } =
+    status;
+  const {
+    customers,
+    shippingProfiles,
+    selectedCustomerId,
+    selectedShippingId,
+    loading: loadingDropdowns,
+    error: dropdownError,
+  } = dropdowns;
+
   return (
-    <div className="w-full xl:w-[45%] bg-white border-r border-slate-200 shadow-sm flex flex-col p-5 space-y-6 max-h-screen xl:overflow-y-auto custom-scrollbar">
-      <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-        <FileText className="w-5 h-5 text-teal-600" />
-        <div>
-          <h2 className="text-base font-black text-slate-800 tracking-tight">
-            Invoice Control Dock
-          </h2>
-          <p className="text-[11px] text-slate-400">
-            Fill billing parameters to compile standard invoice templates
+    <div className="min-h-screen bg-gray-100 flex items-center lg:mt-0 md:mt-4 justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8 md:ml-16">
+      <main className="w-full max-w-5xl rounded-2xl bg-gray-50 p-6 sm:p-10 shadow-lg border border-gray-200/50">
+        <div className="mb-8 flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-teal-600" />
+            <p className="text-teal-600 uppercase tracking-[0.4em] text-[11px] font-black">
+              POS Billing Terminal
+            </p>
+          </div>
+          <h1 className="text-3xl font-black text-slate-900">
+            Customer Invoice
+          </h1>
+          <p className="max-w-2xl text-sm text-slate-500">
+            Fill standard operations and load real-time parameters to generate
+            compiled templates.
           </p>
         </div>
-      </div>
 
-      {/* META INFO */}
-      <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200/50">
-        <FormInput
-          label="Invoice ID No"
-          value={invoiceData.meta.invoiceNo}
-          onChange={(v) => handleInputChange('meta', 'invoiceNo', v)}
-        />
-        <FormInput
-          label="Invoice Date"
-          type="date"
-          value={invoiceData.meta.date}
-          onChange={(v) => handleInputChange('meta', 'date', v)}
-        />
-      </div>
-
-      {/* BILL TO */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-1 flex justify-between items-center">
-          <span>Customer Billing Profile</span>
-          <span className="text-[9px] text-teal-600 font-black">Bill To</span>
-        </h3>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <FormInput
-              label="Company Name"
-              value={invoiceData.billTo.name}
-              onChange={(v) => handleInputChange('billTo', 'name', v)}
-            />
-          </div>
-          <FormInput
-            label="Attention/POC"
-            value={invoiceData.billTo.attn}
-            onChange={(v) => handleInputChange('billTo', 'attn', v)}
-          />
-          <FormInput
-            label="Phone Line"
-            value={invoiceData.billTo.phone}
-            onChange={(v) => handleInputChange('billTo', 'phone', v)}
-          />
-          <div className="col-span-2">
-            <FormInput
-              label="Mailing Address"
-              value={invoiceData.billTo.address}
-              onChange={(v) => handleInputChange('billTo', 'address', v)}
-            />
-          </div>
-          <FormInput
-            label="City"
-            value={invoiceData.billTo.city}
-            onChange={(v) => handleInputChange('billTo', 'city', v)}
-          />
-          <FormInput
-            label="Email Desk"
-            type="email"
-            value={invoiceData.billTo.email}
-            onChange={(v) => handleInputChange('billTo', 'email', v)}
-          />
-        </div>
-      </div>
-
-      {/* SHIP TO PROFILE TOGGLE */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center border-b border-slate-100 pb-1">
-          <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-            Shipping Destination Profile
-          </h3>
-          <button
-            onClick={() => setIsShippingSame(!isShippingSame)}
-            className="flex items-center gap-1.5 text-[10px] text-teal-600 font-bold hover:text-teal-700 transition-colors"
-          >
-            {isShippingSame ? (
-              <CheckSquare className="w-3.5 h-3.5" />
-            ) : (
-              <Square className="w-3.5 h-3.5" />
-            )}
-            Same as Billing
-          </button>
-        </div>
-
-        {!isShippingSame && (
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2">
-              <FormInput
-                label="Warehouse Name"
-                value={invoiceData.shipTo.name}
-                onChange={(v) => handleInputChange('shipTo', 'name', v)}
-              />
-            </div>
-            <FormInput
-              label="Attention To"
-              value={invoiceData.shipTo.attn}
-              onChange={(v) => handleInputChange('shipTo', 'attn', v)}
-            />
-            <FormInput
-              label="Phone Line"
-              value={invoiceData.shipTo.phone}
-              onChange={(v) => handleInputChange('shipTo', 'phone', v)}
-            />
-            <div className="col-span-2">
-              <FormInput
-                label="Delivery Address"
-                value={invoiceData.shipTo.address}
-                onChange={(v) => handleInputChange('shipTo', 'address', v)}
-              />
-            </div>
-          </div>
+        {dropdownError && (
+          <p className="mb-4 text-xs font-bold text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-100">
+            {dropdownError}
+          </p>
         )}
-      </div>
 
-      {/* LOGISTICS */}
-      <div className="space-y-3">
-        <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-1">
-          Logistic Operations Registry
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          <FormInput
-            label="P.O. NO."
-            value={invoiceData.logisticInfo.poNo}
-            onChange={(v) => handleInputChange('logisticInfo', 'poNo', v)}
-          />
-          <FormInput
-            label="DISPATCH DATE"
-            type="date"
-            value={invoiceData.logisticInfo.shipDate}
-            onChange={(v) => handleInputChange('logisticInfo', 'shipDate', v)}
-          />
-          <FormInput
-            label="SHIP VIA"
-            value={invoiceData.logisticInfo.shipVia}
-            onChange={(v) => handleInputChange('logisticInfo', 'shipVia', v)}
-          />
-          <FormInput
-            label="REP"
-            value={invoiceData.logisticInfo.salesperson}
-            onChange={(v) =>
-              handleInputChange('logisticInfo', 'salesperson', v)
-            }
-          />
-          <FormInput
-            label="F.O.B."
-            value={invoiceData.logisticInfo.fob}
-            onChange={(v) => handleInputChange('logisticInfo', 'fob', v)}
-          />
-          <FormInput
-            label="TERMS"
-            value={invoiceData.logisticInfo.terms}
-            onChange={(v) => handleInputChange('logisticInfo', 'terms', v)}
-          />
-        </div>
-      </div>
+        <form className="space-y-8" onSubmit={onSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+            <WaterInputField
+              type="text"
+              name="invoiceNo"
+              label="Invoice ID No"
+              value={invoiceData.meta.invoiceNo}
+              onChange={(e) =>
+                onInputChange('meta', 'invoiceNo', e.target.value)
+              }
+              placeholder="e.g. ZAM-246"
+              error={fieldErrors.invoiceNo}
+            />
+            <WaterInputField
+              type="date"
+              icon={Calendar}
+              label="Invoice Date"
+              value={invoiceData.meta.date}
+              onChange={(e) => onInputChange('meta', 'date', e.target.value)}
+            />
+          </div>
 
-      {/* LINE ITEMS */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center border-b border-slate-100 pb-1">
-          <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">
-            Line Item Specifications
-          </h3>
-          <button
-            onClick={addItem}
-            className="flex items-center gap-1 text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200/50 rounded-lg px-2.5 py-1 hover:bg-teal-100 transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add New Item
-          </button>
-        </div>
-
-        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
-          {invoiceData.items.map((item) => (
-            <div
-              key={item.id}
-              className="flex gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/60 items-end"
-            >
-              <div className="w-[15%]">
-                <FormInput
-                  label="ID"
-                  value={item.no}
-                  onChange={(v) => handleItemChange(item.id, 'no', v)}
-                />
-              </div>
-              <div className="w-[45%]">
-                <FormInput
-                  label="Description"
-                  value={item.description}
-                  onChange={(v) => handleItemChange(item.id, 'description', v)}
-                />
-              </div>
-              <div className="w-[15%]">
-                <FormInput
-                  label="QTY"
-                  type="number"
-                  value={item.qty.toString()}
-                  onChange={(v) => handleItemChange(item.id, 'qty', Number(v))}
-                />
-              </div>
-              <div className="w-[25%]">
-                <FormInput
-                  label="Rate (Rs)"
-                  type="number"
-                  value={item.unitPrice.toString()}
-                  onChange={(v) =>
-                    handleItemChange(item.id, 'unitPrice', Number(v))
-                  }
-                />
-              </div>
-              <button
-                onClick={() => removeItem(item.id)}
-                className="p-2 mb-0.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors"
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b border-gray-200 pb-1 gap-3">
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Customer Billing Parameters
+              </h3>
+              <select
+                value={selectedCustomerId}
+                onChange={onCustomerSelect}
+                disabled={loadingDropdowns}
+                className="text-xs font-semibold text-slate-700 border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-50 max-w-[180px]"
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <option value="">
+                  {loadingDropdowns ? 'Loading...' : 'Select Customer'}
+                </option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="md:col-span-2">
+                <WaterInputField
+                  type="text"
+                  name="name"
+                  label="Company Name"
+                  value={invoiceData.billTo.name}
+                  onChange={(e) =>
+                    onInputChange('billTo', 'name', e.target.value)
+                  }
+                  placeholder="Client Company Pvt Ltd"
+                  error={fieldErrors.name}
+                />
+              </div>
+              <WaterInputField
+                type="text"
+                label="Attention / POC"
+                value={invoiceData.billTo.attn}
+                onChange={(e) =>
+                  onInputChange('billTo', 'attn', e.target.value)
+                }
+                placeholder="Accounts Dept"
+              />
+              <WaterInputField
+                type="text"
+                name="phone"
+                label="Phone Line"
+                value={invoiceData.billTo.phone}
+                onChange={(e) =>
+                  onInputChange('billTo', 'phone', e.target.value)
+                }
+                placeholder="e.g. 042-3571122"
+                error={fieldErrors.phone}
+              />
+              <div className="md:col-span-2">
+                <WaterInputField
+                  type="text"
+                  name="address"
+                  label="Mailing Address"
+                  value={invoiceData.billTo.address}
+                  onChange={(e) =>
+                    onInputChange('billTo', 'address', e.target.value)
+                  }
+                  placeholder="456 Gulberg Main Boulevard"
+                  error={fieldErrors.address}
+                />
+              </div>
+              <WaterInputField
+                type="text"
+                name="city"
+                label="City"
+                value={invoiceData.billTo.city}
+                onChange={(e) =>
+                  onInputChange('billTo', 'city', e.target.value)
+                }
+                placeholder="Lahore"
+                error={fieldErrors.city}
+              />
+              <WaterInputField
+                type="email"
+                name="email"
+                label="Email Desk"
+                value={invoiceData.billTo.email}
+                onChange={(e) =>
+                  onInputChange('billTo', 'email', e.target.value)
+                }
+                placeholder="billing@clientcompany.com"
+                error={fieldErrors.email}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b border-gray-200 pb-1 gap-3">
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Shipping Destination Profile
+              </h3>
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedShippingId}
+                  onChange={onShippingSelect}
+                  disabled={loadingDropdowns}
+                  className="text-xs font-semibold text-slate-700 border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-50 max-w-[160px]"
+                >
+                  <option value="">
+                    {loadingDropdowns ? 'Loading...' : 'Select Warehouse'}
+                  </option>
+                  {shippingProfiles.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={onShippingSameToggle}
+                  className="flex items-center gap-1.5 text-[11px] text-teal-600 font-bold tracking-tight whitespace-nowrap"
+                >
+                  {isShippingSame ? (
+                    <CheckSquare className="w-4 h-4" />
+                  ) : (
+                    <Square className="w-4 h-4" />
+                  )}{' '}
+                  Same as Billing
+                </button>
+              </div>
+            </div>
+
+            {!isShippingSame && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 transition-all">
+                <div className="md:col-span-2">
+                  <WaterInputField
+                    type="text"
+                    label="Warehouse Name"
+                    value={invoiceData.shipTo.name}
+                    onChange={(e) =>
+                      onInputChange('shipTo', 'name', e.target.value)
+                    }
+                    placeholder="Client Company Warehouse"
+                  />
+                </div>
+                <WaterInputField
+                  type="text"
+                  label="Attention To"
+                  value={invoiceData.shipTo.attn}
+                  onChange={(e) =>
+                    onInputChange('shipTo', 'attn', e.target.value)
+                  }
+                  placeholder="Store Manager"
+                />
+                <WaterInputField
+                  type="text"
+                  label="Phone Line"
+                  value={invoiceData.shipTo.phone}
+                  onChange={(e) =>
+                    onInputChange('shipTo', 'phone', e.target.value)
+                  }
+                  placeholder="e.g. 042-3571123"
+                />
+                <div className="md:col-span-2">
+                  <WaterInputField
+                    type="text"
+                    label="Delivery Address"
+                    value={invoiceData.shipTo.address}
+                    onChange={(e) =>
+                      onInputChange('shipTo', 'address', e.target.value)
+                    }
+                    placeholder="Plot 12, Sundar Industrial Estate"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide border-b border-gray-200 pb-1">
+              Logistic Operations Registry
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+              {LOGISTIC_FIELDS.map((f) => (
+                <WaterInputField
+                  type="text"
+                  key={f.key}
+                  label={f.label}
+                  value={
+                    invoiceData.logisticInfo[
+                      f.key as keyof typeof invoiceData.logisticInfo
+                    ]
+                  }
+                  onChange={(e) =>
+                    onInputChange('logisticInfo', f.key, e.target.value)
+                  }
+                  placeholder={f.placeholder}
+                />
+              ))}
+              <WaterInputField
+                type="date"
+                icon={Calendar}
+                label="DISPATCH DATE"
+                value={invoiceData.logisticInfo.shipDate}
+                onChange={(e) =>
+                  onInputChange('logisticInfo', 'shipDate', e.target.value)
+                }
+              />
+            </div>
+          </div>
+
+          {/* DYNAMIC ITEM SPECIFICATIONS LIST */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b border-gray-200 pb-1">
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Line Item Specifications
+              </h3>
+              <button
+                type="button"
+                onClick={onAddItem}
+                className="flex items-center gap-1 text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200/50 rounded-xl px-3 py-1.5 hover:bg-teal-100 transition-all"
+              >
+                <Plus className="w-4 h-4" /> Add Item Row
               </button>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* OVERHEADS */}
-      <div className="space-y-3 pt-2">
-        <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider border-b border-slate-100 pb-1">
-          Ledger Adjustments
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          <FormInput
-            label="Tax Rate (%)"
-            type="number"
-            value={invoiceData.taxRate.toString()}
-            onChange={(v) =>
-              setInvoiceData((p) => ({ ...p, taxRate: Number(v) }))
-            }
-          />
-          <FormInput
-            label="Shipping (Rs)"
-            type="number"
-            value={invoiceData.shipping.toString()}
-            onChange={(v) =>
-              setInvoiceData((p) => ({ ...p, shipping: Number(v) }))
-            }
-          />
-          <FormInput
-            label="Misc Charges"
-            type="number"
-            value={invoiceData.other.toString()}
-            onChange={(v) =>
-              setInvoiceData((p) => ({ ...p, other: Number(v) }))
-            }
-          />
-          <FormInput
-            label="Previous Due"
-            type="number"
-            value={invoiceData.previousDue.toString()}
-            onChange={(v) =>
-              setInvoiceData((p) => ({ ...p, previousDue: Number(v) }))
-            }
-          />
-          <FormInput
-            label="Amount Paid"
-            type="number"
-            value={invoiceData.payment.paidAmount.toString()}
-            onChange={(v) =>
-              handleInputChange('payment', 'paidAmount', Number(v))
-            }
-          />
-        </div>
-      </div>
+            <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+              {invoiceData.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col md:flex-row gap-3 bg-white p-4 rounded-xl border border-gray-100 items-end shadow-sm"
+                >
+                  <div className="w-full md:w-[12%]">
+                    <WaterInputField
+                      type="text"
+                      label="ID"
+                      value={item.no}
+                      onChange={(e) =>
+                        onItemChange(item.id, 'no', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="w-full md:w-[48%]">
+                    <WaterInputField
+                      type="text"
+                      label="Description"
+                      value={item.description}
+                      onChange={(e) =>
+                        onItemChange(item.id, 'description', e.target.value)
+                      }
+                      placeholder="500ml Premium Bottle (Box of 24)"
+                    />
+                  </div>
+                  <div className="w-full md:w-[15%]">
+                    <WaterInputField
+                      type="number"
+                      label="QTY"
+                      value={item.qty.toString()}
+                      onChange={(e) =>
+                        onItemChange(item.id, 'qty', e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="w-full md:w-[20%]">
+                    <WaterInputField
+                      type="number"
+                      customicon={RsIcon}
+                      label="Rate (Rs)"
+                      value={item.unitPrice.toString()}
+                      onChange={(e) =>
+                        onItemChange(item.id, 'unitPrice', e.target.value)
+                      }
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(item.id)}
+                    className="p-2.5 mb-2 bg-rose-50 text-rose-600 rounded-xl border border-rose-100 hover:bg-rose-100 transition-colors w-full md:w-auto flex justify-center items-center"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {/* SUBMIT */}
-      <div className="pt-4 border-t border-slate-100">
-        <Button
-          label={
-            isPrinting ? 'Compiling PDF Engine...' : 'Download Template Invoice'
-          }
-          onClick={handlePrint}
-          loading={isPrinting}
-          className="w-full py-3 text-xs font-bold uppercase"
-        />
-      </div>
+          {/* LEDGER ADJUSTMENTS TOTALS */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide border-b border-gray-200 pb-1">
+              Ledger Adjustments
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+              <WaterInputField
+                type="number"
+                label="Tax Rate (%)"
+                value={invoiceData.taxRate.toString()}
+                onChange={(e) =>
+                  onLedgerChange('taxRate', Number(e.target.value))
+                }
+              />
+              <WaterInputField
+                type="number"
+                customicon={RsIcon}
+                label="Shipping Charges (Rs)"
+                value={invoiceData.shipping.toString()}
+                onChange={(e) =>
+                  onLedgerChange('shipping', Number(e.target.value))
+                }
+              />
+              <WaterInputField
+                type="number"
+                customicon={RsIcon}
+                label="Misc Charges (Rs)"
+                value={invoiceData.other.toString()}
+                onChange={(e) =>
+                  onLedgerChange('other', Number(e.target.value))
+                }
+              />
+              <WaterInputField
+                type="number"
+                customicon={RsIcon}
+                label="Previous Due Arrears (Rs)"
+                value={invoiceData.previousDue.toString()}
+                onChange={(e) =>
+                  onLedgerChange('previousDue', Number(e.target.value))
+                }
+              />
+              <WaterInputField
+                type="number"
+                customicon={RsIcon}
+                label="Amount Paid By Client (Rs)"
+                value={invoiceData.payment.paidAmount.toString()}
+                onChange={(e) =>
+                  onInputChange('payment', 'paidAmount', e.target.value)
+                }
+              />
+
+              <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 flex flex-col justify-center items-end text-right shadow-sm">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">
+                  Net Balance Due
+                </span>
+                <span className="text-base font-black text-teal-700 font-mono">
+                  Rs {balanceDue.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* NOTIFICATIONS */}
+          {error && (
+            <p className="text-xs font-bold text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-100">
+              {error}
+            </p>
+          )}
+          {successMessage && (
+            <p className="text-xs font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+              {successMessage}
+            </p>
+          )}
+
+          <Button
+            label={
+              isPrinting
+                ? 'Compiling Invoice Template...'
+                : 'Save & Download Invoice'
+            }
+            type="submit"
+            loading={isPrinting}
+            className="w-full mt-6"
+          />
+        </form>
+      </main>
     </div>
   );
 };

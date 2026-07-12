@@ -5,6 +5,7 @@ This is the frontend application for the Zamra Water Plant admin panel, built wi
 ## Overview
 
 The app provides a dashboard experience for managing:
+
 - admin login
 - company information
 - prices

@@ -50,8 +50,6 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
           <span className="text-5xl animate-bounce">💧</span>
-
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       </div>
     );
