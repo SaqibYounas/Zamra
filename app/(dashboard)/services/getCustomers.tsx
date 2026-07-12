@@ -4,7 +4,7 @@ interface ErrorResponse {
   error: string;
 }
 
-export async function fetchCustomers(data: CompanyInfoRequestBody) {
+export async function fetchCustomers() {
   try {
     const response = await axios.get('/api/customers');
     return response.data;

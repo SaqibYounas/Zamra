@@ -18,6 +18,7 @@ export async function GET() {
     });
 
     const data = response.data as unknown;
+    console.log(data);
     return NextResponse.json(data);
   } catch (error) {
     const axiosError = error as AxiosError<BackendErrorResponse>;

@@ -257,6 +257,19 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 Shipping Destination Profile
               </h3>
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onShippingSameToggle}
+                  className="flex items-center gap-1.5 text-[11px] text-teal-600 font-bold tracking-tight whitespace-nowrap"
+                >
+                  {isShippingSame ? (
+                    <CheckSquare className="w-4 h-4" />
+                  ) : (
+                    <Square className="w-4 h-4" />
+                  )}{' '}
+                  Same as Billing
+                </button>
+
                 <select
                   value={selectedShippingId}
                   onChange={onShippingSelect}
@@ -272,18 +285,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                     </option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  onClick={onShippingSameToggle}
-                  className="flex items-center gap-1.5 text-[11px] text-teal-600 font-bold tracking-tight whitespace-nowrap"
-                >
-                  {isShippingSame ? (
-                    <CheckSquare className="w-4 h-4" />
-                  ) : (
-                    <Square className="w-4 h-4" />
-                  )}{' '}
-                  Same as Billing
-                </button>
               </div>
             </div>
 

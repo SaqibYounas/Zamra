@@ -9,8 +9,30 @@ import {
   DropdownState,
 } from './components/InvoiceForm';
 import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../types/types';
-const todayISO = () => new Date().toISOString().split('T')[0];
+import { fetchCustomers } from '../services/getCustomers';
+import { fetchShipping } from '../services/getShipping';
+import { submitInvoice } from '../services/submitInvoice';
 
+type CustomerApiResponse = {
+  id: number;
+  companyName: string;
+  attentionPoc: string;
+  mailingAddress: string;
+  city: string;
+  phone: string;
+  email: string;
+};
+
+type ShippingApiResponse = {
+  id: number;
+  companyName: string;
+  attentionPoc: string;
+  mailingAddress: string;
+  city: string;
+  phone: string;
+};
+
+const todayISO = () => new Date().toISOString().split('T')[0];
 const initialInvoiceData: InvoiceData = {
   companyInfo: {
     name: 'Zamra Water Planet',
@@ -109,27 +131,42 @@ export default function InvoiceFormDashboard() {
   }, []);
 
   useEffect(() => {
-    const fetchDropdownData = async () => {
+    const loadData = async () => {
       patchDropdowns({ loading: true, error: '' });
+
       try {
-        const [customersRes, shippingRes] = await Promise.all([
-          fetch('/api/customers'),
-          fetch('/api/shipping-addresses'),
-        ]);
+        const customersResponse = await fetchCustomers();
+        const shippingResponse = await fetchShipping();
 
-        if (!customersRes.ok || !shippingRes.ok) {
-          throw new Error('Dropdown fetch failed');
-        }
-
-        const customersData = await customersRes.json();
-        const shippingData = await shippingRes.json();
+        const customerData = Array.isArray(customersResponse?.data)
+          ? customersResponse.data
+          : [];
+        const shippingData = Array.isArray(shippingResponse?.data)
+          ? shippingResponse.data
+          : [];
 
         patchDropdowns({
-          customers: Array.isArray(customersData) ? customersData : [],
-          shippingProfiles: Array.isArray(shippingData) ? shippingData : [],
+          customers: customerData.map((c: CustomerApiResponse) => ({
+            id: c.id,
+            name: c.companyName,
+            attn: c.attentionPoc,
+            address: c.mailingAddress,
+            city: c.city,
+            phone: c.phone,
+            email: c.email,
+          })),
+          shippingProfiles: shippingData.map((s: ShippingApiResponse) => ({
+            id: s.id,
+            name: s.companyName,
+            attn: s.attentionPoc,
+            address: s.mailingAddress,
+            city: s.city,
+            phone: s.phone,
+          })),
         });
-      } catch (err) {
-        console.error('Failed to load dropdown data', err);
+      } catch (error) {
+        console.error(error);
+
         patchDropdowns({
           error: 'Could not load saved customers/warehouses.',
         });
@@ -138,23 +175,8 @@ export default function InvoiceFormDashboard() {
       }
     };
 
-    fetchDropdownData();
+    loadData();
   }, [patchDropdowns]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !window.matchMedia) {
-      window.matchMedia = () => ({
-        matches: false,
-        media: '',
-        onchange: null,
-        addListener: () => {},
-        removeListener: () => {},
-        addEventListener: () => {},
-        removeEventListener: () => {},
-        dispatchEvent: () => false,
-      });
-    }
-  }, []);
 
   useEffect(() => {
     if (!status.isShippingSame) return;
@@ -229,41 +251,6 @@ export default function InvoiceFormDashboard() {
     }));
   }, []);
 
-  const handleCustomerSelect = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const id = e.target.value;
-      patchDropdowns({ selectedCustomerId: id });
-      if (!id) return;
-
-      const customer = dropdowns.customers.find((c) => c.id.toString() === id);
-      if (!customer) return;
-
-      setInvoiceData((prev) => ({
-        ...prev,
-        billTo: {
-          attn: customer.attn || '',
-          name: customer.name || '',
-          address: customer.address || '',
-          city: customer.city || '',
-          phone: customer.phone || '',
-          email: customer.email || '',
-        },
-      }));
-
-      patchStatus({
-        fieldErrors: {
-          ...status.fieldErrors,
-          name: '',
-          phone: '',
-          address: '',
-          city: '',
-          email: '',
-        },
-      });
-    },
-    [dropdowns.customers, patchDropdowns, patchStatus, status.fieldErrors]
-  );
-
   const handleShippingSelect = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const id = e.target.value;
@@ -289,6 +276,32 @@ export default function InvoiceFormDashboard() {
       }));
     },
     [dropdowns.shippingProfiles, patchDropdowns, patchStatus]
+  );
+
+  const handleCustomerSelect = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const id = e.target.value;
+      patchDropdowns({ selectedCustomerId: id });
+      if (!id) return;
+
+      const customer = dropdowns.customers.find(
+        (customer) => customer.id.toString() === id
+      );
+      if (!customer) return;
+
+      setInvoiceData((prev) => ({
+        ...prev,
+        billTo: {
+          attn: customer.attn || '',
+          name: customer.name || '',
+          address: customer.address || '',
+          city: customer.city || '',
+          phone: customer.phone || '',
+          email: customer.email || '',
+        },
+      }));
+    },
+    [dropdowns.customers, patchDropdowns]
   );
 
   const subtotal = invoiceData.items.reduce(
@@ -359,6 +372,51 @@ export default function InvoiceFormDashboard() {
     });
 
     try {
+      const payload = {
+        invoiceNo: invoiceData.meta.invoiceNo,
+        customerId: dropdowns.selectedCustomerId
+          ? Number(dropdowns.selectedCustomerId)
+          : undefined,
+        customer: {
+          companyName: invoiceData.billTo.name,
+          attentionPoc: invoiceData.billTo.attn,
+          mailingAddress: invoiceData.billTo.address,
+          city: invoiceData.billTo.city,
+          phone: invoiceData.billTo.phone,
+          email: invoiceData.billTo.email,
+        },
+        shippingAddressId: dropdowns.selectedShippingId
+          ? Number(dropdowns.selectedShippingId)
+          : undefined,
+        poNo: invoiceData.logisticInfo.poNo,
+        shipVia: invoiceData.logisticInfo.shipVia,
+        rep: invoiceData.logisticInfo.salesperson,
+        fob: invoiceData.logisticInfo.fob,
+        terms: invoiceData.logisticInfo.terms,
+        dispatchDate: invoiceData.logisticInfo.shipDate,
+        taxRate: invoiceData.taxRate,
+        shippingCharges: invoiceData.shipping,
+        miscCharges: invoiceData.other,
+        previousDueArrears: invoiceData.previousDue,
+        amountPaid: invoiceData.payment.paidAmount,
+        subtotal,
+        taxAmount,
+        totalAmount,
+        balanceDue,
+        items: invoiceData.items.map((item, index) => ({
+          itemCode: item.no,
+          description: item.description,
+          qty: item.qty,
+          rate: item.unitPrice,
+          sortOrder: index + 1,
+        })),
+      };
+
+      const submitResponse = await submitInvoice(payload);
+      if (submitResponse?.success === false) {
+        throw new Error(submitResponse.message || 'Invoice submission failed.');
+      }
+
       const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
         import('jspdf'),
         import('html2canvas-pro'),
