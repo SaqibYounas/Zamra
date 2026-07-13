@@ -7,8 +7,13 @@ interface ErrorResponse {
 export async function fetchShipping() {
   try {
     const response = await axios.get('/api/shipping-addresses');
-    console.log(response);
-    return response.data;
+    const data = response.data;
+
+    return Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>;
 
