@@ -128,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       />
 
       <aside
-        className={`fixed top-0 left-0 h-full z-30 flex flex-col bg-blue-100 text-slate-700 transition-all duration-300 ease-in-out overflow-hidden shadow-xl border-r border-slate-200/70
+        className={`fixed top-0 left-0 h-full z-30 flex flex-col bg-stone-200 text-slate-700 transition-all duration-300 ease-in-out overflow-hidden shadow-xl border-r border-slate-200/70
           ${sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'}
         `}
       >
@@ -178,7 +178,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-3 border-t border-slate-200 space-y-2">
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-4' : 'justify-center'} gap-3 py-3 rounded-xl bg-slate-900 text-white font-medium transition-all duration-300 hover:bg-blue-600 active:scale-95 cursor-pointer border border-slate-800`}
+            className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-4' : 'justify-center'} gap-3 py-3 rounded-xl bg-red-600 text-white font-medium transition-all duration-300 hover:bg-red-700 active:scale-95 cursor-pointer border border-slate-800`}
           >
             <HiOutlineLockClosed size={18} />
             {sidebarOpen && <span className="text-sm">Logout</span>}

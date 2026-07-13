@@ -105,19 +105,6 @@ body,
 #__next {
   min-height: 100vh;
   background-color: var(--background);
-  background-image:
-    radial-gradient(
-      circle at top left,
-      rgba(79, 70, 229, 0.18),
-      transparent 26%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(34, 211, 238, 0.12),
-      transparent 22%
-    );
-  background-attachment: fixed;
-  background-blend-mode: normal, screen;
   color: var(--foreground);
   font-family: var(--font-sans);
 }
