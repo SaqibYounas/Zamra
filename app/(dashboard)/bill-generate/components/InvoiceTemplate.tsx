@@ -51,7 +51,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
               <span className="font-sans text-black font-bold">Date:</span>{' '}
               {invoiceData.meta.date}
             </div>
-            <div className="bg-teal-50 border border-teal-200 rounded-full px-3 py-1 flex items-center gap-1">
+            <div className="bg-surface border border-slate-200 rounded-full px-3 py-1 flex items-center gap-1">
               <span className="font-sans text-slate-700 font-bold">
                 Invoice No:
               </span>

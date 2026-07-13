@@ -60,7 +60,7 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
-              placeholder="Enter Total Pet"
+              placeholder="Enter total pet"
             />
             <WaterInputField
               label="Bottle per Pet (12)"
@@ -69,7 +69,7 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
-              placeholder="Enter Bottle Per Pet"
+              placeholder="Enter bottle per pet"
             />
           </>
         );
@@ -84,6 +84,7 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
+              placeholder="Enter total pet"
             />
             <WaterInputField
               label="Bottle per Pet (6)"
@@ -92,6 +93,7 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
+              placeholder="Enter bottle per pet"
             />
           </>
         );
@@ -105,6 +107,7 @@ export default function ProductionPage() {
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleChange('totalPet', e.target.value)
             }
+            placeholder="Enter total pet"
           />
         );
 
@@ -118,14 +121,16 @@ export default function ProductionPage() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
+              placeholder="Enter quantity"
             />
             <WaterInputField
-              label="Price per Bottle"
+              label="Price per bottle"
               type="text"
               value={formData.bottleperPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
+              placeholder="Enter bottle per pet"
             />
           </>
         );
@@ -139,6 +144,7 @@ export default function ProductionPage() {
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleChange('totalPet', e.target.value)
             }
+            placeholder="Enter refill today"
           />
         );
 
@@ -201,7 +207,7 @@ export default function ProductionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-amber-50">
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
         <div className="w-full bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col gap-4">
           <h1 className="text-2xl md:text-3xl font-bold text-center">

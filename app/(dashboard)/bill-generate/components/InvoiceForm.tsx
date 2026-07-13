@@ -113,15 +113,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   } = dropdowns;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center lg:mt-0 md:mt-4 justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8 md:ml-16">
-      <main className="w-full max-w-5xl rounded-2xl bg-gray-50 p-6 sm:p-10 shadow-lg border border-gray-200/50">
+    <div className="min-h-screen bg-amber-50  flex items-center lg:mt-0 md:mt-4 justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8 md:ml-16">
+      <main className="w-full max-w-5xl rounded-2xl bg-surface p-6 sm:p-10 shadow-lg border border-slate-200/50">
         <div className="mb-8 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-teal-600" />
-            <p className="text-teal-600 uppercase tracking-[0.4em] text-[11px] font-black">
-              POS Billing Terminal
-            </p>
-          </div>
           <h1 className="text-3xl font-black text-slate-900">
             Customer Invoice
           </h1>
@@ -490,7 +484,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 }
               />
 
-              <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 flex flex-col justify-center items-end text-right shadow-sm">
+              <div className="bg-surface border border-slate-200 rounded-xl p-3 flex flex-col justify-center items-end text-right shadow-sm">
                 <span className="text-[10px] text-slate-400 font-bold uppercase">
                   Net Balance Due
                 </span>
