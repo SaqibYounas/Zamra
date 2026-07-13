@@ -25,14 +25,14 @@ type CustomerApiResponse = {
 
 type ShippingApiResponse = {
   id: number;
-  companyName: string;
-  attentionPoc: string;
-  mailingAddress: string;
-  city: string;
+  warehouseName: string;
+  attentionTo: string;
+  deliveryAddress: string;
   phone: string;
 };
 
 const todayISO = () => new Date().toISOString().split('T')[0];
+const generateInvoiceNo = () => `ZAM-${Date.now()}`;
 const initialInvoiceData: InvoiceData = {
   companyInfo: {
     name: 'Zamra Water Planet',
@@ -44,7 +44,7 @@ const initialInvoiceData: InvoiceData = {
   },
   meta: {
     date: todayISO(),
-    invoiceNo: 'ZAM-246',
+    invoiceNo: generateInvoiceNo(),
   },
   billTo: {
     attn: 'Accounts Dept',
@@ -138,11 +138,11 @@ export default function InvoiceFormDashboard() {
         const customersResponse = await fetchCustomers();
         const shippingResponse = await fetchShipping();
 
-        const customerData = Array.isArray(customersResponse?.data)
-          ? customersResponse.data
+        const customerData = Array.isArray(customersResponse)
+          ? customersResponse
           : [];
-        const shippingData = Array.isArray(shippingResponse?.data)
-          ? shippingResponse.data
+        const shippingData = Array.isArray(shippingResponse)
+          ? shippingResponse
           : [];
 
         patchDropdowns({
@@ -157,10 +157,10 @@ export default function InvoiceFormDashboard() {
           })),
           shippingProfiles: shippingData.map((s: ShippingApiResponse) => ({
             id: s.id,
-            name: s.companyName,
-            attn: s.attentionPoc,
-            address: s.mailingAddress,
-            city: s.city,
+            name: s.warehouseName,
+            attn: s.attentionTo,
+            address: s.deliveryAddress,
+            city: '',
             phone: s.phone,
           })),
         });
@@ -252,8 +252,7 @@ export default function InvoiceFormDashboard() {
   }, []);
 
   const handleShippingSelect = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const id = e.target.value;
+    (id: string) => {
       patchDropdowns({ selectedShippingId: id });
       if (!id) return;
 
@@ -279,8 +278,7 @@ export default function InvoiceFormDashboard() {
   );
 
   const handleCustomerSelect = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const id = e.target.value;
+    (id: string) => {
       patchDropdowns({ selectedCustomerId: id });
       if (!id) return;
 
@@ -413,9 +411,23 @@ export default function InvoiceFormDashboard() {
       };
 
       const submitResponse = await submitInvoice(payload);
-      if (submitResponse?.success === false) {
+      if (
+        submitResponse?.success === false ||
+        submitResponse?.status >= 400 ||
+        (submitResponse?.status === undefined &&
+          submitResponse?.success === false)
+      ) {
         throw new Error(submitResponse.message || 'Invoice submission failed.');
       }
+
+      patchStatus({ successMessage: 'Invoice saved successfully!' });
+      setInvoiceData((prev) => ({
+        ...prev,
+        meta: {
+          ...prev.meta,
+          invoiceNo: generateInvoiceNo(),
+        },
+      }));
 
       const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
         import('jspdf'),

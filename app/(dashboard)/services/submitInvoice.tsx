@@ -58,11 +58,13 @@ interface ErrorResponse {
 
 export async function submitInvoice(data: CreateInvoiceRequestBody) {
   try {
-    const response = await axios.post('/api/invoice-create', {
-      ...data,
-    });
+    const response = await axios.post('/api/invoice-create', data);
+    const result = response.data;
 
-    return response.data;
+    return {
+      ...result,
+      success: response.status >= 200 && response.status < 300,
+    };
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>;
 

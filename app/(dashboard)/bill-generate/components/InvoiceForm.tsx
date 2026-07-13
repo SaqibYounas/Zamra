@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import WaterInputField from '../../../src/components/inputFields/InputField';
 import Button from '../../../src/components/button/Button';
+import Dropdown from '../../../src/components/dropdown/Dropdown';
 import RsIcon from '@/public/RupeesIcon';
 import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../../types/types';
 
@@ -64,8 +65,8 @@ interface InvoiceFormProps {
   dropdowns: DropdownState;
   balanceDue: number;
   onShippingSameToggle: () => void;
-  onCustomerSelect: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  onShippingSelect: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+  onCustomerSelect: (value: string) => void;
+  onShippingSelect: (value: string) => void;
   onInputChange: (
     section: ObjectSectionKey,
     field: string,
@@ -161,23 +162,22 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           <div className="space-y-4">
             <div className="flex justify-between items-center border-b border-gray-200 pb-1 gap-3">
               <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Customer Billing Parameters
+                Customer Billing Parametegitrs
               </h3>
-              <select
-                value={selectedCustomerId}
-                onChange={onCustomerSelect}
-                disabled={loadingDropdowns}
-                className="text-xs font-semibold text-slate-700 border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-50 max-w-[180px]"
-              >
-                <option value="">
-                  {loadingDropdowns ? 'Loading...' : 'Select Customer'}
-                </option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <div className="max-w-[180px] w-full">
+                <Dropdown
+                  placeholder={
+                    loadingDropdowns ? 'Loading...' : 'Select Customer'
+                  }
+                  options={customers.map((c) => ({
+                    label: c.name,
+                    value: c.id.toString(),
+                  }))}
+                  value={selectedCustomerId}
+                  onChange={onCustomerSelect}
+                  disabled={loadingDropdowns}
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
@@ -270,21 +270,18 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   Same as Billing
                 </button>
 
-                <select
+                <Dropdown
+                  placeholder={
+                    loadingDropdowns ? 'Loading...' : 'Select Shipping'
+                  }
+                  options={shippingProfiles.map((s) => ({
+                    label: s.name,
+                    value: s.id.toString(),
+                  }))}
                   value={selectedShippingId}
                   onChange={onShippingSelect}
                   disabled={loadingDropdowns}
-                  className="text-xs font-semibold text-slate-700 border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none focus:ring-1 focus:ring-teal-500 disabled:opacity-50 max-w-[160px]"
-                >
-                  <option value="">
-                    {loadingDropdowns ? 'Loading...' : 'Select Warehouse'}
-                  </option>
-                  {shippingProfiles.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
 

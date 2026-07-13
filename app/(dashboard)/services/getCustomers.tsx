@@ -7,7 +7,13 @@ interface ErrorResponse {
 export async function fetchCustomers() {
   try {
     const response = await axios.get('/api/customers');
-    return response.data;
+    const data = response.data;
+
+    return Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
   } catch (error) {
     const err = error as AxiosError<ErrorResponse>;
 
