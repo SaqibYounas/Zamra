@@ -23,7 +23,7 @@ interface FormState {
   passwordError: string;
 }
 
-export default function PlantAdminForm() {
+export default function AdminForm() {
   const router = useRouter();
 
   const [formState, setFormState] = useState<FormState>({
@@ -45,9 +45,7 @@ export default function PlantAdminForm() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const submitForm = async () => {
     let hasError = false;
     const errors: Partial<FormState> = {};
 
@@ -71,12 +69,20 @@ export default function PlantAdminForm() {
 
     setLoading(true);
 
-    const login = await loginUser(formState.email, formState.password);
-    setLoading(false);
+    try {
+      const login = await loginUser(formState.email, formState.password);
 
-    if (login.success) {
-      router.push('/dashboard');
+      if (login.success) {
+        router.push('/dashboard');
+      }
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await submitForm();
   };
 
   return (
@@ -99,7 +105,6 @@ export default function PlantAdminForm() {
         </div>
       </div>
 
-      {/* FORM */}
       <form
         onSubmit={handleSubmit}
         className="space-y-4 sm:space-y-5 md:space-y-6"
@@ -125,7 +130,10 @@ export default function PlantAdminForm() {
           onChange={(e) => handleChange('password', e.target.value)}
           togglePassword={() => setShowPassword(!showPassword)}
           showPassword={showPassword}
-          iconToggle={{ show: <EyeOff size={18} />, hide: <Eye size={18} /> }}
+          iconToggle={{
+            show: <EyeOff size={18} />,
+            hide: <Eye size={18} />,
+          }}
           error={formState.passwordError}
         />
 
@@ -147,7 +155,7 @@ export default function PlantAdminForm() {
         </div>
 
         <AppButton
-          onClick={handleSubmit}
+          type="submit"
           label="Login"
           loading={loading}
           className="w-full text-sm sm:text-base btn-primary text-white shadow-md hover:shadow-lg transition-all"
