@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Lock,
@@ -85,6 +85,21 @@ export default function AdminForm() {
     await submitForm();
   };
 
+  useEffect(() => {
+    const handleGlobalEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !loading) {
+        e.preventDefault();
+        submitForm();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalEnter);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalEnter);
+    };
+  }, [loading, formState]);
+
   return (
     <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto p-4 sm:p-6 md:p-8 lg:p-10 bg-linear-to-br from-slate-900/90 to-slate-800/90 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-700/50 relative overflow-hidden">
       <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-blue-500 to-transparent opacity-20"></div>
@@ -156,7 +171,7 @@ export default function AdminForm() {
 
         <AppButton
           type="submit"
-          label="Login"
+          label={loading ? 'Logging in...' : 'Login'}
           loading={loading}
           className="w-full text-sm sm:text-base btn-primary text-white shadow-md hover:shadow-lg transition-all"
         />
