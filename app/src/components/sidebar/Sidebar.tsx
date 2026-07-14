@@ -107,7 +107,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         'success',
         'Logged out'
       );
-      router.replace('/login');
+      router.replace('/');
     }
   };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, JSX, Fragment } from 'react';
+import { ChangeEvent, JSX, KeyboardEvent } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 
@@ -11,6 +11,7 @@ interface WaterInputFieldProps {
   type: string;
   value: string;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
   placeholder?: string;
   error?: string;
   dark?: boolean;
@@ -24,6 +25,7 @@ export default function WaterInputField({
   label,
   value,
   onChange,
+  onKeyDown,
   icon: Icon,
   customicon: customicon,
   type,
@@ -52,6 +54,7 @@ export default function WaterInputField({
           type={type}
           value={value}
           onChange={onChange}
+          onKeyDown={onKeyDown}
           placeholder={placeholder}
           className={`block w-full ${Icon || customicon ? 'pl-12' : 'pl-3'} pr-10 py-3 rounded-2xl border transition-all focus:outline-none focus:ring-2 ${
             dark

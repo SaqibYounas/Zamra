@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, User, MapPin, Phone, Mail, Globe } from 'lucide-react';
 import WaterInputField from '../../src/components/inputFields/InputField';
 import Button from '../../src/components/button/Button';
@@ -27,28 +27,37 @@ export default function CompanyInformation() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (field: keyof typeof payload, value: string) => {
-    setPayload((prev) => ({ ...prev, [field]: value }));
+    setPayload((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
 
     if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({ ...prev, [field]: '' }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const submitForm = async () => {
     const localErrors: Record<string, string> = {};
 
     if (!payload.name.trim())
       localErrors.name = 'Company Name field is required.';
+
     if (!payload.owner.trim())
       localErrors.owner = 'Owner Name field is required.';
+
     if (!payload.city.trim())
       localErrors.city = 'City context name is required.';
+
     if (!payload.contact.trim())
       localErrors.contact = 'Contact phone number is required.';
+
     if (!payload.address.trim())
       localErrors.address = 'Company physical address is required.';
+
     if (!payload.email.trim())
       localErrors.email = 'Company email desk address is required.';
 
@@ -88,6 +97,26 @@ export default function CompanyInformation() {
     }
   };
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await submitForm();
+  };
+
+  useEffect(() => {
+    const handleGlobalEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !loading) {
+        e.preventDefault();
+        submitForm();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalEnter);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalEnter);
+    };
+  }, [loading, payload]);
+
   return (
     <div className="min-h-screen bg-amber-50 flex items-start md:items-center justify-center pt-24 pb-10 px-4 sm:py-12 sm:px-6 lg:px-8 md:pl-20">
       <main className="w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl bg-gray-50 p-4 sm:p-8 lg:p-10 shadow-lg border border-gray-200/50">
@@ -98,7 +127,7 @@ export default function CompanyInformation() {
         </div>
 
         <div className="p-0 sm:p-2">
-          <form onSubmit={handleSubmit} className="flex flex-col ">
+          <form onSubmit={handleSubmit} className="flex flex-col">
             <div className="flex flex-col sm:flex-row gap-5">
               <WaterInputField
                 name="name"
@@ -123,7 +152,6 @@ export default function CompanyInformation() {
               />
             </div>
 
-            {/* Second Row */}
             <div className="flex flex-col sm:flex-row gap-5">
               <WaterInputField
                 name="city"

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useEffect } from 'react';
 import WaterInputField from '../../src/components/inputFields/InputField';
-import Button from '../../src/components/button/Button';
+import AppButton from '../../src/components/button/Button';
 import Dropdown from '../../src/components/dropdown/Dropdown';
 import { waterTypes } from '../data/waterTypes';
 import { saveStock } from '../services/stockManagement';
@@ -29,6 +29,8 @@ export default function ProductionPage() {
     bottleperPet: '',
   });
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field: keyof StockFormData, value: string) => {
@@ -36,6 +38,13 @@ export default function ProductionPage() {
       ...prev,
       [field]: value,
     }));
+
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
   };
 
   const handleTypeChange = (value: string) => {
@@ -46,6 +55,8 @@ export default function ProductionPage() {
       perPet: '',
       bottleperPet: '',
     });
+
+    setFieldErrors({});
   };
 
   const renderFields = () => {
@@ -55,21 +66,24 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Total Pet"
-              type="text"
+              type="number"
               value={formData.totalPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
               placeholder="Enter total pet"
+              error={fieldErrors.totalPet}
             />
+
             <WaterInputField
               label="Bottle per Pet (12)"
-              type="text"
+              type="number"
               value={formData.bottleperPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
               placeholder="Enter bottle per pet"
+              error={fieldErrors.bottleperPet}
             />
           </>
         );
@@ -79,21 +93,24 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Total Pet"
-              type="text"
+              type="number"
               value={formData.totalPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
               placeholder="Enter total pet"
+              error={fieldErrors.totalPet}
             />
+
             <WaterInputField
               label="Bottle per Pet (6)"
-              type="text"
+              type="number"
               value={formData.bottleperPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
               placeholder="Enter bottle per pet"
+              error={fieldErrors.bottleperPet}
             />
           </>
         );
@@ -102,12 +119,13 @@ export default function ProductionPage() {
         return (
           <WaterInputField
             label="Total Bottles"
-            type="text"
+            type="number"
             value={formData.totalPet}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleChange('totalPet', e.target.value)
             }
-            placeholder="Enter total pet"
+            placeholder="Enter total bottles"
+            error={fieldErrors.totalPet}
           />
         );
 
@@ -116,21 +134,24 @@ export default function ProductionPage() {
           <>
             <WaterInputField
               label="Quantity"
-              type="text"
+              type="number"
               value={formData.totalPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('totalPet', e.target.value)
               }
               placeholder="Enter quantity"
+              error={fieldErrors.totalPet}
             />
+
             <WaterInputField
               label="Price per bottle"
-              type="text"
+              type="number"
               value={formData.bottleperPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 handleChange('bottleperPet', e.target.value)
               }
-              placeholder="Enter bottle per pet"
+              placeholder="Enter price per bottle"
+              error={fieldErrors.bottleperPet}
             />
           </>
         );
@@ -139,12 +160,13 @@ export default function ProductionPage() {
         return (
           <WaterInputField
             label="Total Refill Today"
-            type="text"
+            type="number"
             value={formData.totalPet}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
               handleChange('totalPet', e.target.value)
             }
             placeholder="Enter refill today"
+            error={fieldErrors.totalPet}
           />
         );
 
@@ -153,27 +175,28 @@ export default function ProductionPage() {
     }
   };
 
-  const handleSubmit = async () => {
+  const submitForm = async () => {
+    const errors: Record<string, string> = {};
+
     if (!formData.totalPet.trim()) {
-      showApiToast('Please fill in all required fields.', 'error');
-      return;
+      errors.totalPet = 'This field is required.';
     }
 
     if (
-      (type === '500ml' || type === '1.5L') &&
+      (type === '500ml' || type === '1.5L' || type === '19L') &&
       !formData.bottleperPet.trim()
     ) {
-      showApiToast('Please fill in all required fields.', 'error');
-      return;
+      errors.bottleperPet = 'This field is required.';
     }
 
-    if (type === '19L' && !formData.bottleperPet.trim()) {
-      showApiToast('Please fill in all required fields.', 'error');
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
     try {
       setLoading(true);
+      setFieldErrors({});
 
       const payload: StockMangRequestBody = {
         bottleType: type,
@@ -192,6 +215,8 @@ export default function ProductionPage() {
           'error'
         );
       } else {
+        showApiToast('Stock updated successfully.', 'success');
+
         setFormData({
           totalPet: '',
           perPet: '',
@@ -200,11 +225,37 @@ export default function ProductionPage() {
       }
     } catch (err) {
       const errorObject = err as Error;
-      console.error(errorObject.message || 'An unexpected error occurred.');
+
+      showApiToast(
+        errorObject.message || 'An unexpected error occurred.',
+        'error'
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    await submitForm();
+  };
+
+  useEffect(() => {
+    const handleGlobalEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !loading) {
+        e.preventDefault();
+
+        submitForm();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalEnter);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalEnter);
+    };
+  }, [loading, formData]);
 
   return (
     <div className="min-h-screen bg-amber-50">
@@ -214,20 +265,24 @@ export default function ProductionPage() {
             Production
           </h1>
 
-          <Dropdown
-            label="Select Bottle Type"
-            options={waterTypes}
-            value={type}
-            onChange={handleTypeChange}
-          />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Dropdown
+              label="Select Bottle Type"
+              options={waterTypes}
+              value={type}
+              onChange={handleTypeChange}
+            />
 
-          {renderFields()}
+            {renderFields()}
 
-          <Button
-            label={loading ? 'Submitting...' : 'Submit'}
-            onClick={handleSubmit}
-            disabled={loading}
-          />
+            <AppButton
+              type="submit"
+              label={loading ? 'Submitting...' : 'Submit'}
+              loading={loading}
+              disabled={loading}
+              className="w-full py-3 text-sm sm:text-base mt-2"
+            />
+          </form>
         </div>
       </main>
     </div>

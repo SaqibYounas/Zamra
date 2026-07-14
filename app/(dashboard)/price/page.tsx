@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import WaterInputField from '../../src/components/inputFields/InputField';
-import Button from '../../src/components/button/Button';
+import AppButton from '../../src/components/button/Button';
 import Dropdown from '../../src/components/dropdown/Dropdown';
 import RsIcon from '@/public/RupeesIcon';
 import { waterTypes } from '../data/waterTypes';
 import { savePrice } from '../services/priceManagement';
-import { showApiToast } from '@/app/src/lib/apiToast';
 
 interface WaterFormData {
   type: string;
@@ -26,6 +25,8 @@ export default function WaterFormPage() {
 
   const [loading, setLoading] = useState(false);
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   const handleTypeChange = (val: string) => {
     setFormData({
       type: val,
@@ -33,25 +34,50 @@ export default function WaterFormPage() {
       labelCap: '',
       otherExpense: '',
     });
+
+    setFieldErrors({});
   };
 
   const handleChange = (field: keyof WaterFormData, value: string) => {
     const cleanValue = value.replace(/[^0-9]/g, '');
-    setFormData((prev) => ({ ...prev, [field]: cleanValue }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [field]: cleanValue,
+    }));
+
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
   };
 
-  const handleSubmit = async () => {
-    if (
-      !formData.price.trim() ||
-      !formData.labelCap.trim() ||
-      !formData.otherExpense.trim()
-    ) {
-      showApiToast('Please fill in all required fields.', 'error');
+  const submitForm = async () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.price.trim()) {
+      errors.price = 'Per bottle price is required.';
+    }
+
+    if (!formData.labelCap.trim()) {
+      errors.labelCap = 'Label + Cap cost is required.';
+    }
+
+    if (!formData.otherExpense.trim()) {
+      errors.otherExpense = 'Other expenses are required.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
     try {
       setLoading(true);
+      setFieldErrors({});
+
       const response = await savePrice(formData);
 
       if (response && response.success === false) {
@@ -70,55 +96,79 @@ export default function WaterFormPage() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await submitForm();
+  };
+
+  useEffect(() => {
+    const handleGlobalEnter = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !loading) {
+        e.preventDefault();
+        submitForm();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalEnter);
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalEnter);
+    };
+  }, [loading, formData]);
+
   return (
     <div className="min-h-screen bg-amber-50">
       <main className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-center mb-2">
+        <div className="w-full rounded-2xl bg-gray-50 p-6 shadow-lg md:p-10">
+          <h1 className="mb-4 text-center text-2xl font-bold md:text-3xl">
             Price
           </h1>
 
-          <Dropdown
-            label="Select Bottle Type"
-            options={waterTypes}
-            value={formData.type}
-            onChange={handleTypeChange}
-          />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Dropdown
+              label="Select Bottle Type"
+              options={waterTypes}
+              value={formData.type}
+              onChange={handleTypeChange}
+            />
 
-          <WaterInputField
-            label="Per Bottle Price"
-            customicon={RsIcon}
-            type="text"
-            value={formData.price}
-            onChange={(e) => handleChange('price', e.target.value)}
-            placeholder="Enter price per bottle"
-          />
+            <WaterInputField
+              label="Per Bottle Price"
+              customicon={RsIcon}
+              type="text"
+              value={formData.price}
+              onChange={(e) => handleChange('price', e.target.value)}
+              placeholder="Enter price per bottle"
+              error={fieldErrors.price}
+            />
 
-          <WaterInputField
-            label="Label + Cap"
-            customicon={RsIcon}
-            type="text"
-            value={formData.labelCap}
-            onChange={(e) => handleChange('labelCap', e.target.value)}
-            placeholder="Enter label + cap cost"
-          />
+            <WaterInputField
+              label="Label + Cap"
+              customicon={RsIcon}
+              type="text"
+              value={formData.labelCap}
+              onChange={(e) => handleChange('labelCap', e.target.value)}
+              placeholder="Enter label + cap cost"
+              error={fieldErrors.labelCap}
+            />
 
-          <WaterInputField
-            label="Other Expenses"
-            customicon={RsIcon}
-            type="text"
-            value={formData.otherExpense}
-            onChange={(e) => handleChange('otherExpense', e.target.value)}
-            placeholder="Enter other expenses"
-          />
+            <WaterInputField
+              label="Other Expenses"
+              customicon={RsIcon}
+              type="text"
+              value={formData.otherExpense}
+              onChange={(e) => handleChange('otherExpense', e.target.value)}
+              placeholder="Enter other expenses"
+              error={fieldErrors.otherExpense}
+            />
 
-          <Button
-            onClick={handleSubmit}
-            label={loading ? 'Saving Changes...' : 'Save Changes'}
-            type="submit"
-            className="w-full py-3 text-sm sm:text-base mt-2"
-            disabled={loading}
-          />
+            <AppButton
+              type="submit"
+              label={loading ? 'Saving Changes...' : 'Save Changes'}
+              loading={loading}
+              className="w-full py-3 text-sm sm:text-base mt-2"
+            />
+          </form>
         </div>
       </main>
     </div>

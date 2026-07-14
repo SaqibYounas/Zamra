@@ -102,7 +102,7 @@ export function setupApiToastInterceptors() {
             'info',
             'Session expired'
           );
-          window.location.href = '/login';
+          window.location.href = '/';
         }
         return response;
       }
