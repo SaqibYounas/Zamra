@@ -1,14 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  Plus,
-  Trash2,
-  FileText,
-  CheckSquare,
-  Square,
-  Calendar,
-} from 'lucide-react';
+import { Plus, Trash2, CheckSquare, Square, Calendar } from 'lucide-react';
 import WaterInputField from '../../../src/components/inputFields/InputField';
 import Button from '../../../src/components/button/Button';
 import Dropdown from '../../../src/components/dropdown/Dropdown';
@@ -263,19 +256,20 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   )}{' '}
                   Same as Billing
                 </button>
-
-                <Dropdown
-                  placeholder={
-                    loadingDropdowns ? 'Loading...' : 'Select Shipping'
-                  }
-                  options={shippingProfiles.map((s) => ({
-                    label: s.name,
-                    value: s.id.toString(),
-                  }))}
-                  value={selectedShippingId}
-                  onChange={onShippingSelect}
-                  disabled={loadingDropdowns}
-                />
+                <div className="max-w-[180px] w-full">
+                  <Dropdown
+                    placeholder={
+                      loadingDropdowns ? 'Loading...' : 'Select Shipping'
+                    }
+                    options={shippingProfiles.map((s) => ({
+                      label: s.name,
+                      value: s.id.toString(),
+                    }))}
+                    value={selectedShippingId}
+                    onChange={onShippingSelect}
+                    disabled={loadingDropdowns}
+                  />
+                </div>
               </div>
             </div>
 

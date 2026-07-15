@@ -9,8 +9,13 @@ export interface ApiToast {
   type: ApiToastType;
 }
 
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    showToast?: boolean;
+  }
+}
+
 const listeners = new Set<(toast: ApiToast) => void>();
-let hasSetup = false;
 
 function getToastTitle(type: ApiToastType, fallback: string) {
   if (type === 'success') return 'Success';
@@ -20,6 +25,7 @@ function getToastTitle(type: ApiToastType, fallback: string) {
 
 function formatToastMessage(message: string, fallback: string) {
   const cleaned = message?.trim();
+
   if (!cleaned) return fallback;
 
   const normalized = cleaned
@@ -51,14 +57,15 @@ function dispatchToast(
   type: ApiToastType = 'info',
   title?: string
 ) {
-  if (typeof window === 'undefined') {
-    return;
-  }
+  if (typeof window === 'undefined') return;
 
   const toast: ApiToast = {
     id: Date.now() + Math.random(),
     title: title || getToastTitle(type, 'Notice'),
-    message: formatToastMessage(message, 'Request completed successfully'),
+    message: formatToastMessage(
+      message,
+      type === 'success' ? 'Request completed successfully' : 'Request failed'
+    ),
     type,
   };
 
@@ -68,7 +75,9 @@ function dispatchToast(
 export function subscribeApiToast(listener: (toast: ApiToast) => void) {
   listeners.add(listener);
 
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 export function showApiToast(
@@ -79,6 +88,8 @@ export function showApiToast(
   dispatchToast(message, type, title);
 }
 
+let hasSetup = false;
+
 export function setupApiToastInterceptors() {
   if (hasSetup || typeof window === 'undefined') {
     return;
@@ -88,74 +99,60 @@ export function setupApiToastInterceptors() {
 
   axios.interceptors.response.use(
     (response) => {
-      const requestUrl = response?.config?.url;
-      const skipToast =
-        response?.config?.headers?.['x-skip-api-toast'] ||
-        response?.config?.headers?.['X-Skip-Api-Toast'];
+      const showToast = response.config.showToast;
 
-      const payload = response?.data;
-      const statusCode = response?.status || payload?.status;
-      if (statusCode === 401) {
-        if (typeof window !== 'undefined') {
-          dispatchToast(
-            'Your session has expired. Please sign in again.',
-            'info',
-            'Session expired'
-          );
-          window.location.href = '/';
-        }
-        return response;
+      if (showToast) {
+        const payload = response.data;
+
+        const isFailure = payload?.success === false || payload?.error;
+
+        const message =
+          payload?.message ||
+          payload?.successMessage ||
+          payload?.msg ||
+          'Request completed successfully';
+
+        dispatchToast(message, isFailure ? 'error' : 'success');
       }
 
-      if (skipToast || requestUrl?.includes('/api/chatbot')) {
-        return response;
-      }
-
-      const isFailure = payload?.success === false || payload?.error;
-      const message =
-        payload?.message ||
-        payload?.error ||
-        payload?.successMessage ||
-        payload?.detail ||
-        payload?.msg ||
-        (isFailure ? 'Request failed' : 'Request completed successfully');
-
-      dispatchToast(message, isFailure ? 'error' : 'success');
       return response;
     },
+
     (error) => {
-      const requestUrl = error?.config?.url;
-      const skipToast =
-        error?.config?.headers?.['x-skip-api-toast'] ||
-        error?.config?.headers?.['X-Skip-Api-Toast'];
+      const showToast = error?.config?.showToast;
 
       const status = error?.response?.status;
+
       if (status === 401) {
-        if (typeof window !== 'undefined') {
+        if (showToast) {
           dispatchToast(
             'Your session has expired. Please sign in again.',
             'info',
             'Session expired'
           );
-          window.location.href = '/login';
         }
+
+        if (typeof window !== 'undefined') {
+          window.location.href = '/';
+        }
+
         return Promise.reject(error);
       }
 
-      if (skipToast || requestUrl?.includes('/api/chatbot')) {
-        return Promise.reject(error);
+      if (showToast) {
+        const payload = error?.response?.data;
+
+        const message =
+          payload?.message ||
+          payload?.error ||
+          payload?.detail ||
+          payload?.msg ||
+          error?.message ||
+          'Request failed';
+
+        dispatchToast(message, 'error');
       }
 
-      const payload = error?.response?.data;
-      const message =
-        payload?.message ||
-        payload?.error ||
-        payload?.detail ||
-        payload?.msg ||
-        error?.message ||
-        'Request failed';
-
-      dispatchToast(message, 'error');
       return Promise.reject(error);
     }
   );
