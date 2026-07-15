@@ -40,30 +40,44 @@ export default function AdminForm() {
     setFormState((prev) => ({
       ...prev,
       [field]: value,
-      ...(field === 'email' && { emailError: '' }),
-      ...(field === 'password' && { passwordError: '' }),
+
+      ...(field === 'email' && {
+        emailError: '',
+      }),
+
+      ...(field === 'password' && {
+        passwordError: '',
+      }),
     }));
   };
 
   const submitForm = async () => {
     let hasError = false;
+
     const errors: Partial<FormState> = {};
 
-    if (!formState.email) {
+    if (!formState.email.trim()) {
       errors.emailError = 'Email is required';
+
       hasError = true;
     } else if (!validateEmail(formState.email)) {
       errors.emailError = 'Invalid email';
+
       hasError = true;
     }
 
-    if (!formState.password) {
+    if (!formState.password.trim()) {
       errors.passwordError = 'Password is required';
+
       hasError = true;
     }
 
     if (hasError) {
-      setFormState((prev) => ({ ...prev, ...errors }));
+      setFormState((prev) => ({
+        ...prev,
+        ...errors,
+      }));
+
       return;
     }
 
@@ -74,7 +88,21 @@ export default function AdminForm() {
 
       if (login.success) {
         router.push('/dashboard');
+      } else {
+        setFormState((prev) => ({
+          ...prev,
+
+          passwordError: login.message || 'Invalid email or password',
+        }));
       }
+    } catch (error) {
+      const err = error as Error;
+
+      setFormState((prev) => ({
+        ...prev,
+
+        passwordError: err.message || 'Invalid email or password',
+      }));
     } finally {
       setLoading(false);
     }
@@ -82,6 +110,7 @@ export default function AdminForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     await submitForm();
   };
 
@@ -89,6 +118,7 @@ export default function AdminForm() {
     const handleGlobalEnter = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && !loading) {
         e.preventDefault();
+
         submitForm();
       }
     };
@@ -147,6 +177,7 @@ export default function AdminForm() {
           showPassword={showPassword}
           iconToggle={{
             show: <EyeOff size={18} />,
+
             hide: <Eye size={18} />,
           }}
           error={formState.passwordError}
@@ -155,6 +186,7 @@ export default function AdminForm() {
         <div className="p-3 sm:p-4 bg-slate-700/40 border border-slate-600/40 rounded-xl sm:rounded-2xl">
           <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1">
             <CloudRain size={14} />
+
             <span>System Status</span>
           </div>
 
