@@ -29,7 +29,7 @@ export default function Dropdown({
   const selectedOption = options.find((option) => option.value === value);
 
   return (
-    <div className="mb-4 w-full">
+    <div className="w-full">
       {label && <label className="block mb-1 text-sm font-bold">{label}</label>}
 
       <Listbox value={value} onChange={onChange} disabled={disabled}>
