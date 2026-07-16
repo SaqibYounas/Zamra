@@ -100,20 +100,16 @@ interface InvoiceFormProps {
 
 const SectionHeader: React.FC<{
   icon: React.ElementType;
-  eyebrow: string;
   title: string;
   action?: React.ReactNode;
-}> = ({ icon: Icon, eyebrow, title, action }) => (
-  <div className="flex items-end justify-between gap-3 border-b-2 border-slate-900/90 pb-2">
+}> = ({ icon: Icon, title, action }) => (
+  <div className="flex flex-col gap-3 border-b-2 border-slate-900/90 pb-2 sm:flex-row sm:items-end sm:justify-between">
     <div className="flex items-center gap-2.5">
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-900 text-amber-50">
-        <Icon className="h-3.5 w-3.5" />
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-900 text-amber-50 sm:h-7 sm:w-7">
+        <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </span>
       <div className="leading-tight">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-teal-700">
-          {eyebrow}
-        </p>
-        <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+        <h3 className="text-xs font-bold text-slate-900 sm:text-sm">{title}</h3>
       </div>
     </div>
     {action}
@@ -178,9 +174,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-[size:22px_22px] flex items-center lg:mt-0 md:mt-4 justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8 ">
+    <div className="min-h-screen bg-[size:22px_22px] flex items-start sm:items-center justify-center pt-20 pb-6 px-3 sm:py-10 sm:px-6 lg:px-8">
       <main className="w-full max-w-5xl rounded-2xl bg-surface ring-1 shadow-lg border border-slate-900/10 overflow-hidden">
-        <div className="relative bg-slate-900 px-6 py-7 sm:px-10 text-amber-50">
+        <div className="relative bg-slate-900 px-4 py-5 sm:px-6 sm:py-7 md:px-10 text-amber-50">
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.06]"
             style={{
@@ -188,36 +184,32 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 'repeating-linear-gradient(135deg, #fff 0px, #fff 1px, transparent 1px, transparent 14px)',
             }}
           />
-          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-500/90 text-slate-950 shadow-md">
-                <Receipt className="h-5 w-5" />
+          <div className="flex items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <span className="flex h-8 w-8 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/90 text-slate-950 shadow-md">
+                <Receipt className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
               </span>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-teal-300">
-                  Tax Invoice
-                </p>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+                <h1 className="text-base sm:text-2xl md:text-3xl font-black tracking-tight whitespace-nowrap">
                   Customer Invoice
                 </h1>
               </div>
             </div>
 
-            <div className="w-full sm:w-64">
-              <label className="mb-1 block text-[10px] font-bold uppercase tracking-[0.18em] text-teal-300">
+            <div className="w-28 sm:w-48 shrink-0">
+              <label className="mb-1 block text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] text-teal-300">
                 Invoice ID No
               </label>
               <div className="rounded-lg bg-slate-800/80 ring-1 ring-white/10 focus-within:ring-teal-400 transition-shadow">
-                <WaterInputField
+                <input
                   type="text"
                   name="invoiceNo"
                   value={invoiceData.meta.invoiceNo}
                   onChange={(e) =>
                     onInputChange('meta', 'invoiceNo', e.target.value)
                   }
-                  placeholder="e.g. ZAM-246"
-                  error={fieldErrors.invoiceNo}
-                  label={''}
+                  placeholder="ZAM-246"
+                  className="w-full bg-transparent px-2.5 py-1.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -225,20 +217,22 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         </div>
 
         {dropdownError && (
-          <p className="mx-6 mt-6 sm:mx-10 text-xs font-bold text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
+          <p className="mx-4 mt-4 sm:mx-10 sm:mt-6 text-xs font-bold text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
             {dropdownError}
           </p>
         )}
 
-        <form className="space-y-9 p-6 sm:p-10" onSubmit={onSubmit}>
-          <div className="space-y-4">
+        <form
+          className="space-y-6 p-4 sm:space-y-9 sm:p-6 md:p-10"
+          onSubmit={onSubmit}
+        >
+          <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={User}
-              eyebrow="Billed To"
               title="Customer Billing Details"
               action={
                 <div
-                  className="w-40 sm:w-48"
+                  className="w-full sm:w-48"
                   onClick={handleCustomerDropdownOpen}
                   onFocus={handleCustomerDropdownOpen}
                 >
@@ -257,8 +251,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 </div>
               }
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl bg-slate-50/70 p-4 border border-slate-200/70">
-              <div className="md:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70">
+              <div className="sm:col-span-2">
                 <WaterInputField
                   type="text"
                   name="name"
@@ -294,7 +288,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 placeholder="e.g. 042-3571122"
                 error={fieldErrors.phone}
               />
-              <div className="md:col-span-2">
+              <div className="sm:col-span-2">
                 <WaterInputField
                   type="text"
                   name="address"
@@ -335,18 +329,16 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
           </div>
 
-          {/* SHIPPING */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={Truck}
-              eyebrow="Ship To"
               title="Shipping Destination"
               action={
-                <div className="flex items-center gap-3">
-                  <button
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                  {/* <button
                     type="button"
                     onClick={onShippingSameToggle}
-                    className="flex items-center gap-1.5 text-[11px] text-teal-700 font-bold tracking-tight whitespace-nowrap rounded-lg px-2 py-1 hover:bg-teal-50 transition-colors"
+                    className="flex items-center gap-1.5 text-[11px] text-teal-700 font-bold tracking-tight whitespace-nowrap rounded-lg px-2 py-1 hover:bg-teal-50 transition-colors cursor-pointer"
                   >
                     {isShippingSame ? (
                       <CheckSquare className="w-4 h-4" />
@@ -354,9 +346,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                       <Square className="w-4 h-4" />
                     )}{' '}
                     Same as Billing
-                  </button>
+                  </button> */}
                   <div
-                    className="w-40 sm:w-48"
+                    className="w-full sm:w-48"
                     onClick={handleShippingDropdownOpen}
                     onFocus={handleShippingDropdownOpen}
                   >
@@ -378,8 +370,8 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
 
             {!isShippingSame && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-xl bg-slate-50/70 p-4 border border-slate-200/70 transition-all">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70 transition-all">
+                <div className="sm:col-span-2">
                   <WaterInputField
                     type="text"
                     icon={Building2}
@@ -411,7 +403,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   }
                   placeholder="e.g. 042-3571123"
                 />
-                <div className="md:col-span-2">
+                <div className="sm:col-span-2">
                   <WaterInputField
                     type="text"
                     icon={MapPin}
@@ -427,14 +419,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             )}
           </div>
 
-          {/* LOGISTICS */}
-          <div className="space-y-4">
-            <SectionHeader
-              icon={Truck}
-              eyebrow="Dispatch"
-              title="Logistic Operations"
-            />
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="space-y-3 sm:space-y-4">
+            <SectionHeader icon={Truck} title="Logistic Operations" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               {LOGISTIC_FIELDS.map((f) => (
                 <WaterInputField
                   type="text"
@@ -463,19 +450,17 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
           </div>
 
-          {/* LINE ITEMS */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={Receipt}
-              eyebrow="Manifest"
               title="Line Item Specifications"
               action={
                 <button
                   type="button"
                   onClick={onAddItem}
-                  className="flex items-center gap-1 text-[11px] font-bold bg-teal-600 text-white rounded-lg px-3 py-1.5 shadow-sm hover:bg-teal-700 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-1 text-[11px] font-bold bg-teal-600 text-white rounded-lg px-3 py-1.5 shadow-sm hover:bg-teal-700 transition-colors cursor-pointer w-full sm:w-auto"
                 >
-                  <Plus className="w-4 h-4 " /> Add Item Row
+                  <Plus className="w-4 h-4" /> Add Item Row
                 </button>
               }
             />
@@ -497,7 +482,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   return (
                     <div
                       key={item.id}
-                      className={`grid grid-cols-1 md:grid-cols-[10%_38%_12%_16%_16%_8%] gap-3 px-4 py-3 items-end ${
+                      className={`grid grid-cols-1 md:grid-cols-[10%_38%_12%_16%_16%_8%] gap-2 sm:gap-3 px-3 py-3 sm:px-4 items-end ${
                         idx % 2 === 1 ? 'bg-slate-50/60' : ''
                       }`}
                     >
@@ -547,7 +532,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         type="button"
                         onClick={() => onRemoveItem(item.id)}
                         className="p-2.5 mb-1 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors w-full md:w-auto flex justify-center items-center cursor-pointer"
-                        aria-label="Remove line item "
+                        aria-label="Remove line item"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -556,26 +541,21 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 })}
               </div>
 
-              <div className="flex justify-end bg-slate-50 px-4 py-2 border-t border-slate-200">
-                <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              <div className="flex flex-wrap justify-end bg-slate-50 px-3 py-2 sm:px-4 border-t border-slate-200">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-slate-500">
                   Items Subtotal:&nbsp;
                 </span>
-                <span className="font-mono text-sm font-bold text-slate-900">
+                <span className="font-mono text-xs sm:text-sm font-bold text-slate-900">
                   Rs {itemsSubtotal.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* LEDGER */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6 items-start">
-            <div className="space-y-4">
-              <SectionHeader
-                icon={Percent}
-                eyebrow="Adjustments"
-                title="Ledger Adjustments"
-              />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-start">
+            <div className="space-y-3 sm:space-y-4">
+              <SectionHeader icon={Percent} title="Ledger Adjustments" />
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
                 <WaterInputField
                   type="number"
                   icon={Percent}
@@ -625,11 +605,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
 
             <div className="flex justify-center lg:justify-end pt-2">
-              <div className="-rotate-2 rounded-xl border-[3px] border-dashed border-teal-700/70 bg-teal-50/60 px-6 py-4 text-center shadow-sm">
-                <span className="block text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">
+              <div className="-rotate-2 rounded-xl border-[3px] border-dashed border-teal-700/70 bg-teal-50/60 px-5 py-3 sm:px-6 sm:py-4 text-center shadow-sm">
+                <span className="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">
                   Net Balance Due
                 </span>
-                <span className="mt-1 block font-mono text-2xl font-black text-teal-800">
+                <span className="mt-1 block font-mono text-lg sm:text-2xl font-black text-teal-800">
                   Rs {balanceDue.toFixed(2)}
                 </span>
               </div>
