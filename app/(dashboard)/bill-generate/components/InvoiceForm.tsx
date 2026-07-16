@@ -335,18 +335,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
               title="Shipping Destination"
               action={
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                  {/* <button
-                    type="button"
-                    onClick={onShippingSameToggle}
-                    className="flex items-center gap-1.5 text-[11px] text-teal-700 font-bold tracking-tight whitespace-nowrap rounded-lg px-2 py-1 hover:bg-teal-50 transition-colors cursor-pointer"
-                  >
-                    {isShippingSame ? (
-                      <CheckSquare className="w-4 h-4" />
-                    ) : (
-                      <Square className="w-4 h-4" />
-                    )}{' '}
-                    Same as Billing
-                  </button> */}
                   <div
                     className="w-full sm:w-48"
                     onClick={handleShippingDropdownOpen}
@@ -421,7 +409,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader icon={Truck} title="Logistic Operations" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
               {LOGISTIC_FIELDS.map((f) => (
                 <WaterInputField
                   type="text"
@@ -466,7 +454,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
 
             <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <div className="hidden md:grid grid-cols-[10%_38%_12%_16%_16%_8%] gap-3 bg-slate-900 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-amber-50">
+              <div className="hidden md:grid grid-cols-[10%_38%_12%_16%_16%_8%] gap-3 bg-slate-900 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-50">
                 <span>ID</span>
                 <span>Description</span>
                 <span>Qty</span>
@@ -475,14 +463,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <span className="text-center">—</span>
               </div>
 
-              <div className="divide-y divide-slate-100 max-h-[340px] overflow-y-auto bg-white">
+              <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto bg-white">
                 {invoiceData.items.map((item, idx) => {
                   const lineTotal =
                     (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
                   return (
                     <div
                       key={item.id}
-                      className={`grid grid-cols-1 md:grid-cols-[10%_38%_12%_16%_16%_8%] gap-2 sm:gap-3 px-3 py-3 sm:px-4 items-end ${
+                      className={`grid grid-cols-2 md:grid-cols-[10%_38%_12%_16%_16%_8%] gap-3 px-3 py-4 sm:px-4 items-end ${
                         idx % 2 === 1 ? 'bg-slate-50/60' : ''
                       }`}
                     >
@@ -525,25 +513,28 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                           Amount
                         </span>
                         <span className="font-mono text-sm font-bold text-slate-800 md:text-right">
-                          {lineTotal.toFixed(2)}
+                          Rs {lineTotal.toFixed(2)}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => onRemoveItem(item.id)}
-                        className="p-2.5 mb-1 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors w-full md:w-auto flex justify-center items-center cursor-pointer"
-                        aria-label="Remove line item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+                      <div className="col-span-2 md:col-span-1 flex items-end">
+                        <button
+                          type="button"
+                          onClick={() => onRemoveItem(Number(item.id))}
+                          className="p-2.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors w-full flex justify-center items-center cursor-pointer"
+                          aria-label="Remove line item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="flex flex-wrap justify-end bg-slate-50 px-3 py-2 sm:px-4 border-t border-slate-200">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                  Items Subtotal:&nbsp;
+              <div className="flex items-center justify-between bg-slate-50 px-3 py-2.5 sm:px-4 border-t border-slate-200">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  Items Subtotal:
                 </span>
                 <span className="font-mono text-xs sm:text-sm font-bold text-slate-900">
                   Rs {itemsSubtotal.toFixed(2)}
@@ -555,14 +546,14 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-start">
             <div className="space-y-3 sm:space-y-4">
               <SectionHeader icon={Percent} title="Ledger Adjustments" />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70">
                 <WaterInputField
                   type="number"
                   icon={Percent}
                   label="Tax Rate (%)"
                   value={invoiceData.taxRate.toString()}
                   onChange={(e) =>
-                    onLedgerChange('taxRate', Number(e.target.value))
+                    onLedgerChange('taxRate', Number(e.target.value) || 0)
                   }
                 />
                 <WaterInputField
@@ -571,7 +562,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   label="Shipping Charges (Rs)"
                   value={invoiceData.shipping.toString()}
                   onChange={(e) =>
-                    onLedgerChange('shipping', Number(e.target.value))
+                    onLedgerChange('shipping', Number(e.target.value) || 0)
                   }
                 />
                 <WaterInputField
@@ -580,7 +571,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   label="Misc Charges (Rs)"
                   value={invoiceData.other.toString()}
                   onChange={(e) =>
-                    onLedgerChange('other', Number(e.target.value))
+                    onLedgerChange('other', Number(e.target.value) || 0)
                   }
                 />
                 <WaterInputField
@@ -589,7 +580,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   label="Previous Due Arrears (Rs)"
                   value={invoiceData.previousDue.toString()}
                   onChange={(e) =>
-                    onLedgerChange('previousDue', Number(e.target.value))
+                    onLedgerChange('previousDue', Number(e.target.value) || 0)
                   }
                 />
                 <WaterInputField
@@ -598,7 +589,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   label="Amount Paid By Client (Rs)"
                   value={invoiceData.payment.paidAmount.toString()}
                   onChange={(e) =>
-                    onInputChange('payment', 'paidAmount', e.target.value)
+                    onInputChange(
+                      'payment',
+                      'paidAmount',
+                      Number(e.target.value) || 0
+                    )
                   }
                 />
               </div>

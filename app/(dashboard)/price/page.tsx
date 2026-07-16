@@ -124,13 +124,15 @@ export default function WaterFormPage() {
             Price
           </h1>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Dropdown
-              label="Select Bottle Type"
-              options={waterTypes}
-              value={formData.type}
-              onChange={handleTypeChange}
-            />
+          <form onSubmit={handleSubmit} className="flex flex-col">
+            <div className="mb-5">
+              <Dropdown
+                label="Select Bottle Type"
+                options={waterTypes}
+                value={formData.type}
+                onChange={handleTypeChange}
+              />
+            </div>
 
             <WaterInputField
               label="Per Bottle Price"
@@ -166,7 +168,7 @@ export default function WaterFormPage() {
               type="submit"
               label={loading ? 'Saving Changes...' : 'Save Changes'}
               loading={loading}
-              className="w-full py-3 text-sm sm:text-base mt-2"
+              className="w-full py-3 text-sm sm:text-base mt-6"
             />
           </form>
         </div>

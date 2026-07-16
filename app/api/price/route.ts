@@ -4,8 +4,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 interface PriceMangRequestBody {
-  type?: string;
-  price?: string;
+  type: string;
+  price: string;
   labelCap: string;
   otherExpense: string;
 }
@@ -19,11 +19,32 @@ export async function POST(request: Request) {
     const body = (await request.json()) as PriceMangRequestBody;
     const { type, price, labelCap, otherExpense } = body;
 
-    if (!type || !price || !labelCap || !otherExpense) {
+    // Validate all fields are present and not empty
+    if (
+      !type?.trim() ||
+      !price?.trim() ||
+      !labelCap?.trim() ||
+      !otherExpense?.trim()
+    ) {
       return NextResponse.json(
         {
           success: false,
           message: 'Please fill in all required fields before submitting.',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Validate numbers are valid
+    const priceNum = Number(price);
+    const labelCapNum = Number(labelCap);
+    const otherExpenseNum = Number(otherExpense);
+
+    if (isNaN(priceNum) || isNaN(labelCapNum) || isNaN(otherExpenseNum)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Price values must be valid numbers.',
         },
         { status: 400 }
       );
