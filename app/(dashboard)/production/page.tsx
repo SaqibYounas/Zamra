@@ -258,9 +258,9 @@ export default function ProductionPage() {
   }, [loading, formData]);
 
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="min-h-screen ">
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full bg-gray-50 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col gap-4">
+        <div className="w-full bg-gray-50 ring-1 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col gap-4">
           <h1 className="text-2xl md:text-3xl font-bold text-center">
             Production
           </h1>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { InvoiceTemplate } from './components/InvoiceTemplate';
 import {
   InvoiceForm,
@@ -44,7 +44,7 @@ const initialInvoiceData: InvoiceData = {
   },
   meta: {
     date: todayISO(),
-    invoiceNo: generateInvoiceNo(),
+    invoiceNo: generateInvoiceNo().slice(0, 9),
   },
   billTo: {
     attn: 'Accounts Dept',
@@ -106,13 +106,15 @@ const initialStatus: FormStatus = {
   successMessage: '',
   fieldErrors: {},
 };
-
 const initialDropdowns: DropdownState = {
   customers: [],
   shippingProfiles: [],
   selectedCustomerId: '',
   selectedShippingId: '',
-  loading: false,
+  customersLoading: false,
+  customersLoaded: false,
+  shippingLoading: false,
+  shippingLoaded: false,
   error: '',
 };
 
@@ -130,67 +132,62 @@ export default function InvoiceFormDashboard() {
     setDropdowns((prev) => ({ ...prev, ...patch }));
   }, []);
 
-  useEffect(() => {
-    const loadData = async () => {
-      patchDropdowns({ loading: true, error: '' });
+  const handleCustomerDropdownOpen = useCallback(async () => {
+    patchDropdowns({ customersLoading: true, error: '' });
 
-      try {
-        const customersResponse = await fetchCustomers();
-        const shippingResponse = await fetchShipping();
+    try {
+      const customersResponse = await fetchCustomers();
+      const customerData = Array.isArray(customersResponse)
+        ? customersResponse
+        : [];
 
-        const customerData = Array.isArray(customersResponse)
-          ? customersResponse
-          : [];
-        const shippingData = Array.isArray(shippingResponse)
-          ? shippingResponse
-          : [];
-
-        patchDropdowns({
-          customers: customerData.map((c: CustomerApiResponse) => ({
-            id: c.id,
-            name: c.companyName,
-            attn: c.attentionPoc,
-            address: c.mailingAddress,
-            city: c.city,
-            phone: c.phone,
-            email: c.email,
-          })),
-          shippingProfiles: shippingData.map((s: ShippingApiResponse) => ({
-            id: s.id,
-            name: s.warehouseName,
-            attn: s.attentionTo,
-            address: s.deliveryAddress,
-            city: '',
-            phone: s.phone,
-          })),
-        });
-      } catch (error) {
-        console.error(error);
-
-        patchDropdowns({
-          error: 'Could not load saved customers/warehouses.',
-        });
-      } finally {
-        patchDropdowns({ loading: false });
-      }
-    };
-
-    loadData();
+      patchDropdowns({
+        customers: customerData.map((c: CustomerApiResponse) => ({
+          id: c.id,
+          name: c.companyName,
+          attn: c.attentionPoc,
+          address: c.mailingAddress,
+          city: c.city,
+          phone: c.phone,
+          email: c.email,
+        })),
+        customersLoaded: true,
+      });
+    } catch (error) {
+      console.error(error);
+      patchDropdowns({ error: 'Could not load saved customers.' });
+    } finally {
+      patchDropdowns({ customersLoading: false });
+    }
   }, [patchDropdowns]);
 
-  useEffect(() => {
-    if (!status.isShippingSame) return;
-    setInvoiceData((prev) => ({
-      ...prev,
-      shipTo: {
-        attn: prev.billTo.attn,
-        name: prev.billTo.name,
-        address: prev.billTo.address,
-        city: prev.billTo.city,
-        phone: prev.billTo.phone,
-      },
-    }));
-  }, [status.isShippingSame, invoiceData.billTo]);
+  const handleShippingDropdownOpen = useCallback(async () => {
+    patchDropdowns({ shippingLoading: true, error: '' });
+
+    try {
+      const shippingResponse = await fetchShipping();
+      const shippingData = Array.isArray(shippingResponse)
+        ? shippingResponse
+        : [];
+
+      patchDropdowns({
+        shippingProfiles: shippingData.map((s: ShippingApiResponse) => ({
+          id: s.id,
+          name: s.warehouseName,
+          attn: s.attentionTo,
+          address: s.deliveryAddress,
+          city: '',
+          phone: s.phone,
+        })),
+        shippingLoaded: true,
+      });
+    } catch (error) {
+      console.error(error);
+      patchDropdowns({ error: 'Could not load saved warehouses.' });
+    } finally {
+      patchDropdowns({ shippingLoading: false });
+    }
+  }, [patchDropdowns]);
 
   const handleInputChange = useCallback(
     (section: ObjectSectionKey, field: string, value: string | number) => {
@@ -254,7 +251,20 @@ export default function InvoiceFormDashboard() {
   const handleShippingSelect = useCallback(
     (id: string) => {
       patchDropdowns({ selectedShippingId: id });
-      if (!id) return;
+
+      if (!id) {
+        setInvoiceData((prev) => ({
+          ...prev,
+          shipTo: {
+            attn: '',
+            name: '',
+            address: '',
+            city: '',
+            phone: '',
+          },
+        }));
+        return;
+      }
 
       const profile = dropdowns.shippingProfiles.find(
         (s) => s.id.toString() === id
@@ -280,7 +290,21 @@ export default function InvoiceFormDashboard() {
   const handleCustomerSelect = useCallback(
     (id: string) => {
       patchDropdowns({ selectedCustomerId: id });
-      if (!id) return;
+
+      if (!id) {
+        setInvoiceData((prev) => ({
+          ...prev,
+          billTo: {
+            attn: '',
+            name: '',
+            address: '',
+            city: '',
+            phone: '',
+            email: '',
+          },
+        }));
+        return;
+      }
 
       const customer = dropdowns.customers.find(
         (customer) => customer.id.toString() === id
@@ -301,6 +325,20 @@ export default function InvoiceFormDashboard() {
     },
     [dropdowns.customers, patchDropdowns]
   );
+
+  useEffect(() => {
+    if (!status.isShippingSame) return;
+    setInvoiceData((prev) => ({
+      ...prev,
+      shipTo: {
+        attn: prev.billTo.attn,
+        name: prev.billTo.name,
+        address: prev.billTo.address,
+        city: prev.billTo.city,
+        phone: prev.billTo.phone,
+      },
+    }));
+  }, [status.isShippingSame, invoiceData.billTo]);
 
   const subtotal = invoiceData.items.reduce(
     (acc, item) => acc + item.qty * item.unitPrice,
@@ -506,6 +544,8 @@ export default function InvoiceFormDashboard() {
         }
         onCustomerSelect={handleCustomerSelect}
         onShippingSelect={handleShippingSelect}
+        onCustomerDropdownOpen={handleCustomerDropdownOpen}
+        onShippingDropdownOpen={handleShippingDropdownOpen}
         onInputChange={handleInputChange}
         onItemChange={handleItemChange}
         onAddItem={addItem}

@@ -134,8 +134,8 @@ export default function ChangePasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-amber-50 flex items-center justify-center py-6 px-4 sm:py-8 sm:px-6 lg:px-8 md:ml-16">
-      <main className="w-full max-w-md sm:max-w-xl lg:max-w-2xl rounded-2xl bg-gray-50 p-5 sm:p-8 lg:p-10 shadow-lg border border-gray-200/50">
+    <div className="min-h-screen  flex items-center justify-center py-6 px-4 sm:py-8 sm:px-6 lg:px-8 md:ml-16">
+      <main className="w-full max-w-md sm:max-w-xl lg:max-w-2xl rounded-2xl bg-gray-50 p-5 sm:p-8 lg:p-10 ring-1 shadow-lg border border-gray-200/50">
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-center">
             Change Password
