@@ -118,8 +118,8 @@ export default function CompanyInformation() {
   }, [loading, payload]);
 
   return (
-    <div className="min-h-screen bg-amber-50 flex items-start md:items-center justify-center pt-24 pb-10 px-4 sm:py-12 sm:px-6 lg:px-8 md:pl-20">
-      <main className="w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl bg-gray-50 p-4 sm:p-8 lg:p-10 shadow-lg border border-gray-200/50">
+    <div className="min-h-screen flex items-start md:items-center justify-center pt-24 pb-10 px-4 sm:py-12 sm:px-6 lg:px-8 md:pl-20">
+      <main className="w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl bg-gray-50 p-4 sm:p-8 lg:p-10 ring-1 shadow-lg border border-gray-200/50">
         <div className="mb-6 sm:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center">
             Update Company Information

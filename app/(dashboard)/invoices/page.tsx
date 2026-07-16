@@ -38,7 +38,7 @@ export default function InvoicesPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-surface-2 flex flex-col items-center justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8">
+    <div className="min-h-screen  bg-surface-2 flex flex-col items-center justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8">
       <main className="w-full max-w-4xl">
         <div className="bg-surface shadow-lg rounded-3xl p-6 md:p-10">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">

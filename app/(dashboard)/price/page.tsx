@@ -117,9 +117,9 @@ export default function WaterFormPage() {
   }, [loading, formData]);
 
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="min-h-screen ">
       <main className="mx-auto flex min-h-screen max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full rounded-2xl bg-gray-50 p-6 shadow-lg md:p-10">
+        <div className="w-full rounded-2xl bg-gray-50 p-6 ring-1 shadow-lg md:p-10">
           <h1 className="mb-4 text-center text-2xl font-bold md:text-3xl">
             Price
           </h1>

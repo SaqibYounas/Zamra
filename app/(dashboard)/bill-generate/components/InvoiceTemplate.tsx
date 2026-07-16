@@ -80,7 +80,6 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         </div>
       </div>
 
-      {/* CUSTOMER PROFILES */}
       <div className="grid grid-cols-2 gap-8 relative mb-6">
         <div className="flex flex-col">
           <h3 className="text-teal-700 text-[10px] font-black uppercase tracking-wider mb-2 border-b border-slate-100 pb-0.5">
@@ -121,7 +120,6 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         </div>
       </div>
 
-      {/* LOGISTICS BLOCK ROW */}
       <div className="bg-slate-50 border border-slate-100 rounded-md mb-6 px-3 py-2">
         <table className="w-full border-collapse table-fixed">
           <thead>
@@ -153,7 +151,6 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         </table>
       </div>
 
-      {/* PRODUCT ITEMS TABLE — no longer flex-1, so it doesn't stretch and push totals to page bottom */}
       <div className="mb-6">
         <table className="w-full border-collapse">
           <thead>
@@ -190,7 +187,6 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
         </table>
       </div>
 
-      {/* LEDGER MATH SUMMARIES — now sits right after the items table, with just mt-4 spacing */}
       <div className="flex justify-end mt-4">
         <div className="w-72 rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2 text-[11px]">
           <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-200">
