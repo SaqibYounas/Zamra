@@ -54,6 +54,12 @@ const Sidebar: React.FC<SidebarProps> = ({
       href: '/price',
     },
     {
+      id: 'selling-price',
+      label: 'Selling Price',
+      icon: <FaFileInvoiceDollar size={20} />,
+      href: '/selling-price',
+    },
+    {
       id: 'production-quantity',
       label: 'Production Quantity',
       icon: <MdOutlineProductionQuantityLimits size={20} />,
