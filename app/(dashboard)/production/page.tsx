@@ -266,7 +266,7 @@ export default function ProductionPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col">
-            <div className="mb-2">
+            <div className="mb-4">
               <Dropdown
                 label="Select Bottle Type"
                 options={waterTypes}
