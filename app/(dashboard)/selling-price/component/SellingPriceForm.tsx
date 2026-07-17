@@ -49,7 +49,6 @@ export default function SellingPriceForm() {
     try {
       setLoading(true);
 
-      // API call
       console.log(formData);
     } catch (error) {
       console.error(error);
@@ -59,44 +58,57 @@ export default function SellingPriceForm() {
   };
 
   return (
-    <div className="min-h-screen">
-      <main className="mx-auto  flex min-h-screen max-w-4xl items-center justify-center px-4 py-8">
-        <div className="w-full rounded-2xl ring-1 bg-gray-50 p-6 shadow-lg md:p-10">
-          <h1 className="mb- text-center text-3xl font-bold">Selling Price</h1>
+    <div
+      className="
+        mx-auto
+        w-full
+        max-w-sm
+        rounded-2xl
+        bg-gray-50
+        p-4
+        shadow-lg
+        ring-1
+        sm:max-w-md
+        sm:p-6
+        lg:max-w-full
+        lg:p-8
+      "
+    >
+      <h1 className="text-center text-xl font-bold sm:text-2xl lg:text-3xl">
+        Selling Price
+      </h1>
 
-          <p className="mb-6 text-center text-sm text-gray-500">
-            Manage bottle selling rates
-          </p>
+      <p className="mb-5 text-center text-xs text-gray-500 sm:mb-6 sm:text-sm">
+        Manage bottle selling rates
+      </p>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-5">
-              <Dropdown
-                label="Select Bottle Type"
-                options={waterTypes}
-                value={formData.type}
-                onChange={handleTypeChange}
-              />
-            </div>
-
-            <WaterInputField
-              label="Selling Price Per Bottle"
-              customicon={RsIcon}
-              type="text"
-              value={formData.sellingPrice}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder="Enter selling price"
-              error={error}
-            />
-
-            <AppButton
-              type="submit"
-              label={loading ? 'Saving...' : 'Save Selling Price'}
-              loading={loading}
-              className="mt-6 w-full py-3"
-            />
-          </form>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-5">
+          <Dropdown
+            label="Select Bottle Type"
+            options={waterTypes}
+            value={formData.type}
+            onChange={handleTypeChange}
+          />
         </div>
-      </main>
+
+        <WaterInputField
+          label="Selling Price Per Bottle"
+          customicon={RsIcon}
+          type="text"
+          value={formData.sellingPrice}
+          onChange={(e) => handleChange(e.target.value)}
+          placeholder="Enter selling price"
+          error={error}
+        />
+
+        <AppButton
+          type="submit"
+          label={loading ? 'Saving...' : 'Save Selling Price'}
+          loading={loading}
+          className="mt-6 w-full py-3"
+        />
+      </form>
     </div>
   );
 }
