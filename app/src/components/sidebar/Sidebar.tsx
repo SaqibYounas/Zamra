@@ -16,6 +16,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { clearAuthTokenFromAxios } from '../../lib/auth';
 import { showApiToast } from '../../lib/apiToast';
+import RupeesIcon from '@/public/RupeesIcon';
 
 type SidebarProps = {
   sidebarOpen: boolean;
@@ -89,10 +90,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       href: '/change-password',
     },
   ];
+
   const handleNavigation = (item: SidebarItem) => {
     router.push(item.href);
     setActiveTab(item.id);
-    if (window.innerWidth < 768) setSidebarOpen(false);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -113,60 +117,88 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-white/95 text-slate-900 shadow-sm border-b border-slate-200/70 backdrop-blur-xl">
-        <span className="font-semibold">Zamra Water</span>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 flex items-center justify-between p-4 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white shadow-lg">
+        <div className="flex items-center gap-2">
+          <div className="bg-white/20 p-2 rounded-lg backdrop-blur">
+            <Droplets size={20} />
+          </div>
+          <span className="font-semibold">Zamra Water</span>
+        </div>
+
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-lg hover:bg-white/20 transition"
+        >
           {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       <div
-        className={`fixed inset-0 bg-slate-900/35 z-20 transition-opacity md:hidden ${
+        className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-20 transition-opacity md:hidden ${
           sidebarOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
         }`}
         onClick={() => setSidebarOpen(false)}
       />
 
+      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full z-30 flex flex-col bg-stone-200 text-slate-700 transition-all duration-300 ease-in-out overflow-hidden shadow-xl border-r border-slate-200/70
-          ${sidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'}
-        `}
+        className={`fixed top-0 left-0 h-full z-30 flex flex-col bg-gradient-to-b from-slate-50 via-white to-blue-50 text-slate-700 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl border-r border-blue-100 ${
+          sidebarOpen
+            ? 'w-64 translate-x-0'
+            : 'w-20 -translate-x-full md:translate-x-0'
+        }`}
       >
-        <div className="px-5 py-6 flex items-center gap-3 border-b border-slate-200">
-          <div className="bg-gradient-to-br from-blue-600 to-cyan-500 p-2.5 rounded-xl shrink-0 shadow-md">
+        <div className="px-5 py-6 flex items-center gap-3 border-b border-blue-100">
+          <div className="bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-400 p-2.5 rounded-xl shadow-lg shadow-blue-200 shrink-0">
             <Droplets size={22} className="text-white" />
           </div>
+
           {sidebarOpen && (
-            <div className="min-w-0">
-              <p className="font-semibold text-base whitespace-nowrap text-slate-900">
+            <div>
+              <p className="font-bold text-base text-slate-900 whitespace-nowrap">
                 Zamra Water
               </p>
-              <p className="text-xs text-slate-500 whitespace-nowrap">
+              <p className="text-xs text-blue-500 whitespace-nowrap">
                 Operations Portal
               </p>
             </div>
           )}
         </div>
 
-        <nav className="flex-1 py-5 px-2 md:px-3 space-y-1.5">
+        <nav className="flex-1 py-5 px-3 space-y-2">
           {sidebarItems.map((item) => {
             const isActive = pathname === item.href;
+
             return (
               <button
                 key={item.id}
                 onClick={() => handleNavigation(item)}
-                className={`group w-full flex items-center gap-3 rounded-xl transition-all duration-300 cursor-pointer border border-transparent
-                  ${sidebarOpen ? 'justify-start px-4 py-3' : 'justify-center p-3'}
-                  ${isActive ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md' : 'text-shadow-mist-700 hover:bg-slate-100 hover:text-slate-900'}
-                `}
+                className={`group w-full flex items-center gap-3 rounded-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-300 ${
+                  sidebarOpen ? 'justify-start px-4 py-3' : 'justify-center p-3'
+                } ${
+                  isActive
+                    ? 'bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-300/50 hover:text-white active:text-white focus:text-white'
+                    : 'text-slate-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:text-blue-700 active:text-blue-700 focus:text-blue-700'
+                }`}
               >
                 <span
-                  className={`flex items-center justify-center ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-600'}`}
+                  className={`flex items-center justify-center ${
+                    isActive
+                      ? '!text-white'
+                      : '!text-slate-500 group-hover:!text-blue-600'
+                  }`}
                 >
                   {item.icon}
                 </span>
+
                 {sidebarOpen && (
-                  <span className="font-medium whitespace-nowrap text-sm">
+                  <span
+                    className={`text-sm font-medium whitespace-nowrap ${
+                      isActive
+                        ? '!text-white'
+                        : '!text-slate-700 group-hover:!text-blue-700'
+                    }`}
+                  >
                     {item.label}
                   </span>
                 )}
@@ -175,17 +207,20 @@ const Sidebar: React.FC<SidebarProps> = ({
           })}
         </nav>
 
-        <div className="p-3 border-t border-slate-200 space-y-2">
+        <div className="p-3 border-t border-blue-100 space-y-2">
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-4' : 'justify-center'} gap-3 py-3 rounded-xl bg-red-600 text-white font-medium transition-all duration-300 hover:bg-red-700 active:scale-95 cursor-pointer border border-slate-800`}
+            className={`w-full flex items-center gap-3 py-3 rounded-xl bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 text-white font-medium shadow-md shadow-red-200 hover:opacity-90 transition-all active:scale-95 cursor-pointer ${
+              sidebarOpen ? 'justify-start px-4' : 'justify-center'
+            }`}
           >
             <HiOutlineLockClosed size={18} />
             {sidebarOpen && <span className="text-sm">Logout</span>}
           </button>
+
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center justify-center p-2.5 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer text-slate-600 hover:text-slate-900"
+            className="w-full flex items-center justify-center p-2.5 rounded-xl text-slate-500 hover:bg-blue-100 hover:text-blue-700 transition cursor-pointer"
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
