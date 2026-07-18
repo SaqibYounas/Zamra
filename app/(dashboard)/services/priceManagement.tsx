@@ -30,3 +30,23 @@ export async function savePrice(data: PriceMangRequestBody) {
     };
   }
 }
+
+export async function fetchActivePrices() {
+  try {
+    const response = await axios.get('/api/active-price');
+    const data = response.data;
+
+    return Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
+  } catch (error) {
+    const err = error as AxiosError<ErrorResponse>;
+
+    return {
+      success: false,
+      message: err.response?.data?.error || 'Server error',
+    };
+  }
+}
