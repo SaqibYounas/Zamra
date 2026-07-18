@@ -2,13 +2,6 @@ import SellingPriceForm from './component/SellingPriceForm';
 import TodayPriceTable from './component/PriceTable';
 
 export default function SellingPricePage() {
-  const prices = {
-    '500ml': 'Rs 50',
-    '1 Liter': 'Rs 80',
-    '1.5 Liter': 'Rs 100',
-    '19 Liter': 'Rs 150',
-  };
-
   return (
     <main
       className="
@@ -23,7 +16,7 @@ export default function SellingPricePage() {
         lg:pt-10
       "
     >
-      <TodayPriceTable loading={false} prices={prices} />
+      <TodayPriceTable />
 
       <div className="mt-5 sm:mt-8">
         <SellingPriceForm />
