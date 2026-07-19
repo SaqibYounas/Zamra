@@ -79,7 +79,6 @@ export default function SellingPriceForm({ prices }: Props) {
       setLoading(true);
 
       const response = await saveSellingPrice(payload);
-
       console.log('Saved:', response);
 
       setFormData({
@@ -100,12 +99,14 @@ export default function SellingPriceForm({ prices }: Props) {
       <h1 className="text-center text-2xl font-bold">Selling Price</h1>
 
       <form onSubmit={handleSubmit}>
-        <Dropdown
-          label="Select Bottle Type"
-          options={waterTypes}
-          value={formData.type}
-          onChange={handleTypeChange}
-        />
+        <div className="mb-5">
+          <Dropdown
+            label="Select Bottle Type"
+            options={waterTypes}
+            value={formData.type}
+            onChange={handleTypeChange}
+          />
+        </div>
 
         <WaterInputField
           label="Selling Price Per Bottle"
