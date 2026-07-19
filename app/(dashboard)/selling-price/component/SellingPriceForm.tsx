@@ -1,41 +1,55 @@
 'use client';
 
 import { useState } from 'react';
+
 import WaterInputField from '../../../src/components/inputFields/InputField';
 import AppButton from '../../../src/components/button/Button';
 import Dropdown from '../../../src/components/dropdown/Dropdown';
 import RsIcon from '@/public/RupeesIcon';
 import { waterTypes } from '../../data/waterTypes';
+import { saveSellingPrice } from '../../services/sellingPrice';
 
-interface SellingPriceFormData {
+interface Price {
+  id: number;
+  bottleType: string;
+  perBottlePrice: string;
+  labelCapPrice: string;
+  otherExpenses: string;
+  isActive: boolean;
+}
+
+interface Props {
+  prices: Price[];
+}
+
+interface FormData {
   type: string;
   sellingPrice: string;
 }
 
-export default function SellingPriceForm() {
-  const [formData, setFormData] = useState<SellingPriceFormData>({
+export default function SellingPriceForm({ prices }: Props) {
+  const [formData, setFormData] = useState<FormData>({
     type: '500ml',
     sellingPrice: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
   const handleTypeChange = (value: string) => {
     setFormData({
       type: value,
       sellingPrice: '',
     });
+
     setError('');
   };
 
   const handleChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
+
       sellingPrice: value.replace(/[^0-9]/g, ''),
     }));
-
-    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,54 +57,55 @@ export default function SellingPriceForm() {
 
     if (!formData.sellingPrice) {
       setError('Selling price is required');
+
       return;
     }
+
+    const selectedPrice = prices.find(
+      (item) => item.bottleType === formData.type
+    );
+
+    if (!selectedPrice) {
+      setError('Price type not found');
+      return;
+    }
+
+    const payload = {
+      sellingPrice: formData.sellingPrice,
+      priceManagementId: selectedPrice.id,
+    };
 
     try {
       setLoading(true);
 
-      console.log(formData);
+      const response = await saveSellingPrice(payload);
+
+      console.log('Saved:', response);
+
+      setFormData({
+        type: '500ml',
+        sellingPrice: '',
+      });
     } catch (error) {
       console.error(error);
+
+      setError('Failed to save');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="
-        mx-auto
-        w-full
-        max-w-sm
-        rounded-2xl
-        bg-gray-50
-        p-4
-        shadow-lg
-        ring-1
-        sm:max-w-md
-        sm:p-6
-        lg:max-w-full
-        lg:p-8
-      "
-    >
-      <h1 className="text-center text-xl font-bold sm:text-2xl lg:text-3xl">
-        Selling Price
-      </h1>
-
-      <p className="mb-5 text-center text-xs text-gray-500 sm:mb-6 sm:text-sm">
-        Manage bottle selling rates
-      </p>
+    <div className="rounded-2xl bg-gray-50 p-6 shadow">
+      <h1 className="text-center text-2xl font-bold">Selling Price</h1>
 
       <form onSubmit={handleSubmit}>
-        <div className="mb-5">
-          <Dropdown
-            label="Select Bottle Type"
-            options={waterTypes}
-            value={formData.type}
-            onChange={handleTypeChange}
-          />
-        </div>
+        <Dropdown
+          label="Select Bottle Type"
+          options={waterTypes}
+          value={formData.type}
+          onChange={handleTypeChange}
+        />
 
         <WaterInputField
           label="Selling Price Per Bottle"
@@ -106,7 +121,6 @@ export default function SellingPriceForm() {
           type="submit"
           label={loading ? 'Saving...' : 'Save Selling Price'}
           loading={loading}
-          className="mt-6 w-full py-3"
         />
       </form>
     </div>

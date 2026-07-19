@@ -3,22 +3,34 @@ import axios, { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+interface sellingPriceRequestBody {
+  sellingPrice: string;
+  priceManagementId: number;
+}
+
 interface BackendErrorResponse {
   message?: string;
 }
 
-export async function GET() {
+export async function POST(request: Request) {
   try {
+    const body = (await request.json()) as sellingPriceRequestBody;
+    const { sellingPrice, priceManagementId } = body;
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-    const response = await axios.get(`${BACKEND_API}/price`, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : '',
+    const response = await axios.post(
+      `${BACKEND_API}/selling-price/create`,
+      {
+        sellingPrice: sellingPrice,
+        priceManagementId: priceManagementId,
       },
-    });
-
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      }
+    );
     const data = response.data as unknown;
-    console.log(data);
     return NextResponse.json(data);
   } catch (error) {
     const axiosError = error as AxiosError<BackendErrorResponse>;

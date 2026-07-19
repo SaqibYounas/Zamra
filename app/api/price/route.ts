@@ -18,8 +18,6 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as PriceMangRequestBody;
     const { type, price, labelCap, otherExpense } = body;
-
-    // Validate all fields are present and not empty
     if (
       !type?.trim() ||
       !price?.trim() ||
