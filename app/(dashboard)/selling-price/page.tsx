@@ -1,7 +1,37 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import SellingPriceForm from './component/SellingPriceForm';
 import TodayPriceTable from './component/PriceTable';
+import { fetchActivePrices } from '../services/priceManagement';
+
+interface Price {
+  id: number;
+  bottleType: string;
+  perBottlePrice: string;
+  labelCapPrice: string;
+  otherExpenses: string;
+  isActive: boolean;
+}
 
 export default function SellingPricePage() {
+  const [prices, setPrices] = useState<Price[]>([]);
+
+  async function getPrices() {
+    try {
+      const data = await fetchActivePrices();
+
+      setPrices(data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    getPrices();
+  }, []);
+
   return (
     <main
       className="
@@ -16,10 +46,10 @@ export default function SellingPricePage() {
         lg:pt-10
       "
     >
-      <TodayPriceTable />
+      <TodayPriceTable prices={prices} loading={false} />
 
       <div className="mt-5 sm:mt-8">
-        <SellingPriceForm />
+        <SellingPriceForm prices={prices} />
       </div>
     </main>
   );
