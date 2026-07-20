@@ -27,30 +27,30 @@ export default function TodayPriceTable({ prices, loading }: Props) {
   return (
     <div
       className="
-      mx-auto
-      w-full
-      max-w-sm
-      overflow-x-auto
-      rounded-2xl
-      bg-white
-      p-3
-      shadow-md
-      ring-1
-      ring-slate-200
-      sm:max-w-md
-      sm:p-5
-      lg:max-w-full
-      lg:p-6
+        mx-auto
+        w-full
+        max-w-sm
+        overflow-x-auto
+        rounded-2xl
+        bg-white
+        p-3
+        shadow-md
+        ring-1
+        ring-slate-200
+        sm:max-w-md
+        sm:p-5
+        lg:max-w-full
+        lg:p-6
       "
     >
       <h2
         className="
-      mb-3
-      text-center
-      text-base
-      font-bold
-      text-slate-900
-      "
+          mb-3
+          text-center
+          text-base
+          font-bold
+          text-slate-900
+        "
       >
         Today Per Bottle Price
       </h2>
@@ -87,14 +87,20 @@ export default function TodayPriceTable({ prices, loading }: Props) {
                   <td
                     key={type}
                     className="
-            border-t
-            p-3
-            text-center
-            text-sm
-            font-semibold
-            "
+                      border-t
+                      p-3
+                      text-center
+                      text-sm
+                      font-semibold
+                    "
                   >
-                    {loading ? 'Loading...' : `Rs ${total}`}
+                    {loading ? (
+                      <div className="flex justify-center">
+                        <div className="h-5 w-16 animate-pulse rounded-md bg-slate-200" />
+                      </div>
+                    ) : (
+                      `Rs ${total}`
+                    )}
                   </td>
                 );
               })}

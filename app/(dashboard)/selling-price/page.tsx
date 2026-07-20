@@ -16,14 +16,19 @@ interface Price {
 
 export default function SellingPricePage() {
   const [prices, setPrices] = useState<Price[]>([]);
+  const [loading, setLoading] = useState(true);
 
   async function getPrices() {
     try {
+      setLoading(true);
+
       const data = await fetchActivePrices();
 
       setPrices(data || []);
+      setLoading(false);
     } catch (error) {
       console.error(error);
+      setLoading(false);
     }
   }
 
@@ -46,7 +51,7 @@ export default function SellingPricePage() {
         lg:pt-10
       "
     >
-      <TodayPriceTable prices={prices} loading={false} />
+      <TodayPriceTable prices={prices} loading={loading} />
 
       <div className="mt-5 sm:mt-8">
         <SellingPriceForm prices={prices} />
