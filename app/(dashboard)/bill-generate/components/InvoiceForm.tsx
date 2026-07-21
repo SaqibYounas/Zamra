@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Plus,
   Trash2,
@@ -30,6 +30,14 @@ export interface CustomerRecord {
   city?: string;
   phone?: string;
   email?: string;
+}
+
+interface sellingPriceRequestBody {
+  sellingPrice: string;
+  priceManagementId: number;
+  priceManagement: {
+    bottleType: string;
+  };
 }
 
 export interface ShippingRecord {
@@ -96,6 +104,7 @@ interface InvoiceFormProps {
     value: number
   ) => void;
   onSubmit: (e: React.FormEvent) => void;
+  todayPrices: sellingPriceRequestBody[];
 }
 
 const SectionHeader: React.FC<{
@@ -104,15 +113,17 @@ const SectionHeader: React.FC<{
   action?: React.ReactNode;
 }> = ({ icon: Icon, title, action }) => (
   <div className="flex flex-col gap-3 border-b-2 border-slate-900/90 pb-2 sm:flex-row sm:items-end sm:justify-between">
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2.5 min-w-0">
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-900 text-amber-50 sm:h-7 sm:w-7">
         <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
       </span>
-      <div className="leading-tight">
-        <h3 className="text-xs font-bold text-slate-900 sm:text-sm">{title}</h3>
+      <div className="leading-tight min-w-0">
+        <h3 className="text-xs font-bold text-slate-900 sm:text-sm truncate">
+          {title}
+        </h3>
       </div>
     </div>
-    {action}
+    {action && <div className="w-full sm:w-auto">{action}</div>}
   </div>
 );
 
@@ -132,9 +143,11 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   onRemoveItem,
   onLedgerChange,
   onSubmit,
+  todayPrices,
 }) => {
   const { isShippingSame, isPrinting, error, successMessage, fieldErrors } =
     status;
+  const [selectedSellingPrice, setSelectedSellingPrice] = useState('');
   const {
     customers,
     shippingProfiles,
@@ -167,6 +180,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     onShippingSelect(value === selectedShippingId ? '' : value);
   };
 
+  const handleSellingPriceSelect = (value: string) => {
+    setSelectedSellingPrice(value);
+  };
+
   const itemsSubtotal = invoiceData.items.reduce(
     (sum, item) =>
       sum + (Number(item.qty) || 0) * (Number(item.unitPrice) || 0),
@@ -174,9 +191,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   );
 
   return (
-    <div className="min-h-screen bg-[size:22px_22px] flex items-start sm:items-center justify-center pt-20 pb-6 px-3 sm:py-10 sm:px-6 lg:px-8">
-      <main className="w-full max-w-5xl rounded-2xl bg-surface ring-1 shadow-lg border border-slate-900/10 overflow-hidden">
-        <div className="relative bg-slate-900 px-4 py-5 sm:px-6 sm:py-7 md:px-10 text-amber-50">
+    <div className="min-h-screen w-full bg-[size:22px_22px] flex items-start sm:items-center justify-center pt-16 pb-6 px-3 sm:py-10 sm:px-6 lg:px-8">
+      <main className="w-full max-w-5xl rounded-xl sm:rounded-2xl bg-surface ring-1 shadow-lg border border-slate-900/10 overflow-hidden">
+        {/* Header */}
+        <div className="relative bg-slate-900 px-3 py-4 sm:px-6 sm:py-7 md:px-10 text-amber-50">
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.06]"
             style={{
@@ -184,19 +202,19 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 'repeating-linear-gradient(135deg, #fff 0px, #fff 1px, transparent 1px, transparent 14px)',
             }}
           />
-          <div className="flex items-center justify-between gap-3 w-full">
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <span className="flex h-8 w-8 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/90 text-slate-950 shadow-md">
+          <div className="relative flex flex-wrap items-center justify-between gap-3 w-full">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <span className="flex h-7 w-7 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl bg-teal-500/90 text-slate-950 shadow-md">
                 <Receipt className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
               </span>
-              <div>
-                <h1 className="text-base sm:text-2xl md:text-3xl font-black tracking-tight whitespace-nowrap">
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-2xl md:text-3xl font-black tracking-tight truncate">
                   Customer Invoice
                 </h1>
               </div>
             </div>
 
-            <div className="w-28 sm:w-48 shrink-0">
+            <div className="w-full sm:w-48 order-3 sm:order-none">
               <label className="mb-1 block text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] text-teal-300">
                 Invoice ID No
               </label>
@@ -217,13 +235,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
         </div>
 
         {dropdownError && (
-          <p className="mx-4 mt-4 sm:mx-10 sm:mt-6 text-xs font-bold text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
+          <p className="mx-3 mt-4 sm:mx-10 sm:mt-6 text-xs font-bold text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
             {dropdownError}
           </p>
         )}
 
         <form
-          className="space-y-6 p-4 sm:space-y-9 sm:p-6 md:p-10"
+          className="space-y-6 p-3 sm:space-y-9 sm:p-6 md:p-10"
           onSubmit={onSubmit}
         >
           <div className="space-y-3 sm:space-y-4">
@@ -407,9 +425,10 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             )}
           </div>
 
+          {/* Logistic Operations */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader icon={Truck} title="Logistic Operations" />
-            <div className="grid grid-cols-1 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70 md:grid-cols-3 gap-3 sm:gap-4">
               {LOGISTIC_FIELDS.map((f) => (
                 <WaterInputField
                   type="text"
@@ -438,6 +457,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
           </div>
 
+          {/* Line Item Specifications */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={Receipt}
@@ -446,7 +466,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <button
                   type="button"
                   onClick={onAddItem}
-                  className="flex items-center justify-center gap-1 text-[11px] font-bold bg-teal-600 text-white rounded-lg px-3 py-1.5 shadow-sm hover:bg-teal-700 transition-colors cursor-pointer w-full sm:w-auto"
+                  className="flex items-center justify-center gap-1 text-[11px] font-bold bg-teal-600 text-white rounded-lg px-3 py-2 sm:py-1.5 shadow-sm hover:bg-teal-700 active:bg-teal-800 transition-colors cursor-pointer w-full sm:w-auto"
                 >
                   <Plus className="w-4 h-4" /> Add Item Row
                 </button>
@@ -454,43 +474,56 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
 
             <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <div className="hidden md:grid grid-cols-[10%_38%_12%_16%_16%_8%] gap-3 bg-slate-900 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-50">
+              {/* Desktop/tablet-landscape column header only, since row layout below only kicks in at lg */}
+              <div className="hidden lg:grid grid-cols-[70px_1.6fr_80px_1fr_140px_60px] gap-3 bg-slate-900 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-50">
                 <span>ID</span>
                 <span>Description</span>
                 <span>Qty</span>
-                <span>Rate (Rs)</span>
+                <span>Selling Price</span>
                 <span className="text-right">Amount (Rs)</span>
                 <span className="text-center">—</span>
               </div>
 
-              <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto bg-white">
+              <div className="divide-y divide-slate-100 max-h-[420px] sm:max-h-[420px] overflow-y-auto bg-white">
                 {invoiceData.items.map((item, idx) => {
                   const lineTotal =
                     (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
                   return (
                     <div
                       key={item.id}
-                      className={`grid grid-cols-2 md:grid-cols-[10%_38%_12%_16%_16%_8%] gap-3 px-3 py-4 sm:px-4 items-end ${
-                        idx % 2 === 1 ? 'bg-slate-50/60' : ''
-                      }`}
+                      className={`
+                        grid
+                        grid-cols-1
+                        sm:grid-cols-2
+                        lg:grid-cols-[70px_1.6fr_80px_1fr_140px_60px]
+                        gap-3 sm:gap-4
+                        lg:items-end
+                        px-3 sm:px-4
+                        py-4
+                        ${idx % 2 === 1 ? 'bg-slate-50/60' : ''}
+                      `}
                     >
-                      <WaterInputField
-                        type="text"
-                        label="ID"
-                        value={item.no}
-                        onChange={(e) =>
-                          onItemChange(item.id, 'no', e.target.value)
-                        }
-                      />
-                      <WaterInputField
-                        type="text"
-                        label="Description"
-                        value={item.description}
-                        onChange={(e) =>
-                          onItemChange(item.id, 'description', e.target.value)
-                        }
-                        placeholder="500ml Premium Bottle (Box of 24)"
-                      />
+                      <div className="sm:col-span-2 lg:col-span-1">
+                        <WaterInputField
+                          type="text"
+                          label="ID"
+                          value={item.no}
+                          onChange={(e) =>
+                            onItemChange(item.id, 'no', e.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="sm:col-span-2 lg:col-span-1">
+                        <WaterInputField
+                          type="text"
+                          label="Description"
+                          value={item.description}
+                          onChange={(e) =>
+                            onItemChange(item.id, 'description', e.target.value)
+                          }
+                          placeholder="500ml Premium Bottle (Box of 24)"
+                        />
+                      </div>
                       <WaterInputField
                         type="number"
                         label="QTY"
@@ -499,32 +532,37 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                           onItemChange(item.id, 'qty', e.target.value)
                         }
                       />
-                      <WaterInputField
-                        type="number"
-                        customicon={RsIcon}
-                        label="Rate (Rs)"
-                        value={item.unitPrice.toString()}
-                        onChange={(e) =>
-                          onItemChange(item.id, 'unitPrice', e.target.value)
-                        }
-                      />
-                      <div className="flex flex-col justify-center h-full pb-2">
-                        <span className="text-[10px] font-bold uppercase text-slate-400 md:hidden">
+
+                      <div className="w-full min-w-0">
+                        <Dropdown
+                          placeholder="Selling Price"
+                          options={todayPrices.map((s) => ({
+                            label: `${s.priceManagement.bottleType} - Rs ${s.sellingPrice}`,
+                            value: s.sellingPrice,
+                          }))}
+                          value={item.unitPrice.toString()}
+                          onChange={(value) =>
+                            onItemChange(item.id, 'unitPrice', Number(value))
+                          }
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between lg:h-full lg:items-end lg:justify-end gap-2 pt-1 lg:pt-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:hidden">
                           Amount
                         </span>
-                        <span className="font-mono text-sm font-bold text-slate-800 md:text-right">
+                        <span className="font-mono text-sm font-bold text-slate-800">
                           Rs {lineTotal.toFixed(2)}
                         </span>
                       </div>
 
-                      <div className="col-span-2 md:col-span-1 flex items-end">
+                      <div className="flex items-center lg:items-end justify-end lg:justify-center">
                         <button
                           type="button"
                           onClick={() => onRemoveItem(Number(item.id))}
-                          className="p-2.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors w-full flex justify-center items-center cursor-pointer"
-                          aria-label="Remove line item"
+                          className="flex h-[40px] w-[40px] sm:h-[44px] sm:w-[44px] shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 active:bg-rose-200"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -546,7 +584,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-start">
             <div className="space-y-3 sm:space-y-4">
               <SectionHeader icon={Percent} title="Ledger Adjustments" />
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70">
                 <WaterInputField
                   type="number"
                   icon={Percent}
@@ -600,7 +638,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
 
             <div className="flex justify-center lg:justify-end pt-2">
-              <div className="-rotate-2 rounded-xl border-[3px] border-dashed border-teal-700/70 bg-teal-50/60 px-5 py-3 sm:px-6 sm:py-4 text-center shadow-sm">
+              <div className="-rotate-2 rounded-xl border-[3px] border-dashed border-teal-700/70 bg-teal-50/60 px-5 py-3 sm:px-6 sm:py-4 text-center shadow-sm w-full sm:w-auto">
                 <span className="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">
                   Net Balance Due
                 </span>

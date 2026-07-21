@@ -28,3 +28,21 @@ export async function saveSellingPrice(data: sellingPriceRequestBody) {
     };
   }
 }
+
+export async function currentSellingPrice() {
+  try {
+    const response = await axios.get('/api/selling-price');
+
+    return response.data;
+  } catch (error) {
+    const err = error as AxiosError<ErrorResponse>;
+    const payload = err.response?.data as
+      | { error?: string; message?: string }
+      | undefined;
+
+    return {
+      success: false,
+      message: payload?.message || payload?.error || 'Server error',
+    };
+  }
+}
