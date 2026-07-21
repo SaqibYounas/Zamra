@@ -25,36 +25,43 @@ export default function SellingPricePage() {
       const data = await fetchActivePrices();
 
       setPrices(data || []);
-      setLoading(false);
     } catch (error) {
       console.error(error);
+    } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     getPrices();
   }, []);
 
   return (
     <main
       className="
-        mx-auto
-        w-full
-        max-w-5xl
-        px-3
-        sm:px-6
-        lg:px-8
-        pt-20
-        sm:pt-24
-        lg:pt-10
-      "
+    min-h-screen
+    w-full
+    flex
+    items-center
+    justify-center
+    px-3
+    sm:px-6
+    lg:px-8
+    py-10
+  "
     >
-      <TodayPriceTable prices={prices} loading={loading} />
+      <div
+        className="
+      w-full
+      max-w-5xl
+      mx-auto
+    "
+      >
+        <TodayPriceTable prices={prices} loading={loading} />
 
-      <div className="mt-5 sm:mt-8">
-        <SellingPriceForm prices={prices} />
+        <div className="mt-5 sm:mt-8">
+          <SellingPriceForm prices={prices} />
+        </div>
       </div>
     </main>
   );

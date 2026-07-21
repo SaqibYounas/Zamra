@@ -27,86 +27,131 @@ export default function TodayPriceTable({ prices, loading }: Props) {
   return (
     <div
       className="
-        mx-auto
-        w-full
-        max-w-sm
-        overflow-x-auto
-        rounded-2xl
-        bg-white
-        p-3
-        shadow-md
-        ring-1
-        ring-slate-200
-        sm:max-w-md
-        sm:p-5
-        lg:max-w-full
-        lg:p-6
-      "
+      w-full
+      max-w-5xl
+      rounded-2xl
+      overflow-hidden
+      border
+      border-slate-900/20
+      bg-white
+      shadow-lg
+    "
     >
-      <h2
+      <div
         className="
-          mb-3
-          text-center
-          text-base
-          font-bold
-          text-slate-900
-        "
+        relative
+        bg-slate-900
+        px-5
+        py-5
+        text-amber-50
+      "
       >
-        Today Per Bottle Price
-      </h2>
+        <div
+          className="
+          pointer-events-none
+          absolute
+          inset-0
+          opacity-[0.06]
+        "
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(135deg,#fff 0px,#fff 1px,transparent 1px,transparent 14px)',
+          }}
+        />
 
-      <div className="overflow-hidden rounded-xl border">
-        <table className="w-full table-fixed">
-          <thead className="bg-blue-50">
-            <tr>
-              {bottles.map((type) => (
-                <th
-                  key={type}
-                  className="p-3 text-center text-xs text-blue-700"
-                >
-                  {type}
-                </th>
-              ))}
-            </tr>
-          </thead>
+        <h2
+          className="
+          relative
+          text-center
+          text-lg
+          sm:text-xl
+          font-black
+          tracking-wide
+        "
+        >
+          Today Per Bottle Price
+        </h2>
+      </div>
 
-          <tbody>
-            <tr>
-              {bottles.map((type) => {
-                const price = prices.find(
-                  (item) => bottleTypeMap[item.bottleType] === type
-                );
-
-                const total = price
-                  ? Number(price.perBottlePrice) +
-                    Number(price.labelCapPrice) +
-                    Number(price.otherExpenses)
-                  : 0;
-
-                return (
-                  <td
+      <div className="p-4 sm:p-6">
+        <div
+          className="
+          overflow-x-auto
+          rounded-xl
+          border
+          border-slate-200
+        "
+        >
+          <table
+            className="
+            w-full
+            min-w-[600px]
+            table-fixed
+          "
+          >
+            <thead
+              className="
+              bg-slate-100
+            "
+            >
+              <tr>
+                {bottles.map((type) => (
+                  <th
                     key={type}
                     className="
+                    px-4
+                    py-3
+                    text-center
+                    text-xs
+                    font-bold
+                    uppercase
+                    text-slate-700
+                  "
+                  >
+                    {type}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                {bottles.map((type) => {
+                  const price = prices.find(
+                    (item) => bottleTypeMap[item.bottleType] === type
+                  );
+
+                  const total = price
+                    ? Number(price.perBottlePrice) +
+                      Number(price.labelCapPrice) +
+                      Number(price.otherExpenses)
+                    : 0;
+
+                  return (
+                    <td
+                      key={type}
+                      className="
                       border-t
-                      p-3
+                      px-4
+                      py-4
                       text-center
                       text-sm
-                      font-semibold
+                      font-bold
+                      text-slate-900
                     "
-                  >
-                    {loading ? (
-                      <div className="flex justify-center">
-                        <div className="h-5 w-16 animate-pulse rounded-md bg-slate-200" />
-                      </div>
-                    ) : (
-                      `Rs ${total}`
-                    )}
-                  </td>
-                );
-              })}
-            </tr>
-          </tbody>
-        </table>
+                    >
+                      {loading ? (
+                        <div className="mx-auto h-5 w-16 rounded bg-slate-200 animate-pulse" />
+                      ) : (
+                        `Rs ${total}`
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
