@@ -35,6 +35,9 @@ export interface CustomerRecord {
 interface sellingPriceRequestBody {
   sellingPrice: string;
   priceManagementId: number;
+  priceManagement: {
+    bottleType: string;
+  };
 }
 
 export interface ShippingRecord {
@@ -241,7 +244,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           className="space-y-6 p-3 sm:space-y-9 sm:p-6 md:p-10"
           onSubmit={onSubmit}
         >
-          {/* Customer Billing Details */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={User}
@@ -345,7 +347,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
           </div>
 
-          {/* Shipping Destination */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={Truck}
@@ -580,7 +581,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
           </div>
 
-          {/* Ledger Adjustments + Balance Due */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-start">
             <div className="space-y-3 sm:space-y-4">
               <SectionHeader icon={Percent} title="Ledger Adjustments" />
