@@ -146,7 +146,6 @@ const Sidebar: React.FC<SidebarProps> = ({
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full z-30 flex flex-col bg-gradient-to-b from-slate-50 via-white to-blue-50 text-slate-700 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl border-r border-blue-100 ${
           sidebarOpen
