@@ -12,7 +12,7 @@ import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../types/types';
 import { fetchCustomers } from '../services/getCustomers';
 import { fetchShipping } from '../services/getShipping';
 import { submitInvoice } from '../services/submitInvoice';
-
+import { currentSellingPrice } from '../services/sellingPrice';
 type CustomerApiResponse = {
   id: number;
   companyName: string;
@@ -118,14 +118,33 @@ const initialDropdowns: DropdownState = {
   error: '',
 };
 
+interface sellingPriceRequestBody {
+  sellingPrice: string;
+  priceManagementId: number;
+}
+
 export default function InvoiceFormDashboard() {
   const [invoiceData, setInvoiceData] =
     useState<InvoiceData>(initialInvoiceData);
   const [status, setStatus] = useState<FormStatus>(initialStatus);
   const [dropdowns, setDropdowns] = useState<DropdownState>(initialDropdowns);
+  const [prices, setPrices] = useState<sellingPriceRequestBody[]>([]);
 
   const patchStatus = useCallback((patch: Partial<FormStatus>) => {
     setStatus((prev) => ({ ...prev, ...patch }));
+  }, []);
+
+  async function getPrices() {
+    try {
+      const sellingprice = await currentSellingPrice();
+      setPrices(sellingprice.data || []);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(() => {
+    getPrices();
   }, []);
 
   const patchDropdowns = useCallback((patch: Partial<DropdownState>) => {
@@ -542,6 +561,7 @@ export default function InvoiceFormDashboard() {
         onShippingSameToggle={() =>
           patchStatus({ isShippingSame: !status.isShippingSame })
         }
+        todayPrices={prices ?? []}
         onCustomerSelect={handleCustomerSelect}
         onShippingSelect={handleShippingSelect}
         onCustomerDropdownOpen={handleCustomerDropdownOpen}
