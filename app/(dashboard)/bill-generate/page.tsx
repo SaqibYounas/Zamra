@@ -121,6 +121,9 @@ const initialDropdowns: DropdownState = {
 interface sellingPriceRequestBody {
   sellingPrice: string;
   priceManagementId: number;
+  priceManagement: {
+    bottleType: string;
+  };
 }
 
 export default function InvoiceFormDashboard() {
