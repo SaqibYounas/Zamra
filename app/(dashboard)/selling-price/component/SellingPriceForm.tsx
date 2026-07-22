@@ -95,7 +95,7 @@ export default function SellingPriceForm({ prices }: Props) {
   };
 
   return (
-    <div className="r ounded-2xl bg-gray-50 p-6 shadow">
+    <div className="rounded-2xl ring-1 bg-gray-50 p-6 shadow">
       <h1 className="text-center text-2xl font-bold">Selling Price</h1>
 
       <form onSubmit={handleSubmit}>
