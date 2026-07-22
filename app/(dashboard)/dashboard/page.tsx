@@ -56,13 +56,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen ">
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 className="lg:text-3xl sm:text-2xl font-bold text-center mb-6 text-gray-800">
+    <div className="min-h-screen bg-slate-50">
+      <main className="mx-auto max-w-7xl px-4 pt-24 pb-6 sm:px-6 lg:px-8 lg:pt-12">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-slate-800">
           Dashboard
         </h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           {metrics.map((metric) => (
             <GraphCard key={metric} title={metric} rawStockData={stockData} />
           ))}

@@ -180,10 +180,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
     onShippingSelect(value === selectedShippingId ? '' : value);
   };
 
-  const handleSellingPriceSelect = (value: string) => {
-    setSelectedSellingPrice(value);
-  };
-
   const itemsSubtotal = invoiceData.items.reduce(
     (sum, item) =>
       sum + (Number(item.qty) || 0) * (Number(item.unitPrice) || 0),
@@ -193,7 +189,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
   return (
     <div className="min-h-screen w-full bg-[size:22px_22px] flex items-start sm:items-center justify-center pt-16 pb-6 px-3 sm:py-10 sm:px-6 lg:px-8">
       <main className="w-full max-w-5xl rounded-xl sm:rounded-2xl bg-surface ring-1 shadow-lg border border-slate-900/10 overflow-hidden">
-        {/* Header */}
         <div className="relative bg-slate-900 px-3 py-4 sm:px-6 sm:py-7 md:px-10 text-amber-50">
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.06]"
@@ -256,7 +251,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 >
                   <Dropdown
                     placeholder={
-                      customersLoading ? 'Loading...' : 'Load Customer'
+                      customersLoading ? 'Loading...' : 'Select Customer'
                     }
                     options={customers.map((c) => ({
                       label: c.name,
@@ -360,7 +355,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   >
                     <Dropdown
                       placeholder={
-                        shippingLoading ? 'Loading...' : 'Load Shipping'
+                        shippingLoading ? 'Loading...' : 'Select Shipping'
                       }
                       options={shippingProfiles.map((s) => ({
                         label: s.name,
@@ -474,7 +469,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
 
             <div className="rounded-xl border border-slate-200 overflow-hidden">
-              {/* Desktop/tablet-landscape column header only, since row layout below only kicks in at lg */}
               <div className="hidden lg:grid grid-cols-[70px_1.6fr_80px_1fr_140px_60px] gap-3 bg-slate-900 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-50">
                 <span>ID</span>
                 <span>Description</span>
