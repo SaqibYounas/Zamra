@@ -133,7 +133,7 @@ export default function ProductionPage() {
         return (
           <>
             <WaterInputField
-              label="Quantity"
+              label="Total Bottles"
               type="number"
               value={formData.totalPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -142,24 +142,13 @@ export default function ProductionPage() {
               placeholder="Enter quantity"
               error={fieldErrors.totalPet}
             />
-
-            <WaterInputField
-              label="Price per bottle"
-              type="number"
-              value={formData.bottleperPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('bottleperPet', e.target.value)
-              }
-              placeholder="Enter price per bottle"
-              error={fieldErrors.bottleperPet}
-            />
           </>
         );
 
       case '19L Refill':
         return (
           <WaterInputField
-            label="Total Refill Today"
+            label="Total Refill"
             type="number"
             value={formData.totalPet}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -179,14 +168,13 @@ export default function ProductionPage() {
     const errors: Record<string, string> = {};
 
     if (!formData.totalPet.trim()) {
-      errors.totalPet = 'This field is required.';
+      errors.totalPet = 'Total pet or bootles is required.';
     }
-
     if (
       (type === '500ml' || type === '1.5L' || type === '19L') &&
       !formData.bottleperPet.trim()
     ) {
-      errors.bottleperPet = 'This field is required.';
+      errors.bottleperPet = `${type} per pet is required.`;
     }
 
     if (Object.keys(errors).length > 0) {

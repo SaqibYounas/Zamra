@@ -55,7 +55,7 @@ export async function GET() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-    const response = await axios.get(`${BACKEND_API}/daily-stock`, {
+    const response = await axios.get(`${BACKEND_API}/daily-stock/today`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },
