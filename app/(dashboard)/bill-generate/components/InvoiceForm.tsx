@@ -423,7 +423,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
           {/* Logistic Operations */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader icon={Truck} title="Logistic Operations" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 rounded-xl bg-slate-50/70 p-4 sm:p-4 border border-slate-200/70 md:grid-cols-3 gap-3 sm:gap-4">
               {LOGISTIC_FIELDS.map((f) => (
                 <WaterInputField
                   type="text"
@@ -469,7 +469,22 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             />
 
             <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <div className="hidden lg:grid grid-cols-[70px_1.6fr_80px_1fr_140px_60px] gap-3 bg-slate-900 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-amber-50">
+              {/* Header */}
+              <div
+                className="
+        hidden lg:grid
+        grid-cols-[70px_1.6fr_120px_1fr_140px_60px]
+        gap-3
+        bg-slate-900
+        px-4
+        py-2.5
+        text-[10px]
+        font-bold
+        uppercase
+        tracking-wider
+        text-amber-50
+      "
+              >
                 <span>ID</span>
                 <span>Description</span>
                 <span>Qty</span>
@@ -478,26 +493,31 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <span className="text-center">—</span>
               </div>
 
-              <div className="divide-y divide-slate-100 max-h-[420px] sm:max-h-[420px] overflow-y-auto bg-white">
+              {/* Rows */}
+              <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto bg-white">
                 {invoiceData.items.map((item, idx) => {
                   const lineTotal =
                     (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
+
                   return (
                     <div
                       key={item.id}
                       className={`
-                        grid
-                        grid-cols-1
-                        sm:grid-cols-2
-                        lg:grid-cols-[70px_1.6fr_80px_1fr_140px_60px]
-                        gap-3 sm:gap-4
-                        lg:items-end
-                        px-3 sm:px-4
-                        py-4
-                        ${idx % 2 === 1 ? 'bg-slate-50/60' : ''}
-                      `}
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              lg:grid-cols-[70px_1.6fr_120px_1fr_140px_60px]
+              gap-3
+              sm:gap-4
+              lg:items-end
+              px-3
+              sm:px-4
+              py-4
+              ${idx % 2 === 1 ? 'bg-slate-50/60' : ''}
+            `}
                     >
-                      <div className="sm:col-span-2 lg:col-span-1">
+                      {/* ID */}
+                      <div className="sm:col-span-2 lg:col-span-1 w-full">
                         <WaterInputField
                           type="text"
                           label="ID"
@@ -507,7 +527,9 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                           }
                         />
                       </div>
-                      <div className="sm:col-span-2 lg:col-span-1">
+
+                      {/* Description */}
+                      <div className="sm:col-span-2 lg:col-span-1 w-full">
                         <WaterInputField
                           type="text"
                           label="Description"
@@ -518,15 +540,20 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                           placeholder="500ml Premium Bottle (Box of 24)"
                         />
                       </div>
-                      <WaterInputField
-                        type="number"
-                        label="QTY"
-                        value={item.qty.toString()}
-                        onChange={(e) =>
-                          onItemChange(item.id, 'qty', e.target.value)
-                        }
-                      />
 
+                      {/* Qty FIXED */}
+                      <div className="w-full">
+                        <WaterInputField
+                          type="number"
+                          label="QTY"
+                          value={String(item.qty)}
+                          onChange={(e) =>
+                            onItemChange(item.id, 'qty', e.target.value)
+                          }
+                        />
+                      </div>
+
+                      {/* Selling Price */}
                       <div className="w-full min-w-0">
                         <Dropdown
                           placeholder="Selling Price"
@@ -541,20 +568,40 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         />
                       </div>
 
-                      <div className="flex items-center justify-between lg:h-full lg:items-end lg:justify-end gap-2 pt-1 lg:pt-0">
+                      {/* Amount */}
+                      <div className="flex items-center justify-between lg:h-full lg:items-end lg:justify-end gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:hidden">
                           Amount
                         </span>
+
                         <span className="font-mono text-sm font-bold text-slate-800">
                           Rs {lineTotal.toFixed(2)}
                         </span>
                       </div>
 
-                      <div className="flex items-center lg:items-end justify-end lg:justify-center">
+                      {/* Delete */}
+                      <div className="flex items-center justify-end lg:justify-center">
                         <button
                           type="button"
                           onClick={() => onRemoveItem(Number(item.id))}
-                          className="flex h-[40px] w-[40px] sm:h-[44px] sm:w-[44px] shrink-0 items-center justify-center rounded-lg border border-rose-200 bg-rose-50 text-rose-600 transition hover:bg-rose-100 active:bg-rose-200"
+                          className="
+                  flex
+                  h-[40px]
+                  w-[40px]
+                  sm:h-[44px]
+                  sm:w-[44px]
+                  shrink-0
+                  items-center
+                  justify-center
+                  rounded-lg
+                  border
+                  border-rose-200
+                  bg-rose-50
+                  text-rose-600
+                  transition
+                  hover:bg-rose-100
+                  active:bg-rose-200
+                "
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -568,13 +615,13 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   Items Subtotal:
                 </span>
+
                 <span className="font-mono text-xs sm:text-sm font-bold text-slate-900">
                   Rs {itemsSubtotal.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-start">
             <div className="space-y-3 sm:space-y-4">
               <SectionHeader icon={Percent} title="Ledger Adjustments" />
