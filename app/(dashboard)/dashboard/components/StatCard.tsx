@@ -21,26 +21,25 @@ export default function StatCard({
   iconBg = 'bg-sky-100',
 }: StatCardProps) {
   return (
-    <div className="group flex h-full w-full items-center ring-1 justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <div className="flex items-center gap-4 min-w-0">
+    <div className="group ring-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+      <h3 className="mb-2 text-center text-sm font-bold text-slate-700">
+        {label}
+      </h3>
+
+      <div className="flex items-center justify-between">
         <div
-          className={`flex h-14 w-14 items-center justify-center rounded-2xl ${iconBg} shrink-0`}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}
         >
           {icon}
         </div>
 
-        <div className="min-w-0">
-          <h3 className="text-sm font-bold truncate">{label}</h3>
+        <div className="flex items-center gap-1 text-xl font-bold text-blue-400">
+          {isCurrency && <RupeesIcon />}
+          <span>{value.toLocaleString()}</span>
 
-          <div className="mt-1 flex items-center gap-1 text-2xl font-bold text-blue-400">
-            {isCurrency && <RupeesIcon />}
-            <span>{value.toLocaleString()}</span>
-            {!isCurrency && unit && (
-              <span className="text-base font-medium text-slate-500">
-                {unit}
-              </span>
-            )}
-          </div>
+          {!isCurrency && unit && (
+            <span className="text-sm font-medium text-slate-500">{unit}</span>
+          )}
         </div>
       </div>
     </div>
