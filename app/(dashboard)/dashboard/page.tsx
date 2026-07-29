@@ -73,21 +73,15 @@ export default function DashboardPage() {
           );
           setStockData(dummyStockData);
         } else {
-          setStockData(stock as StockMetrics);
+          setStockData(stock as unknown as StockMetrics);
         }
       } catch (error) {
-        // Stock API not available yet — fall back to dummy data so the
-        // dashboard is still usable during development.
         console.error(
           'Error fetching stock data, falling back to dummy data:',
           error
         );
         setStockData(dummyStockData);
       }
-
-      // Customers / shipping addresses don't have a live API yet — dummy data
-      // is used until those endpoints exist. Swap `getCustomers` /
-      // `getShippingAddresses` in services/dummyData.ts for real calls later.
       try {
         const [customerRows, shippingRows] = await Promise.all([
           getCustomers(),
