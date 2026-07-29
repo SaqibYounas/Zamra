@@ -82,6 +82,7 @@ export type MetricType =
 export type StockBottleType = '500ml' | '1.5L' | '5L' | '19L' | '19L Refill';
 
 export type StockMetrics = {
+  [x: string]: unknown;
   todayStock?: Record<StockBottleType, number>;
   costs?: Record<StockBottleType, number>;
   profitToday?: Record<StockBottleType, number>;
