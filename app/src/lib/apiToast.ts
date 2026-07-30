@@ -90,7 +90,7 @@ export function showApiToast(
 
 let hasSetup = false;
 
-export function setupApiToastInterceptors() {
+export function setupApiToastInterceptors(onUnauthorized?: () => void) {
   if (hasSetup || typeof window === 'undefined') {
     return;
   }
@@ -120,20 +120,22 @@ export function setupApiToastInterceptors() {
 
     (error) => {
       const showToast = error?.config?.showToast;
-
       const status = error?.response?.status;
 
+      // 401 Session Expired Handling
       if (status === 401) {
         if (showToast) {
           dispatchToast(
             'Your session has expired. Please sign in again.',
             'info',
-            'Session expired'
+            'Session Expired'
           );
         }
 
-        if (typeof window !== 'undefined') {
-          window.location.href = '/';
+        // ❌ Direct `window.location.href = '/'` hata diya gaya hai.
+        // Client-side callback execute hoga agar provide kiya gaya ho.
+        if (onUnauthorized) {
+          onUnauthorized();
         }
 
         return Promise.reject(error);

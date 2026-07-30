@@ -91,7 +91,7 @@ export default function AdminForm() {
       } else {
         setFormState((prev) => ({
           ...prev,
-
+          emailError: login.message || 'Invalid email or password',
           passwordError: login.message || 'Invalid email or password',
         }));
       }
