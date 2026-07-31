@@ -48,7 +48,6 @@ export async function POST(request: Request) {
     return res;
   } catch (error) {
     const axiosError = error as AxiosError<BackendErrorResponse>;
-
     const errorMessage =
       axiosError.response?.data?.message || 'Something went wrong';
 

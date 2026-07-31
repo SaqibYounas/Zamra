@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 interface ErrorResponse {
-  error: string;
+  message: string;
 }
 
 export async function loginUser(email: string, password: string) {
@@ -17,7 +17,7 @@ export async function loginUser(email: string, password: string) {
 
     return {
       success: false,
-      message: err.response?.data?.error || 'Server error',
+      message: err.response?.data?.message || 'Server error',
     };
   }
 }
