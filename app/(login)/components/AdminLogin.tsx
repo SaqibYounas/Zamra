@@ -89,10 +89,15 @@ export default function AdminForm() {
       if (login.success) {
         router.push('/dashboard');
       } else {
+        const message = login.message || '';
+
         setFormState((prev) => ({
           ...prev,
-          emailError: login.message || 'Invalid email or password',
-          passwordError: login.message || 'Invalid email or password',
+          emailError: message.toLowerCase().includes('email') ? message : '',
+
+          passwordError: message.toLowerCase().includes('password')
+            ? message
+            : '',
         }));
       }
     } catch (error) {
