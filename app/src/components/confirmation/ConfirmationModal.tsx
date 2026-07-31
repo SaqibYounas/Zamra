@@ -53,19 +53,19 @@ export default function ConfirmationModal({
 
           <div className="mt-6 flex gap-3">
             <button
-              onClick={onCancel}
+              onClick={onConfirm}
               disabled={loading}
-              className="flex-1 rounded-xl border border-slate-300 bg-white py-3 font-semibold text-slate-700 transition cursor-pointer hover:bg-slate-100"
+              className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 py-3 font-semibold text-white transition-all duration-200 hover:from-rose-600 hover:to-red-700 hover:shadow-lg cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {cancelText}
+              {loading ? 'Logging out...' : confirmText}
             </button>
 
             <button
-              onClick={onConfirm}
+              onClick={onCancel}
               disabled={loading}
-              className="flex-1 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 py-3 font-semibold text-white transition hover:opacity-90 cursor-pointer"
+              className="flex-1 rounded-xl border border-slate-300 bg-white py-3 font-semibold text-slate-700 transition-all duration-200 cursor-pointer hover:bg-slate-100 hover:border-slate-400 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {loading ? 'Logging out...' : confirmText}
+              {cancelText}
             </button>
           </div>
         </div>

@@ -17,10 +17,15 @@ declare module 'axios' {
 
 const listeners = new Set<(toast: ApiToast) => void>();
 
-function getToastTitle(type: ApiToastType, fallback: string) {
-  if (type === 'success') return 'Success';
-  if (type === 'error') return 'Error';
-  return fallback;
+function getToastTitle(type: ApiToastType) {
+  switch (type) {
+    case 'success':
+      return 'Success';
+    case 'error':
+      return 'Error';
+    default:
+      return 'Information';
+  }
 }
 
 function formatToastMessage(message: string, fallback: string) {
@@ -61,10 +66,12 @@ function dispatchToast(
 
   const toast: ApiToast = {
     id: Date.now() + Math.random(),
-    title: title || getToastTitle(type, 'Notice'),
+    title: title || getToastTitle(type),
     message: formatToastMessage(
       message,
-      type === 'success' ? 'Request completed successfully' : 'Request failed'
+      type === 'success'
+        ? 'Operation completed successfully.'
+        : 'Request failed.'
     ),
     type,
   };
@@ -103,14 +110,15 @@ export function setupApiToastInterceptors(onUnauthorized?: () => void) {
 
       if (showToast) {
         const payload = response.data;
+        console.log(payload);
 
-        const isFailure = payload?.success === false || payload?.error;
+        const isFailure = payload?.success === false || Boolean(payload?.error);
 
         const message =
           payload?.message ||
           payload?.successMessage ||
           payload?.msg ||
-          'Request completed successfully';
+          (isFailure ? 'Request failed.' : 'Operation completed successfully.');
 
         dispatchToast(message, isFailure ? 'error' : 'success');
       }
@@ -122,7 +130,6 @@ export function setupApiToastInterceptors(onUnauthorized?: () => void) {
       const showToast = error?.config?.showToast;
       const status = error?.response?.status;
 
-      // 401 Session Expired Handling
       if (status === 401) {
         if (showToast) {
           dispatchToast(
@@ -132,8 +139,6 @@ export function setupApiToastInterceptors(onUnauthorized?: () => void) {
           );
         }
 
-        // ❌ Direct `window.location.href = '/'` hata diya gaya hai.
-        // Client-side callback execute hoga agar provide kiya gaya ho.
         if (onUnauthorized) {
           onUnauthorized();
         }
@@ -150,7 +155,7 @@ export function setupApiToastInterceptors(onUnauthorized?: () => void) {
           payload?.detail ||
           payload?.msg ||
           error?.message ||
-          'Request failed';
+          'Request failed.';
 
         dispatchToast(message, 'error');
       }

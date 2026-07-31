@@ -32,6 +32,7 @@ export async function POST(request: Request) {
 
     const res = NextResponse.json({
       success: true,
+      message: 'Welcome back!',
       user: data.user,
     });
 

@@ -6,10 +6,16 @@ interface ErrorResponse {
 
 export async function loginUser(email: string, password: string) {
   try {
-    const response = await axios.post('/api/login', {
-      email,
-      password,
-    });
+    const response = await axios.post(
+      '/api/login',
+      {
+        email,
+        password,
+      },
+      {
+        showToast: true,
+      }
+    );
 
     return response.data;
   } catch (error) {
