@@ -199,7 +199,7 @@ export default function CompanyInformation() {
             />
 
             <Button
-              label={loading ? 'Saving Changes...' : 'Save Changes'}
+              label={loading ? 'Saving...' : 'Save Company'}
               type="submit"
               className="w-full py-3 text-sm sm:text-base"
               disabled={loading}
