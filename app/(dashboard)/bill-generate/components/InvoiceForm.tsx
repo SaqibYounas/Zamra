@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import {
   Plus,
   Trash2,
-  CheckSquare,
-  Square,
   Calendar,
   Receipt,
   Building2,
@@ -21,6 +19,7 @@ import Button from '../../../src/components/button/Button';
 import Dropdown from '../../../src/components/dropdown/Dropdown';
 import RsIcon from '@/public/RupeesIcon';
 import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../../types/types';
+import { waterTypes } from '../../data/waterTypes';
 
 export interface CustomerRecord {
   id: number | string;
@@ -420,7 +419,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             )}
           </div>
 
-          {/* Logistic Operations */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader icon={Truck} title="Logistic Operations" />
             <div className="grid grid-cols-1 sm:grid-cols-2 rounded-xl bg-slate-50/70 p-4 sm:p-4 border border-slate-200/70 md:grid-cols-3 gap-3 sm:gap-4">
@@ -452,7 +450,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
             </div>
           </div>
 
-          {/* Line Item Specifications */}
           <div className="space-y-3 sm:space-y-4">
             <SectionHeader
               icon={Receipt}
@@ -463,38 +460,39 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   onClick={onAddItem}
                   className="flex items-center justify-center gap-1 text-[11px] font-bold bg-teal-600 text-white rounded-lg px-3 py-2 sm:py-1.5 shadow-sm hover:bg-teal-700 active:bg-teal-800 transition-colors cursor-pointer w-full sm:w-auto"
                 >
-                  <Plus className="w-4 h-4" /> Add Item Row
+                  <Plus className="w-4 h-4" />
+                  Add Item Row
                 </button>
               }
             />
 
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
-              {/* Header */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              {/* Desktop Header */}
               <div
                 className="
-        hidden lg:grid
-        grid-cols-[70px_1.6fr_120px_1fr_140px_60px]
-        gap-3
-        bg-slate-900
-        px-4
-        py-2.5
-        text-[10px]
-        font-bold
-        uppercase
-        tracking-wider
-        text-amber-50
-      "
+                hidden lg:grid
+                grid-cols-[60px_1.4fr_170px_90px_170px_120px_60px]
+                gap-3
+                bg-slate-900
+                px-4
+                py-3
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-wider
+                text-white
+              "
               >
                 <span>ID</span>
                 <span>Description</span>
+                <span>Bottle Type</span>
                 <span>Qty</span>
                 <span>Selling Price</span>
-                <span className="text-right">Amount (Rs)</span>
-                <span className="text-center">—</span>
+                <span className="text-right">Amount</span>
+                <span className="text-center">Action</span>
               </div>
 
-              {/* Rows */}
-              <div className="divide-y divide-slate-100 max-h-[420px] overflow-y-auto bg-white">
+              <div className="max-h-[450px] divide-y divide-slate-100 overflow-y-auto">
                 {invoiceData.items.map((item, idx) => {
                   const lineTotal =
                     (Number(item.qty) || 0) * (Number(item.unitPrice) || 0);
@@ -505,103 +503,120 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                       className={`
               grid
               grid-cols-1
-              sm:grid-cols-2
-              lg:grid-cols-[70px_1.6fr_120px_1fr_140px_60px]
+              md:grid-cols-2
+              lg:grid-cols-[60px_1.4fr_170px_90px_170px_120px_60px]
               gap-3
-              sm:gap-4
-              lg:items-end
               px-3
-              sm:px-4
               py-4
-              ${idx % 2 === 1 ? 'bg-slate-50/60' : ''}
+              sm:px-4
+              ${idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}
             `}
                     >
                       {/* ID */}
-                      <div className="sm:col-span-2 lg:col-span-1 w-full">
-                        <WaterInputField
-                          type="text"
-                          label="ID"
-                          value={item.no}
-                          onChange={(e) =>
-                            onItemChange(item.id, 'no', e.target.value)
-                          }
-                        />
-                      </div>
+                      <WaterInputField
+                        type="text"
+                        label="ID"
+                        value={item.no}
+                        onChange={(e) =>
+                          onItemChange(item.id, 'no', e.target.value)
+                        }
+                      />
 
                       {/* Description */}
-                      <div className="sm:col-span-2 lg:col-span-1 w-full">
-                        <WaterInputField
-                          type="text"
-                          label="Description"
-                          value={item.description}
-                          onChange={(e) =>
-                            onItemChange(item.id, 'description', e.target.value)
-                          }
-                          placeholder="500ml Premium Bottle (Box of 24)"
-                        />
-                      </div>
+                      <WaterInputField
+                        type="text"
+                        label="Description"
+                        value={item.description}
+                        onChange={(e) =>
+                          onItemChange(item.id, 'description', e.target.value)
+                        }
+                        placeholder="500ml Premium Bottle"
+                      />
 
-                      {/* Qty FIXED */}
-                      <div className="w-full">
-                        <WaterInputField
-                          type="number"
-                          label="QTY"
-                          value={String(item.qty)}
-                          onChange={(e) =>
-                            onItemChange(item.id, 'qty', e.target.value)
-                          }
-                        />
-                      </div>
+                      {/* Bottle Type */}
+                      <Dropdown
+                        label="Bottle Type"
+                        options={waterTypes}
+                        value={item.bottleType}
+                        onChange={(value) =>
+                          onItemChange(item.id, 'bottleType', value)
+                        }
+                      />
+
+                      {/* Qty */}
+                      <WaterInputField
+                        type="number"
+                        label="Qty"
+                        value={String(item.qty)}
+                        onChange={(e) =>
+                          onItemChange(item.id, 'qty', e.target.value)
+                        }
+                      />
 
                       {/* Selling Price */}
-                      <div className="w-full min-w-0">
-                        <Dropdown
-                          placeholder="Selling Price"
-                          options={todayPrices.map((s) => ({
-                            label: `${s.priceManagement.bottleType} - Rs ${s.sellingPrice}`,
-                            value: s.sellingPrice,
-                          }))}
-                          value={item.unitPrice.toString()}
-                          onChange={(value) =>
-                            onItemChange(item.id, 'unitPrice', Number(value))
-                          }
-                        />
-                      </div>
+                      <Dropdown
+                        label="Selling Price"
+                        placeholder="Select Price"
+                        options={todayPrices.map((s) => ({
+                          label: `Rs ${s.sellingPrice}`,
+                          value: String(s.sellingPrice),
+                        }))}
+                        value={String(item.unitPrice)}
+                        onChange={(value) =>
+                          onItemChange(item.id, 'unitPrice', Number(value))
+                        }
+                      />
 
                       {/* Amount */}
-                      <div className="flex items-center justify-between lg:h-full lg:items-end lg:justify-end gap-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 lg:hidden">
+                      {/* Amount */}
+                      <div className="flex flex-col">
+                        <label className="mb-1 text-sm font-bold text-slate-700">
                           Amount
-                        </span>
+                        </label>
 
-                        <span className="font-mono text-sm font-bold text-slate-800">
+                        <div
+                          className="
+                          flex
+                          h-[42px]
+                          items-center
+                          rounded-xl
+                          border
+                          border-slate-300
+                          bg-slate-50
+                          px-4
+                          text-sm
+                          font-bold
+                          text-slate-900
+                          whitespace-nowrap
+                        "
+                        >
                           Rs {lineTotal.toFixed(2)}
-                        </span>
+                        </div>
                       </div>
-
                       {/* Delete */}
-                      <div className="flex items-center justify-end lg:justify-center">
+                      <div className="flex flex-col">
+                        <label className="mb-1 text-sm font-bold text-slate-700 opacity-0">
+                          Action
+                        </label>
+
                         <button
                           type="button"
                           onClick={() => onRemoveItem(Number(item.id))}
                           className="
-                  flex
-                  h-[40px]
-                  w-[40px]
-                  sm:h-[44px]
-                  sm:w-[44px]
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-lg
-                  border
-                  border-rose-200
-                  bg-rose-50
-                  text-rose-600
-                  transition
-                  hover:bg-rose-100
-                  active:bg-rose-200
-                "
+                        flex
+                        h-[42px]
+                        w-full
+                        items-center
+                        justify-center
+                        rounded-xl
+                        border
+                        border-rose-200
+                        bg-rose-50
+                        text-rose-600
+                        transition-all
+                        hover:bg-rose-100
+                        active:scale-95
+                      "
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -611,61 +626,71 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                 })}
               </div>
 
-              <div className="flex items-center justify-between bg-slate-50 px-3 py-2.5 sm:px-4 border-t border-slate-200">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  Items Subtotal:
+              <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Items Subtotal
                 </span>
 
-                <span className="font-mono text-xs sm:text-sm font-bold text-slate-900">
+                <span className="font-mono text-sm font-bold text-slate-900">
                   Rs {itemsSubtotal.toFixed(2)}
                 </span>
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 sm:gap-6 items-start">
-            <div className="space-y-3 sm:space-y-4">
-              <SectionHeader icon={Percent} title="Ledger Adjustments" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 rounded-xl bg-slate-50/70 p-3 sm:p-4 border border-slate-200/70">
+          <div className="space-y-4">
+            <SectionHeader icon={Percent} title="Ledger Adjustments" />
+
+            <div className="rounded-xl border border-slate-200 bg-white p-4 ">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4 ">
                 <WaterInputField
+                  marginBottom="mb-0"
                   type="number"
                   icon={Percent}
-                  label="Tax Rate (%)"
+                  label="Tax (%)"
                   value={invoiceData.taxRate.toString()}
                   onChange={(e) =>
                     onLedgerChange('taxRate', Number(e.target.value) || 0)
                   }
                 />
+
                 <WaterInputField
+                  marginBottom="mb-0"
                   type="number"
                   customicon={RsIcon}
-                  label="Shipping Charges (Rs)"
+                  label="Shipping (Rs)"
                   value={invoiceData.shipping.toString()}
                   onChange={(e) =>
                     onLedgerChange('shipping', Number(e.target.value) || 0)
                   }
                 />
+
                 <WaterInputField
+                  marginBottom="mb-0"
                   type="number"
                   customicon={RsIcon}
-                  label="Misc Charges (Rs)"
+                  label="Misc (Rs)"
                   value={invoiceData.other.toString()}
                   onChange={(e) =>
                     onLedgerChange('other', Number(e.target.value) || 0)
                   }
                 />
+
                 <WaterInputField
+                  marginBottom="mb-0"
                   type="number"
                   customicon={RsIcon}
-                  label="Previous Due Arrears (Rs)"
+                  label="Previous Due"
                   value={invoiceData.previousDue.toString()}
                   onChange={(e) =>
                     onLedgerChange('previousDue', Number(e.target.value) || 0)
                   }
                 />
+
                 <WaterInputField
+                  marginBottom="mb-0"
                   type="number"
                   customicon={RsIcon}
-                  label="Amount Paid By Client (Rs)"
+                  label="Paid Amount"
                   value={invoiceData.payment.paidAmount.toString()}
                   onChange={(e) =>
                     onInputChange(
@@ -676,16 +701,17 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                   }
                 />
               </div>
-            </div>
 
-            <div className="flex justify-center lg:justify-end pt-2">
-              <div className="-rotate-2 rounded-xl border-[3px] border-dashed border-teal-700/70 bg-teal-50/60 px-5 py-3 sm:px-6 sm:py-4 text-center shadow-sm w-full sm:w-auto">
-                <span className="block text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">
-                  Net Balance Due
-                </span>
-                <span className="mt-1 block font-mono text-lg sm:text-2xl font-black text-teal-800">
-                  Rs {balanceDue.toFixed(2)}
-                </span>
+              <div className="mt-5 flex justify-end">
+                <div className="min-w-[220px] rounded-xl bg-teal-600 px-5 py-4 text-white shadow">
+                  <p className="text-xs font-semibold uppercase tracking-wider opacity-90">
+                    Net Balance Due
+                  </p>
+
+                  <p className="mt-1 font-mono text-2xl font-bold">
+                    Rs {balanceDue.toFixed(2)}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
