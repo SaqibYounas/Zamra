@@ -13,6 +13,7 @@ import { fetchCustomers } from '../services/getCustomers';
 import { fetchShipping } from '../services/getShipping';
 import { submitInvoice } from '../services/submitInvoice';
 import { currentSellingPrice } from '../services/sellingPrice';
+
 type CustomerApiResponse = {
   id: number;
   companyName: string;
@@ -76,6 +77,7 @@ const initialInvoiceData: InvoiceData = {
       description: '500ml Premium Bottle (Box of 24)',
       qty: 10,
       unitPrice: 50.0,
+      bottleType: '',
     },
     {
       id: 2,
@@ -83,6 +85,7 @@ const initialInvoiceData: InvoiceData = {
       description: '1.5L Premium Bottle (Box of 12)',
       qty: 5,
       unitPrice: 80.0,
+      bottleType: '',
     },
     {
       id: 3,
@@ -90,6 +93,7 @@ const initialInvoiceData: InvoiceData = {
       description: '19L Corporate Water Gallon',
       qty: 2,
       unitPrice: 250.0,
+      bottleType: '',
     },
   ],
   previousDue: 1500,
@@ -256,13 +260,13 @@ export default function InvoiceFormDashboard() {
           id: Date.now(),
           no: (prev.items.length + 1).toString(),
           description: '',
+          bottleType: '',
           qty: 1,
           unitPrice: 0,
         },
       ],
     }));
   }, []);
-
   const removeItem = useCallback((id: number) => {
     setInvoiceData((prev) => ({
       ...prev,

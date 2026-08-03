@@ -19,6 +19,7 @@ interface WaterInputFieldProps {
   showPassword?: boolean;
   iconToggle?: { show: JSX.Element; hide: JSX.Element };
   name?: string;
+  marginBottom?: string;
 }
 
 export default function WaterInputField({
@@ -27,7 +28,7 @@ export default function WaterInputField({
   onChange,
   onKeyDown,
   icon: Icon,
-  customicon: customicon,
+  customicon,
   type,
   placeholder,
   error,
@@ -35,39 +36,62 @@ export default function WaterInputField({
   togglePassword,
   showPassword,
   iconToggle,
+  marginBottom = 'mb-4',
 }: WaterInputFieldProps) {
   return (
-    <div className="mb-4 w-full">
-      <label
-        className={`block mb-1 text-sm  font-bold ${
-          dark ? 'text-sky-300' : 'text-slate-700'
-        }`}
-      >
-        {label}
-      </label>
+    <div className={`w-full ${marginBottom}`}>
+      {label && (
+        <label
+          className={`mb-1 block text-sm font-bold ${
+            dark ? 'text-sky-300' : 'text-slate-700'
+          }`}
+        >
+          {label}
+        </label>
+      )}
 
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sky-600">
-          {customicon ? customicon() : Icon && <Icon size={18} />}
-        </div>
+        {(Icon || customicon) && (
+          <div
+            className={`absolute left-0 flex h-[42px] items-center pl-3 ${
+              dark ? 'text-sky-400' : 'text-sky-600'
+            }`}
+          >
+            {customicon ? customicon() : Icon && <Icon size={18} />}
+          </div>
+        )}
+
         <input
           type={type}
           value={value}
           onChange={onChange}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
-          className={`block w-full ${Icon || customicon ? 'pl-12' : 'pl-3'} pr-10 py-3 rounded-2xl border transition-all focus:outline-none focus:ring-2 ${
-            dark
-              ? 'bg-sky-950/50 border-sky-800 text-white  focus:border-sky-500'
-              : 'bg-white border-slate-300 text-slate-800 focus:ring-sky-400 focus:border-sky-700'
-          } ${error ? 'border-red-500 ' : ''}`}
+          className={`
+            h-[42px]
+            w-full
+            rounded-xl
+            border
+            text-sm
+            transition-all
+            focus:outline-none
+            focus:ring-2
+            ${Icon || customicon ? 'pl-11' : 'pl-3'}
+            ${togglePassword ? 'pr-10' : 'pr-3'}
+            ${
+              dark
+                ? 'border-sky-800 bg-sky-950/50 text-white focus:border-sky-500'
+                : 'border-slate-300 bg-white text-slate-800 focus:border-sky-700 focus:ring-sky-400'
+            }
+            ${error ? 'border-red-500' : ''}
+          `}
         />
 
-        {(type === 'password' || type === 'text') && togglePassword && (
+        {togglePassword && (
           <button
             type="button"
             onClick={togglePassword}
-            className={`absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer ${
+            className={`absolute right-0 flex h-[42px] items-center pr-3 ${
               dark
                 ? 'text-sky-400 hover:text-sky-200'
                 : 'text-slate-400 hover:text-sky-600'
@@ -89,9 +113,7 @@ export default function WaterInputField({
         leaveTo="opacity-0"
       >
         {error && (
-          <p className="mt-1.5 text-xs text-red-500 pl-4 flex items-center gap-1 font-bold ">
-            {error}
-          </p>
+          <p className="mt-1 text-xs font-semibold text-red-500">{error}</p>
         )}
       </Transition>
     </div>

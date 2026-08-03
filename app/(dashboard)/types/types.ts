@@ -42,6 +42,7 @@ export interface InvoiceItem {
   id: number;
   no: string;
   description: string;
+  bottleType: string;
   qty: number;
   unitPrice: number;
 }
