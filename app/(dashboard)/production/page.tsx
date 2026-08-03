@@ -269,7 +269,7 @@ export default function ProductionPage() {
 
             <AppButton
               type="submit"
-              label={loading ? 'Submitting...' : 'Submit'}
+              label={loading ? 'Saving...' : 'Save Production'}
               loading={loading}
               disabled={loading}
               className="w-full py-3 text-sm sm:text-base mt-2"

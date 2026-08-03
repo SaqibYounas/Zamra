@@ -136,29 +136,26 @@ export default function AdminForm() {
   }, [loading, formState]);
 
   return (
-    <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto p-4 sm:p-6 md:p-8 lg:p-10 bg-linear-to-br from-slate-900/90 to-slate-800/90 rounded-2xl sm:rounded-3xl shadow-xl border border-slate-700/50 relative overflow-hidden">
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-blue-500 to-transparent opacity-20"></div>
+    <div className="w-full max-w-md sm:max-w-lg mx-auto p-5 sm:p-6 md:p-8 bg-linear-to-br from-slate-900/90 to-slate-800/90 rounded-3xl shadow-xl border border-slate-700/50 relative overflow-hidden">
+      <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-blue-500 to-transparent opacity-20" />
 
-      <div className="flex items-center gap-3 mb-5 sm:mb-7 md:mb-10">
-        <div className="p-2 sm:p-2.5 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-lg sm:rounded-xl">
-          <Factory size={20} className="sm:w-[22px] sm:h-[22px]" />
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <div className="p-3 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-xl">
+          <Factory size={24} />
         </div>
 
         <div>
-          <h3 className="text-base sm:text-lg md:text-xl font-bold text-white leading-tight">
+          <h3 className="text-lg sm:text-xl font-bold text-white">
             Admin Control
           </h3>
 
-          <p className="text-[10px] sm:text-xs md:text-sm text-sky-300 uppercase tracking-widest font-semibold mt-1">
-            Authorized Person Only
+          <p className="text-xs sm:text-sm text-sky-300  tracking-wider font-medium mt-1">
+            Authorized Personnel Only
           </p>
         </div>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4 sm:space-y-5 md:space-y-6"
-      >
+      <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
         <WaterInputField
           dark
           label="Email"
@@ -175,32 +172,30 @@ export default function AdminForm() {
           label="Password"
           icon={Lock}
           type={showPassword ? 'text' : 'password'}
-          placeholder="Enter the Password"
+          placeholder="Enter your password"
           value={formState.password}
           onChange={(e) => handleChange('password', e.target.value)}
           togglePassword={() => setShowPassword(!showPassword)}
           showPassword={showPassword}
           iconToggle={{
             show: <EyeOff size={18} />,
-
             hide: <Eye size={18} />,
           }}
           error={formState.passwordError}
         />
 
-        <div className="p-3 sm:p-4 bg-slate-700/40 border border-slate-600/40 rounded-xl sm:rounded-2xl">
-          <div className="flex items-center gap-2 text-blue-300 text-xs sm:text-sm mb-1">
-            <CloudRain size={14} />
-
-            <span>System Status</span>
+        <div className="p-4 bg-slate-700/40 border border-slate-600/40 rounded-2xl">
+          <div className="flex items-center gap-2 text-blue-300 text-sm mb-2">
+            <CloudRain size={16} />
+            <span className="font-medium">System Status</span>
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] sm:text-xs text-slate-400 pl-5 sm:pl-6">
+          <div className="flex items-center justify-between">
+            <span className="text-xs sm:text-sm text-slate-400">
               Filtration Units
             </span>
 
-            <span className="text-[10px] sm:text-xs font-bold text-green-400">
+            <span className="text-xs sm:text-sm font-semibold text-green-400">
               Online
             </span>
           </div>
@@ -210,7 +205,7 @@ export default function AdminForm() {
           type="submit"
           label={loading ? 'Logging in...' : 'Login'}
           loading={loading}
-          className="w-full text-sm sm:text-base btn-primary text-white shadow-md hover:shadow-lg transition-all"
+          className="w-full h-12 text-sm sm:text-base font-semibold btn-primary text-white shadow-md hover:shadow-lg transition-all duration-200"
         />
       </form>
     </div>

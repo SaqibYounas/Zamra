@@ -166,7 +166,7 @@ export default function WaterFormPage() {
 
             <AppButton
               type="submit"
-              label={loading ? 'Saving Changes...' : 'Save Changes'}
+              label={loading ? 'Saving...' : 'Save Price'}
               loading={loading}
               className="w-full py-3 text-sm sm:text-base mt-6"
             />

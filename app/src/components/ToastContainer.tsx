@@ -17,21 +17,17 @@ export function ToastContainer() {
       }, 5000);
     });
 
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  if (toasts.length === 0) {
-    return null;
-  }
+  if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-3">
+    <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[9999] flex w-[calc(100vw-1.5rem)] sm:w-96 max-w-md flex-col gap-3">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`animate-[slideIn_0.3s_ease-out] rounded-2xl border px-4 py-3 shadow-2xl backdrop-blur-md ${
+          className={`animate-[slideIn_0.3s_ease-out] rounded-2xl border px-4 py-3 sm:px-5 sm:py-4 shadow-2xl backdrop-blur-md ${
             toast.type === 'error'
               ? 'border-red-200 bg-gradient-to-r from-rose-600 to-red-500 text-white'
               : toast.type === 'info'
@@ -39,11 +35,13 @@ export function ToastContainer() {
                 : 'border-emerald-200 bg-gradient-to-r from-emerald-600 to-green-500 text-white'
           }`}
         >
-          <div className="flex items-start gap-2.5">
+          <div className="flex items-start gap-3">
             <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-white/80" />
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold">{toast.title}</p>
-              <p className="mt-0.5 text-sm leading-5 text-white/95">
+
+            <div className="min-w-0 flex-1">
+              <p className="text-xs sm:text-sm font-semibold">{toast.title}</p>
+
+              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/95 break-words">
                 {toast.message}
               </p>
             </div>
