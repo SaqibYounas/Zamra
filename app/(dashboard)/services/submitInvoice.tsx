@@ -2,6 +2,7 @@ import axios, { AxiosError } from 'axios';
 interface InvoiceItem {
   itemCode: string;
   description: string;
+  bottleType: string;
   qty: number;
   rate: number;
   sortOrder: number;

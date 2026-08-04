@@ -468,6 +468,7 @@ export default function InvoiceFormDashboard() {
         items: invoiceData.items.map((item, index) => ({
           itemCode: item.no,
           description: item.description,
+          bottleType: item.bottleType,
           qty: item.qty,
           rate: item.unitPrice,
           sortOrder: index + 1,

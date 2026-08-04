@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 interface InvoiceItem {
   itemCode: string;
   description: string;
+  bottleType?: string;
   qty: number;
   rate: number;
   sortOrder: number;
@@ -64,14 +65,31 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as CreateInvoiceRequestBody;
 
+    const payload = {
+      ...body,
+      items: body.items?.map((item) => ({
+        itemCode: item.itemCode,
+        description: item.description,
+        bottleType: item.bottleType,
+        qty: item.qty,
+        rate: item.rate,
+        sortOrder: item.sortOrder,
+      })),
+    };
+
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
 
-    const response = await axios.post(`${BACKEND_API}/invoice/create`, body, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : '',
-      },
-    });
+    const response = await axios.post(
+      `${BACKEND_API}/invoice/create`,
+      payload,
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     return NextResponse.json(response.data);
   } catch (error) {
