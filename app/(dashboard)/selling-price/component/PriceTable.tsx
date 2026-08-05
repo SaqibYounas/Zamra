@@ -1,8 +1,10 @@
 'use client';
 
+import { StockBottleType } from '../../types/types';
+
 interface Price {
   id: number;
-  bottleType: string;
+  bottleType: StockBottleType;
   perBottlePrice: string;
   labelCapPrice: string;
   otherExpenses: string;
@@ -14,16 +16,15 @@ interface Props {
   loading: boolean;
 }
 
+const bottleTypes: StockBottleType[] = [
+  '500ml',
+  '1.5L',
+  '5L',
+  '19L',
+  '19L Refill',
+];
+
 export default function TodayPriceTable({ prices, loading }: Props) {
-  const bottles = ['500ml', '1 Liter', '1.5 Liter', '19 Liter'];
-
-  const bottleTypeMap: Record<string, string> = {
-    '500ml': '500ml',
-    '1L': '1 Liter',
-    '1.5L': '1.5 Liter',
-    '19L': '19 Liter',
-  };
-
   return (
     <div
       className="
@@ -85,7 +86,7 @@ export default function TodayPriceTable({ prices, loading }: Props) {
           <table
             className="
             w-full
-            min-w-[600px]
+            min-w-150
             table-fixed
           "
           >
@@ -95,7 +96,7 @@ export default function TodayPriceTable({ prices, loading }: Props) {
             "
             >
               <tr>
-                {bottles.map((type) => (
+                {bottleTypes.map((type) => (
                   <th
                     key={type}
                     className="
@@ -116,10 +117,8 @@ export default function TodayPriceTable({ prices, loading }: Props) {
 
             <tbody>
               <tr>
-                {bottles.map((type) => {
-                  const price = prices.find(
-                    (item) => bottleTypeMap[item.bottleType] === type
-                  );
+                {bottleTypes.map((type) => {
+                  const price = prices.find((item) => item.bottleType === type);
 
                   const total = price
                     ? Number(price.perBottlePrice) +
