@@ -144,7 +144,13 @@ export default function InvoiceFormDashboard() {
   async function getPrices() {
     try {
       const sellingprice = await currentSellingPrice();
-      setPrices(sellingprice.data || []);
+      const priceData = sellingprice.data;
+      const normalizedPrices = Array.isArray(priceData)
+        ? priceData
+        : priceData
+          ? [priceData]
+          : [];
+      setPrices(normalizedPrices);
     } catch (error) {
       console.error(error);
     }
@@ -243,12 +249,28 @@ export default function InvoiceFormDashboard() {
     ) => {
       setInvoiceData((prev) => ({
         ...prev,
-        items: prev.items.map((item) =>
-          item.id === id ? { ...item, [field]: value } : item
-        ),
+        items: prev.items.map((item) => {
+          if (item.id !== id) return item;
+
+          if (field === 'bottleType' && typeof value === 'string') {
+            const matchingPrice = prices.find(
+              (price) => price.priceManagement.bottleType === value
+            );
+
+            return {
+              ...item,
+              bottleType: value,
+              unitPrice: matchingPrice
+                ? Number(matchingPrice.sellingPrice)
+                : item.unitPrice,
+            };
+          }
+
+          return { ...item, [field]: value };
+        }),
       }));
     },
-    []
+    [prices]
   );
 
   const addItem = useCallback(() => {
