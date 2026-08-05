@@ -556,15 +556,26 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                       {/* Selling Price */}
                       <Dropdown
                         label="Selling Price"
-                        placeholder="Select Price"
-                        options={todayPrices.map((s) => ({
-                          label: `Rs ${s.sellingPrice}`,
-                          value: String(s.sellingPrice),
-                        }))}
+                        placeholder={
+                          item.bottleType
+                            ? 'Select Price'
+                            : 'Choose bottle type first'
+                        }
+                        options={todayPrices
+                          .filter((s) =>
+                            item.bottleType
+                              ? s.priceManagement.bottleType === item.bottleType
+                              : false
+                          )
+                          .map((s) => ({
+                            label: `Rs ${s.sellingPrice}`,
+                            value: String(s.sellingPrice),
+                          }))}
                         value={String(item.unitPrice)}
                         onChange={(value) =>
                           onItemChange(item.id, 'unitPrice', Number(value))
                         }
+                        disabled={!item.bottleType}
                       />
 
                       {/* Amount */}
