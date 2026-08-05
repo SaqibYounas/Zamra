@@ -53,7 +53,7 @@ export default function WaterInputField({
       <div className="relative">
         {(Icon || customicon) && (
           <div
-            className={`absolute left-0 flex h-[42px] items-center pl-3 ${
+            className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${
               dark ? 'text-sky-400' : 'text-sky-600'
             }`}
           >
@@ -77,7 +77,7 @@ export default function WaterInputField({
             focus:outline-none
             focus:ring-2
             ${Icon || customicon ? 'pl-11' : 'pl-3'}
-            ${togglePassword ? 'pr-10' : 'pr-3'}
+            ${togglePassword ? 'pr-11' : 'pr-3'}
             ${
               dark
                 ? 'border-sky-800 bg-sky-950/50 text-white focus:border-sky-500'
@@ -91,7 +91,7 @@ export default function WaterInputField({
           <button
             type="button"
             onClick={togglePassword}
-            className={`absolute right-0 flex h-[42px] items-center pr-3 ${
+            className={`absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
               dark
                 ? 'text-sky-400 hover:text-sky-200'
                 : 'text-slate-400 hover:text-sky-600'
