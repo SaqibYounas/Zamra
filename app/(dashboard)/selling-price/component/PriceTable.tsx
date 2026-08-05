@@ -1,18 +1,10 @@
 'use client';
 
 import { StockBottleType } from '../../types/types';
-
-interface Price {
-  id: number;
-  bottleType: StockBottleType;
-  perBottlePrice: string;
-  labelCapPrice: string;
-  otherExpenses: string;
-  isActive: boolean;
-}
+import { SellingPrice } from '../types';
 
 interface Props {
-  prices: Price[];
+  prices: SellingPrice[];
   loading: boolean;
 }
 

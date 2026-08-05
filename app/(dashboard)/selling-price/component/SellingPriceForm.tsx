@@ -9,17 +9,10 @@ import RsIcon from '@/public/RupeesIcon';
 import { waterTypes } from '../../data/waterTypes';
 import { saveSellingPrice } from '../../services/sellingPrice';
 
-interface Price {
-  id: number;
-  bottleType: string;
-  perBottlePrice: string;
-  labelCapPrice: string;
-  otherExpenses: string;
-  isActive: boolean;
-}
+import { SellingPrice } from '../types';
 
 interface Props {
-  prices: Price[];
+  prices: SellingPrice[];
 }
 
 interface FormData {

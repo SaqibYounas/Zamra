@@ -4,18 +4,10 @@ import { useEffect, useState } from 'react';
 import SellingPriceForm from './component/SellingPriceForm';
 import TodayPriceTable from './component/PriceTable';
 import { fetchActivePrices } from '../services/priceManagement';
-
-interface Price {
-  id: number;
-  bottleType: string;
-  perBottlePrice: string;
-  labelCapPrice: string;
-  otherExpenses: string;
-  isActive: boolean;
-}
+import { SellingPrice } from './types';
 
 export default function SellingPricePage() {
-  const [prices, setPrices] = useState<Price[]>([]);
+  const [prices, setPrices] = useState<SellingPrice[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function getPrices() {
