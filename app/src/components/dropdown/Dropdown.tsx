@@ -31,7 +31,7 @@ export default function Dropdown({
   return (
     <div className="w-full mb-5">
       {label && (
-        <label className="block mb-1 text-sm font-bold text-slate-700">
+        <label className="mb-1 block pl-2 text-sm font-bold text-slate-700">
           {label}
         </label>
       )}

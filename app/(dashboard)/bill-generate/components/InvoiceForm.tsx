@@ -146,7 +146,6 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
 }) => {
   const { isShippingSame, isPrinting, error, successMessage, fieldErrors } =
     status;
-  const [selectedSellingPrice, setSelectedSellingPrice] = useState('');
   const {
     customers,
     shippingProfiles,
@@ -538,9 +537,34 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         label="Bottle Type"
                         options={waterTypes}
                         value={item.bottleType}
-                        onChange={(value) =>
-                          onItemChange(item.id, 'bottleType', value)
-                        }
+                        onChange={(value) => {
+                          const selectedPrice = todayPrices.find(
+                            (p) => p.priceManagement.bottleType === value
+                          );
+
+                          onItemChange(item.id, 'bottleType', value);
+
+                          if (selectedPrice) {
+                            onItemChange(
+                              item.id,
+                              'unitPrice',
+                              Number(selectedPrice.sellingPrice)
+                            );
+                          }
+
+                          const words = item.description.trim().split(' ');
+
+                          if (words.length === 0) {
+                            onItemChange(item.id, 'description', value);
+                          } else {
+                            words[0] = value;
+                            onItemChange(
+                              item.id,
+                              'description',
+                              words.join(' ')
+                            );
+                          }
+                        }}
                       />
 
                       {/* Qty */}
@@ -572,14 +596,41 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                             value: String(s.sellingPrice),
                           }))}
                         value={String(item.unitPrice)}
-                        onChange={(value) =>
-                          onItemChange(item.id, 'unitPrice', Number(value))
-                        }
-                        disabled={!item.bottleType}
+                        onChange={(value) => {
+                          const selectedPrice = todayPrices.find(
+                            (p) => p.sellingPrice === value
+                          );
+
+                          onItemChange(item.id, 'unitPrice', Number(value));
+
+                          if (selectedPrice) {
+                            onItemChange(
+                              item.id,
+                              'bottleType',
+                              selectedPrice.priceManagement.bottleType
+                            );
+
+                            const words = item.description.trim().split(' ');
+
+                            if (words.length === 0) {
+                              onItemChange(
+                                item.id,
+                                'description',
+                                selectedPrice.priceManagement.bottleType
+                              );
+                            } else {
+                              words[0] =
+                                selectedPrice.priceManagement.bottleType;
+                              onItemChange(
+                                item.id,
+                                'description',
+                                words.join(' ')
+                              );
+                            }
+                          }
+                        }}
                       />
 
-                      {/* Amount */}
-                      {/* Amount */}
                       <div className="flex flex-col">
                         <label className="mb-1 text-sm font-bold text-slate-700">
                           Amount
@@ -627,6 +678,7 @@ export const InvoiceForm: React.FC<InvoiceFormProps> = ({
                         transition-all
                         hover:bg-rose-100
                         active:scale-95
+                        cursor-pointer
                       "
                         >
                           <Trash2 className="h-4 w-4" />

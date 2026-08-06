@@ -42,7 +42,7 @@ export default function WaterInputField({
     <div className={`w-full ${marginBottom}`}>
       {label && (
         <label
-          className={`mb-1 block text-sm font-bold ${
+          className={`mb-1 block pl-2 text-sm font-bold ${
             dark ? 'text-sky-300' : 'text-slate-700'
           }`}
         >
