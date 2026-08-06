@@ -15,9 +15,15 @@ interface ErrorResponse {
 
 export async function saveCompanyInfo(data: CompanyInfoRequestBody) {
   try {
-    const response = await axios.post('/api/company-info', {
-      ...data,
-    });
+    const response = await axios.post(
+      '/api/company-info',
+      {
+        ...data,
+      },
+      {
+        showToast: true,
+      }
+    );
 
     return response.data;
   } catch (error) {

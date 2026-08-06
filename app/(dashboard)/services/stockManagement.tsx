@@ -95,9 +95,15 @@ const buildStockMetrics = (items: StockApiItem[]): StockMetrics => {
 
 export async function saveStock(data: StockMangRequestBody) {
   try {
-    const response = await axios.post('/api/stock', {
-      ...data,
-    });
+    const response = await axios.post(
+      '/api/stock',
+      {
+        ...data,
+      },
+      {
+        showToast: true,
+      }
+    );
 
     return response.data;
   } catch (error) {

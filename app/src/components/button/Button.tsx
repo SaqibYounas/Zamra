@@ -23,7 +23,7 @@ export default function Button({
       className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold uppercase text-sm tracking-[0.2em] transition-all shadow-md cursor-pointer
         ${
           loading || disabled
-            ? 'bg-(--color-disabled) cursor-not-allowed'
+            ? 'bg-(--color-disabled) opacity-50 cursor-not-allowed'
             : 'btn-primary hover:-translate-y-0.5'
         }
         text-white ${className}`}

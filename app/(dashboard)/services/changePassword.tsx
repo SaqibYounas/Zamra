@@ -6,10 +6,16 @@ interface ErrorResponse {
 
 export async function changePassword(oldPassword: string, newPassword: string) {
   try {
-    const response = await axios.post('/api/update', {
-      oldPassword,
-      newPassword,
-    });
+    const response = await axios.post(
+      '/api/update',
+      {
+        oldPassword,
+        newPassword,
+      },
+      {
+        showToast: true,
+      }
+    );
 
     return response.data;
   } catch (error) {

@@ -26,6 +26,9 @@
 .bg-primary {
   background-color: var(--color-primary);
 }
+.btn-primary-loading {
+  background-color: rgb(from var(--color-primary) r g b / 70%);
+}
 
 .bg-primary-strong {
   background-color: var(--color-primary-strong);
