@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { Layers, Receipt, TrendingUp } from 'lucide-react';
-
 import GraphCard from './components/Graph';
 import StatCard from './components/StatCard';
 import DataTable, { DataTableColumn } from './components/DataTable';
@@ -63,23 +62,14 @@ export default function DashboardPage() {
     async function fetchDashboardData() {
       try {
         const stock = await getStock();
-
-        // getStock may return an error object { success: boolean; message: string }
         if (stock && typeof stock === 'object' && 'success' in stock) {
-          const errorResponse = stock as { success: boolean; message?: string };
-          console.error(
-            'Error fetching stock data, falling back to dummy data:',
-            errorResponse.message || stock
-          );
+          console.error(stock.message);
           setStockData(dummyStockData);
         } else {
-          setStockData(stock as unknown as StockMetrics);
+          setStockData(stock as StockMetrics);
         }
       } catch (error) {
-        console.error(
-          'Error fetching stock data, falling back to dummy data:',
-          error
-        );
+        console.error(error);
         setStockData(dummyStockData);
       }
       try {
@@ -87,10 +77,11 @@ export default function DashboardPage() {
           getCustomers(),
           getShippingAddresses(),
         ]);
+
         setCustomers(customerRows);
         setShippingAddresses(shippingRows);
       } catch (error) {
-        console.error('Error fetching table data:', error);
+        console.error('Table loading error', error);
       } finally {
         setLoading(false);
       }
@@ -123,7 +114,6 @@ export default function DashboardPage() {
           Dashboard
         </h1>
 
-        {/* Top summary cards */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
           <StatCard
             label="Total Profit Overall"
@@ -145,12 +135,10 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Monthly profit graph — full width */}
         <div className="grid grid-cols-1 gap-6 mb-6">
           <GraphCard title="Monthly Profit" rawStockData={stockData} />
         </div>
 
-        {/* Total Stock (bottle-wise) + Selling Price Today (bottle-wise) */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-10">
           <GraphCard
             title="Overall Stock"
@@ -164,7 +152,6 @@ export default function DashboardPage() {
           />
         </div>
 
-        {/* Tables */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <DataTable
             title="Customers"

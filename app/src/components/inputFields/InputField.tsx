@@ -42,7 +42,7 @@ export default function WaterInputField({
     <div className={`w-full ${marginBottom}`}>
       {label && (
         <label
-          className={`mb-1 block text-sm font-bold ${
+          className={`mb-1 block pl-2 text-sm font-bold ${
             dark ? 'text-sky-300' : 'text-slate-700'
           }`}
         >
@@ -113,7 +113,9 @@ export default function WaterInputField({
         leaveTo="opacity-0"
       >
         {error && (
-          <p className="mt-1 text-xs font-semibold text-red-500">{error}</p>
+          <p className="mt-1 pl-2 text-xs font-semibold text-red-500">
+            {error}
+          </p>
         )}
       </Transition>
     </div>

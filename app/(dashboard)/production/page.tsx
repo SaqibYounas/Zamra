@@ -10,14 +10,13 @@ import { showApiToast } from '@/app/src/lib/apiToast';
 
 interface StockFormData {
   totalPet: string;
-  perPet: string;
-  bottleperPet: string;
+  bottlePerPet: string;
 }
 
 interface StockMangRequestBody {
   bottleType: string;
   totalPet: string;
-  bottleperPet?: string;
+  bottlePerPet?: string;
 }
 
 export default function ProductionPage() {
@@ -25,8 +24,7 @@ export default function ProductionPage() {
 
   const [formData, setFormData] = useState<StockFormData>({
     totalPet: '',
-    perPet: '',
-    bottleperPet: '',
+    bottlePerPet: '',
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -52,8 +50,7 @@ export default function ProductionPage() {
 
     setFormData({
       totalPet: '',
-      perPet: '',
-      bottleperPet: '',
+      bottlePerPet: '',
     });
 
     setFieldErrors({});
@@ -78,12 +75,12 @@ export default function ProductionPage() {
             <WaterInputField
               label="Bottle per Pet (12)"
               type="number"
-              value={formData.bottleperPet}
+              value={formData.bottlePerPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('bottleperPet', e.target.value)
+                handleChange('bottlePerPet', e.target.value)
               }
               placeholder="Enter bottle per pet"
-              error={fieldErrors.bottleperPet}
+              error={fieldErrors.bottlePerPet}
             />
           </>
         );
@@ -105,12 +102,12 @@ export default function ProductionPage() {
             <WaterInputField
               label="Bottle per Pet (6)"
               type="number"
-              value={formData.bottleperPet}
+              value={formData.bottlePerPet}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('bottleperPet', e.target.value)
+                handleChange('bottlePerPet', e.target.value)
               }
               placeholder="Enter bottle per pet"
-              error={fieldErrors.bottleperPet}
+              error={fieldErrors.bottlePerPet}
             />
           </>
         );
@@ -171,10 +168,10 @@ export default function ProductionPage() {
       errors.totalPet = 'Total pet or bootles is required.';
     }
     if (
-      (type === '500ml' || type === '1.5L' || type === '19L') &&
-      !formData.bottleperPet.trim()
+      (type === '500ml' || type === '1.5L') &&
+      !formData.bottlePerPet.trim()
     ) {
-      errors.bottleperPet = `${type} per pet is required.`;
+      errors.bottlePerPet = `${type} per pet is required.`;
     }
 
     if (Object.keys(errors).length > 0) {
@@ -191,8 +188,10 @@ export default function ProductionPage() {
         totalPet: formData.totalPet,
       };
 
-      if (formData.bottleperPet) {
-        payload.bottleperPet = formData.bottleperPet;
+      if (type === '500ml' || type === '1.5L') {
+        payload.bottlePerPet = formData.bottlePerPet;
+      } else {
+        payload.bottlePerPet = '1';
       }
 
       const response = await saveStock(payload);
@@ -207,8 +206,7 @@ export default function ProductionPage() {
 
         setFormData({
           totalPet: '',
-          perPet: '',
-          bottleperPet: '',
+          bottlePerPet: '',
         });
       }
     } catch (err) {

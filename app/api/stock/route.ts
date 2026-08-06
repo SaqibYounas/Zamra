@@ -6,7 +6,8 @@ import { cookies } from 'next/headers';
 interface StockMangRequestBody {
   bottleType: string;
   totalPet: string;
-  bottleperPet: string;
+  bottlePerPet?: string;
+  bottleperPet?: string;
 }
 
 interface BackendErrorResponse {
@@ -16,7 +17,8 @@ interface BackendErrorResponse {
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as StockMangRequestBody;
-    const { bottleType, totalPet, bottleperPet } = body;
+    const { bottleType, totalPet, bottlePerPet, bottleperPet } = body;
+    const normalizedBottlePerPet = bottlePerPet ?? bottleperPet;
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
     console.log(body);
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
       {
         bottleType,
         totalPet,
-        bottlePerPet: bottleperPet,
+        bottlePerPet: normalizedBottlePerPet,
       },
       {
         headers: {
@@ -55,7 +57,7 @@ export async function GET() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
-    const response = await axios.get(`${BACKEND_API}/daily-stock/today`, {
+    const response = await axios.get(`${BACKEND_API}/daily-stock`, {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
       },

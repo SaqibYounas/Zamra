@@ -59,7 +59,9 @@ interface ErrorResponse {
 
 export async function submitInvoice(data: CreateInvoiceRequestBody) {
   try {
-    const response = await axios.post('/api/invoice-create', data);
+    const response = await axios.post('/api/invoice-create', data, {
+      showToast: true,
+    });
     const result = response.data;
 
     return {

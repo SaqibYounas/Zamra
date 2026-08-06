@@ -11,9 +11,15 @@ interface ErrorResponse {
 
 export async function saveSellingPrice(data: sellingPriceRequestBody) {
   try {
-    const response = await axios.post('/api/selling-price', {
-      ...data,
-    });
+    const response = await axios.post(
+      '/api/selling-price',
+      {
+        ...data,
+      },
+      {
+        showToast: true,
+      }
+    );
 
     return response.data;
   } catch (error) {
