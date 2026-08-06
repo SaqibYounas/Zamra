@@ -113,7 +113,9 @@ export default function WaterInputField({
         leaveTo="opacity-0"
       >
         {error && (
-          <p className="mt-1 text-xs font-semibold text-red-500">{error}</p>
+          <p className="mt-1 pl-2 text-xs font-semibold text-red-500">
+            {error}
+          </p>
         )}
       </Transition>
     </div>
