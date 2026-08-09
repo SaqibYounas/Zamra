@@ -21,16 +21,18 @@ export interface StockMetrics {
 
 export interface Customer {
   id: number;
-  name: string;
+  companyName: string;
+  attentionPoc: string;
   phone: string;
+  mailingAddress: string;
+  city: string;
   email: string;
-  totalOrders: number;
 }
 
 export interface ShippingAddress {
   id: number;
-  customerName: string;
-  addressLine: string;
-  city: string;
-  postalCode: string;
+  warehouseName: string;
+  attentionTo: string;
+  phone: string;
+  deliveryAddress: string;
 }

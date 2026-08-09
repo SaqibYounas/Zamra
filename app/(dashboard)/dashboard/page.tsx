@@ -5,19 +5,15 @@ import { Layers, Receipt, TrendingUp } from 'lucide-react';
 import GraphCard from './components/Graph';
 import StatCard from './components/StatCard';
 import DataTable, { DataTableColumn } from './components/DataTable';
-
+import { fetchCustomers } from '../services/getCustomers';
 import { getStock } from '../services/stockManagement';
-import {
-  dummyStockData,
-  getCustomers,
-  getShippingAddresses,
-} from './dummyData';
 import {
   Customer,
   ShippingAddress,
   StockMetrics,
   StockBottleType,
 } from './types';
+import { fetchShipping } from '../services/getShipping';
 
 const BOTTLE_LABELS: StockBottleType[] = [
   '500ml',
@@ -29,18 +25,19 @@ const BOTTLE_LABELS: StockBottleType[] = [
 
 const customerColumns: DataTableColumn<Customer>[] = [
   { key: 'id', label: '#' },
-  { key: 'name', label: 'Name' },
+  { key: 'companyName', label: 'Company' },
+  { key: 'attentionPoc', label: 'Contact Person' },
   { key: 'phone', label: 'Phone' },
   { key: 'email', label: 'Email' },
-  { key: 'totalOrders', label: 'Orders' },
+  { key: 'city', label: 'City' },
 ];
 
 const shippingColumns: DataTableColumn<ShippingAddress>[] = [
   { key: 'id', label: '#' },
-  { key: 'customerName', label: 'Customer' },
-  { key: 'addressLine', label: 'Address' },
-  { key: 'city', label: 'City' },
-  { key: 'postalCode', label: 'Postal Code' },
+  { key: 'warehouseName', label: 'Warehouse' },
+  { key: 'attentionTo', label: 'Contact Person' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'deliveryAddress', label: 'Address' },
 ];
 
 function sumBottles(metric?: Partial<Record<StockBottleType, number>>) {
@@ -61,25 +58,23 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const stock = await getStock();
-        if (stock && typeof stock === 'object' && 'success' in stock) {
-          console.error(stock.message);
-          setStockData(dummyStockData);
-        } else {
-          setStockData(stock as StockMetrics);
-        }
-      } catch (error) {
-        console.error(error);
-        setStockData(dummyStockData);
-      }
-      try {
-        const [customerRows, shippingRows] = await Promise.all([
-          getCustomers(),
-          getShippingAddresses(),
-        ]);
+        const [customersResponse, shippingResponse, stockResponse] =
+          await Promise.all([fetchCustomers(), fetchShipping(), getStock()]);
 
-        setCustomers(customerRows);
-        setShippingAddresses(shippingRows);
+        setCustomers(Array.isArray(customersResponse) ? customersResponse : []);
+        setShippingAddresses(
+          Array.isArray(shippingResponse) ? shippingResponse : []
+        );
+
+        if (
+          stockResponse &&
+          typeof stockResponse === 'object' &&
+          !('success' in stockResponse)
+        ) {
+          setStockData(stockResponse as StockMetrics);
+        } else {
+          console.error('Stock loading error', stockResponse);
+        }
       } catch (error) {
         console.error('Table loading error', error);
       } finally {
@@ -147,7 +142,7 @@ export default function DashboardPage() {
           />
           <GraphCard
             title="Selling Price Today"
-            label="Selling Price Today (Bottle Wise)"
+            label="Current Selling Price (Bottle Wise)"
             rawStockData={stockData}
           />
         </div>
