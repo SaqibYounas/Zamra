@@ -9,7 +9,7 @@ interface WaterInputFieldProps {
   customicon?: () => JSX.Element;
   icon?: LucideIcon;
   type: string;
-  value: string;
+  value: string | number;
   onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
   placeholder?: string;
@@ -20,6 +20,7 @@ interface WaterInputFieldProps {
   iconToggle?: { show: JSX.Element; hide: JSX.Element };
   name?: string;
   marginBottom?: string;
+  disabled?: boolean;
 }
 
 export default function WaterInputField({
@@ -37,6 +38,7 @@ export default function WaterInputField({
   showPassword,
   iconToggle,
   marginBottom = 'mb-4',
+  disabled = false,
 }: WaterInputFieldProps) {
   return (
     <div className={`w-full ${marginBottom}`}>
@@ -67,6 +69,7 @@ export default function WaterInputField({
           onChange={onChange}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
+          disabled={disabled}
           className={`
             h-[42px]
             w-full
@@ -84,6 +87,7 @@ export default function WaterInputField({
                 : 'border-slate-300 bg-white text-slate-800 focus:border-sky-700 focus:ring-sky-400'
             }
             ${error ? 'border-red-500' : ''}
+            ${disabled ? 'cursor-not-allowed bg-slate-100 text-slate-500 opacity-70' : ''}
           `}
         />
 
@@ -91,11 +95,8 @@ export default function WaterInputField({
           <button
             type="button"
             onClick={togglePassword}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-              dark
-                ? 'text-sky-400 hover:text-sky-200'
-                : 'text-slate-400 hover:text-sky-600'
-            }`}
+            disabled={disabled}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
           >
             {showPassword ? iconToggle?.show : iconToggle?.hide}
           </button>
