@@ -73,14 +73,15 @@ export default function ProductionPage() {
             />
 
             <WaterInputField
-              label="Bottle per Pet (12)"
+              label="Bottle per Pet"
               type="number"
-              value={formData.bottlePerPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('bottlePerPet', e.target.value)
-              }
+              value={12}
+              disabled
               placeholder="Enter bottle per pet"
               error={fieldErrors.bottlePerPet}
+              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
+                throw new Error('Function not implemented.');
+              }}
             />
           </>
         );
@@ -100,30 +101,44 @@ export default function ProductionPage() {
             />
 
             <WaterInputField
-              label="Bottle per Pet (6)"
+              label="Bottle per Pet"
               type="number"
-              value={formData.bottlePerPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('bottlePerPet', e.target.value)
-              }
+              value={6}
+              disabled
               placeholder="Enter bottle per pet"
               error={fieldErrors.bottlePerPet}
+              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
+                throw new Error('Function not implemented.');
+              }}
             />
           </>
         );
 
       case '5L':
         return (
-          <WaterInputField
-            label="Total Bottles"
-            type="number"
-            value={formData.totalPet}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              handleChange('totalPet', e.target.value)
-            }
-            placeholder="Enter total bottles"
-            error={fieldErrors.totalPet}
-          />
+          <>
+            <WaterInputField
+              label="Total Bottles"
+              type="number"
+              value={formData.totalPet}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                handleChange('totalPet', e.target.value)
+              }
+              placeholder="Enter total bottles"
+              error={fieldErrors.totalPet}
+            />
+            <WaterInputField
+              label="Bottle per Pet"
+              type="number"
+              value={4}
+              disabled
+              placeholder="Enter bottle per pet"
+              error={fieldErrors.bottlePerPet}
+              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
+                throw new Error('Function not implemented.');
+              }}
+            />
+          </>
         );
 
       case '19L':
@@ -139,21 +154,45 @@ export default function ProductionPage() {
               placeholder="Enter quantity"
               error={fieldErrors.totalPet}
             />
+            <WaterInputField
+              label="Bottle per Pet"
+              type="number"
+              value={1}
+              disabled
+              placeholder="Enter bottle per pet"
+              error={fieldErrors.bottlePerPet}
+              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
+                throw new Error('Function not implemented.');
+              }}
+            />
           </>
         );
 
       case '19L Refill':
         return (
-          <WaterInputField
-            label="Total Refill"
-            type="number"
-            value={formData.totalPet}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              handleChange('totalPet', e.target.value)
-            }
-            placeholder="Enter refill today"
-            error={fieldErrors.totalPet}
-          />
+          <>
+            <WaterInputField
+              label="Total Refill"
+              type="number"
+              value={formData.totalPet}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                handleChange('totalPet', e.target.value)
+              }
+              placeholder="Enter refill today"
+              error={fieldErrors.totalPet}
+            />
+            <WaterInputField
+              label="Bottle per Pet"
+              type="number"
+              value={1}
+              disabled
+              placeholder="Enter bottle per pet"
+              error={fieldErrors.bottlePerPet}
+              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
+                throw new Error('Function not implemented.');
+              }}
+            />
+          </>
         );
 
       default:
