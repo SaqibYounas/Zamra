@@ -5,6 +5,7 @@ import { Layers, Receipt, TrendingUp } from 'lucide-react';
 import GraphCard from './components/Graph';
 import StatCard from './components/StatCard';
 import DataTable, { DataTableColumn } from './components/DataTable';
+import ProfitReport from './components/profitReport';
 import { fetchCustomers } from '../services/getCustomers';
 import { getStock } from '../services/stockManagement';
 import {
@@ -130,8 +131,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 mb-6">
-          <GraphCard title="Monthly Profit" rawStockData={stockData} />
+        <div className="mb-10">
+          <ProfitReport />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-10">
