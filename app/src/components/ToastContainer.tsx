@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { subscribeApiToast, type ApiToast } from '../lib/apiToast';
+import { X } from 'lucide-react';
 
 export function ToastContainer() {
   const [toasts, setToasts] = useState<ApiToast[]>([]);
@@ -21,33 +22,78 @@ export function ToastContainer() {
   }, []);
 
   if (toasts.length === 0) return null;
-
+  const removeToast = (id: string | number) => {
+    setToasts((current) =>
+      current.filter((toast) => String(toast.id) !== String(id))
+    );
+  };
   return (
-    <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-[9999] flex w-[calc(100vw-1.5rem)] sm:w-96 max-w-md flex-col gap-3">
+    <div className="fixed top-3 right-3 left-3 sm:left-auto sm:right-4 sm:top-4 z-[9999] flex flex-col gap-3 sm:w-[380px]">
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`animate-[slideIn_0.3s_ease-out] rounded-2xl border px-4 py-3 sm:px-5 sm:py-4 shadow-2xl backdrop-blur-md ${
-            toast.type === 'error'
-              ? 'border-red-200 bg-gradient-to-r from-rose-600 to-red-500 text-white'
-              : toast.type === 'info'
-                ? 'border-sky-200 bg-gradient-to-r from-sky-600 to-blue-500 text-white'
-                : 'border-emerald-200 bg-gradient-to-r from-emerald-600 to-green-500 text-white'
-          }`}
+          className={`group relative overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl animate-[toastSlideIn_0.35s_ease-out]
+            
+            ${
+              toast.type === 'error'
+                ? 'border-red-400/30 bg-gradient-to-r from-red-600 via-red-500 to-rose-500'
+                : toast.type === 'info'
+                  ? 'border-blue-400/30 bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-500'
+                  : 'border-emerald-400/30 bg-gradient-to-r from-emerald-600 via-green-500 to-teal-500'
+            }
+          `}
         >
-          <div className="flex items-start gap-3">
-            <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-white/80" />
+          <div className="absolute inset-0 bg-white/5" />
 
-            <div className="min-w-0 flex-1">
-              <p className="text-xs sm:text-sm font-semibold">{toast.title}</p>
+          <div className="relative flex items-start gap-3 p-4 sm:p-5">
+            <div className="mt-1 h-3 w-3 shrink-0 rounded-full bg-white shadow-lg" />
 
-              <p className="mt-1 text-xs sm:text-sm leading-relaxed text-white/95 break-words">
+            <div className="flex-1 min-w-0">
+              <h4 className="font-semibold text-white text-sm sm:text-base">
+                {toast.title}
+              </h4>
+
+              <p className="mt-1 text-xs sm:text-sm text-white/90 leading-relaxed break-words">
                 {toast.message}
               </p>
             </div>
+
+            <button
+              onClick={() => removeToast(toast.id)}
+              className="rounded-lg p-1.5 text-white/80 transition-all hover:bg-white/15 hover:text-white cursor-pointer"
+              aria-label="Close toast"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="h-1 bg-white/20">
+            <div className="h-full bg-white/70 animate-[toastProgress_5s_linear]" />
           </div>
         </div>
       ))}
+
+      <style jsx global>{`
+        @keyframes toastSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(100%) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        @keyframes toastProgress {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
+      `}</style>
     </div>
   );
 }

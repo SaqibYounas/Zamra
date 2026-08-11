@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Layers, Receipt, TrendingUp } from 'lucide-react';
+import { Layers, Receipt, TrendingUp, Droplets } from 'lucide-react';
 import GraphCard from './components/Graph';
 import StatCard from './components/StatCard';
 import DataTable, { DataTableColumn } from './components/DataTable';
+import ProfitReport from './components/profitReport';
 import { fetchCustomers } from '../services/getCustomers';
 import { getStock } from '../services/stockManagement';
 import {
@@ -54,6 +55,17 @@ export default function DashboardPage() {
     []
   );
   const [loading, setLoading] = useState(true);
+  const [today, setToday] = useState('');
+
+  useEffect(() => {
+    setToday(
+      new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      })
+    );
+  }, []);
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -105,9 +117,28 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-7xl px-4 pt-24 pb-6 sm:px-6 lg:px-8 lg:pt-12">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center mb-8 text-slate-800">
-          Dashboard
-        </h1>
+        {/* Header */}
+        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-sky-500/10 ring-1 ring-sky-500/20">
+              <Droplets className="w-7 h-7 text-sky-500" />
+            </div>
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-sky-500">
+                Overview
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight">
+                Dashboard
+              </h1>
+            </div>
+          </div>
+
+          {today && (
+            <div className="flex items-center gap-2 self-start rounded-full bg-slate-100 border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 sm:self-auto">
+              {today}
+            </div>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
           <StatCard
@@ -130,8 +161,8 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 mb-6">
-          <GraphCard title="Monthly Profit" rawStockData={stockData} />
+        <div className="mb-10">
+          <ProfitReport />
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-10">

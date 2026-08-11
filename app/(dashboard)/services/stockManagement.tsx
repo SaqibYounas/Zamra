@@ -122,7 +122,8 @@ const getSellingPrices = (
 
 const buildStockMetrics = (
   items: StockItem[],
-  sellingPriceToday: Record<StockBottleType, number>
+  sellingPriceToday: Record<StockBottleType, number>,
+  monthlyProfitHistory: number[] = []
 ) => {
   const todayStock = initBottleRecord();
 
@@ -163,7 +164,7 @@ const buildStockMetrics = (
 
     sellingPriceToday,
 
-    monthlyProfitHistory: [],
+    monthlyProfitHistory,
   };
 };
 
@@ -181,9 +182,19 @@ export async function getStock() {
       console.log('Selling price API unavailable');
     }
 
+    let monthlyProfitHistory: number[] = [];
+
+    try {
+      const profitResponse = await axios.get('/api/monthly-profit');
+
+      monthlyProfitHistory = profitResponse.data?.monthlyProfitHistory ?? [];
+    } catch {
+      console.log('Profit API unavailable');
+    }
+
     const items = getStockItems(stockResponse.data);
 
-    return buildStockMetrics(items, sellingPriceToday);
+    return buildStockMetrics(items, sellingPriceToday, monthlyProfitHistory);
   } catch (error) {
     const err = error as AxiosError;
 
