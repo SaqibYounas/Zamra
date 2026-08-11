@@ -78,7 +78,7 @@ function generateDummyReport(): ProfitReport {
 
 async function fetchProfitReport(): Promise<ProfitReport> {
   try {
-    const res = await fetch('/api/profit', { cache: 'no-store' });
+    const res = await fetch('/api/monthly-profit', { cache: 'no-store' });
 
     if (!res.ok) {
       throw new Error(`API error ${res.status}`);

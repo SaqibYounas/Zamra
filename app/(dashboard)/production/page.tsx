@@ -204,13 +204,7 @@ export default function ProductionPage() {
     const errors: Record<string, string> = {};
 
     if (!formData.totalPet.trim()) {
-      errors.totalPet = 'Total pet or bootles is required.';
-    }
-    if (
-      (type === '500ml' || type === '1.5L') &&
-      !formData.bottlePerPet.trim()
-    ) {
-      errors.bottlePerPet = `${type} per pet is required.`;
+      errors.totalPet = 'Total pet or bottles is required.';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -225,13 +219,15 @@ export default function ProductionPage() {
       const payload: StockMangRequestBody = {
         bottleType: type,
         totalPet: formData.totalPet,
+        bottlePerPet:
+          type === '500ml'
+            ? '12'
+            : type === '1.5L'
+              ? '6'
+              : type === '5L'
+                ? '4'
+                : '1',
       };
-
-      if (type === '500ml' || type === '1.5L') {
-        payload.bottlePerPet = formData.bottlePerPet;
-      } else {
-        payload.bottlePerPet = '1';
-      }
 
       const response = await saveStock(payload);
 

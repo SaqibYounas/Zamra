@@ -128,6 +128,7 @@ export default function GraphCard({
 
   const chartData = getChartData(title, rawStockData);
   const totalValue = chartData.reduce((sum, value) => sum + value, 0);
+  const hasData = !!rawStockData && chartData.some((value) => value !== 0);
 
   const data: ChartData<'bar'> = {
     labels: title === 'Monthly Profit' ? DAYS : BOTTLE_LABELS,
@@ -220,11 +221,24 @@ export default function GraphCard({
             {config.isCurrency ? <RupeesIcon /> : config.icon}
 
             {totalValue.toLocaleString()}
+            {!config.isCurrency && (
+              <span className="ml-1 text-sm font-semibold text-slate-400">
+                {config.unit}
+              </span>
+            )}
           </div>
         </div>
       </div>
-      <div className="grow min-h-72">
-        <Bar data={data} options={options} />
+
+      <div className="grow min-h-72 rounded-2xl border border-slate-200 bg-white/40 p-2">
+        {hasData ? (
+          <Bar data={data} options={options} />
+        ) : (
+          <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2 text-slate-400">
+            <div className="p-3 bg-slate-50 rounded-xl">{config.icon}</div>
+            <p className="text-sm font-medium">No data yet</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -185,7 +185,7 @@ export async function getStock() {
     let monthlyProfitHistory: number[] = [];
 
     try {
-      const profitResponse = await axios.get('/api/profit');
+      const profitResponse = await axios.get('/api/monthly-profit');
 
       monthlyProfitHistory = profitResponse.data?.monthlyProfitHistory ?? [];
     } catch {

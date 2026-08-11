@@ -20,15 +20,24 @@ export default function Button({
       {...props}
       type={type}
       disabled={disabled || loading}
-      className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold uppercase text-sm tracking-[0.2em] transition-all shadow-md cursor-pointer
+      className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl
+        font-semibold uppercase text-sm tracking-[0.2em]
+        transition-all duration-200 shadow-md
         ${
           loading || disabled
-            ? 'bg-(--color-disabled) opacity-50 cursor-not-allowed'
-            : 'btn-primary hover:-translate-y-0.5'
+            ? 'btn-primary opacity-70 cursor-not-allowed'
+            : 'btn-primary cursor-pointer hover:-translate-y-0.5 hover:shadow-lg'
         }
         text-white ${className}`}
     >
-      {loading ? <Loader2 className="animate-spin" /> : label}
+      {loading ? (
+        <>
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>{label}</span>
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }
