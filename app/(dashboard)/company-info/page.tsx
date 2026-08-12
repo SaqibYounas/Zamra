@@ -44,23 +44,21 @@ export default function CompanyInformation() {
     const localErrors: Record<string, string> = {};
 
     if (!payload.name.trim())
-      localErrors.name = 'Company Name field is required.';
+      localErrors.name = 'Please enter the company name.';
 
     if (!payload.owner.trim())
-      localErrors.owner = 'Owner Name field is required.';
+      localErrors.owner = 'Please enter the owner name.';
 
-    if (!payload.city.trim())
-      localErrors.city = 'City context name is required.';
+    if (!payload.city.trim()) localErrors.city = 'Please enter the city.';
 
     if (!payload.contact.trim())
-      localErrors.contact = 'Contact phone number is required.';
+      localErrors.contact = 'Please enter the contact number.';
 
     if (!payload.address.trim())
-      localErrors.address = 'Company physical address is required.';
+      localErrors.address = 'Please enter the company address.';
 
     if (!payload.email.trim())
-      localErrors.email = 'Company email desk address is required.';
-
+      localErrors.email = 'Please enter the email address.';
     if (Object.keys(localErrors).length > 0) {
       setFieldErrors(localErrors);
       return;
