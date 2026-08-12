@@ -1,7 +1,3 @@
-// Shared types for the monthly stock Timeline table + its PDF export.
-// Keep these in one place so the table, the API/dummy service, and the
-// PDF template all agree on the same shape.
-
 export type BottleSize = '500ml' | '1.5L' | '5L' | '19L' | '19L Refill';
 
 export const BOTTLE_SIZES: BottleSize[] = [

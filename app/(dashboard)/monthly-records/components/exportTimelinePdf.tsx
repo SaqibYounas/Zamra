@@ -2,7 +2,7 @@
 
 import { pdf } from '@react-pdf/renderer';
 
-import { TimelineDay } from '../../timelineTypes';
+import { TimelineDay } from './timelineTypes';
 import TimelineReportPdf from './TimelineReportPdf';
 
 /**

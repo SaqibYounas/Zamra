@@ -5,21 +5,6 @@ import {
   TimelineDay,
 } from './timelineTypes';
 
-/**
- * Fetches the daily stock/price/sales/cost/profit timeline for one month.
- *
- * DUMMY IMPLEMENTATION — replace the body with a real API call once the
- * backend endpoint exists, e.g.:
- *
- *   export async function fetchMonthlyTimeline(year: number, month: number) {
- *     const res = await fetch(`/api/timeline?year=${year}&month=${month}`);
- *     if (!res.ok) throw new Error(`API error ${res.status}`);
- *     return (await res.json()) as TimelineDay[];
- *   }
- *
- * Keep the return type (TimelineDay[]) identical so TimelineTable and the
- * PDF export don't need to change when this is swapped out.
- */
 export async function fetchMonthlyTimeline(
   year: number,
   month: number

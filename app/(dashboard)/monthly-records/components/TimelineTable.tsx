@@ -98,7 +98,6 @@ export default function TimelineTable() {
 
   return (
     <div className="flex h-full w-full flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-xl sm:p-6 lg:p-8">
-      {/* Header */}
       <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         {' '}
         <div className="flex items-center gap-3">
@@ -109,7 +108,7 @@ export default function TimelineTable() {
           <div>
             <h3 className="text-lg font-bold text-slate-800 sm:text-xl">
               {' '}
-              Stock Timeline
+              Monthly Records
             </h3>
             <p className="hidden text-sm text-slate-500 sm:block">
               {' '}
@@ -123,7 +122,7 @@ export default function TimelineTable() {
             <button
               onClick={goToPrevMonth}
               aria-label="Previous month"
-              className="rounded-full p-2 transition-all hover:bg-sky-100 hover:text-sky-600"
+              className="rounded-full p-2 transition-all hover:bg-sky-100 hover:text-sky-600 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -137,7 +136,7 @@ export default function TimelineTable() {
               onClick={goToNextMonth}
               disabled={isCurrentMonth}
               aria-label="Next month"
-              className="rounded-full p-2 transition-all hover:bg-sky-100 hover:text-sky-600 disabled:opacity-30"
+              className="rounded-full p-2 transition-all hover:bg-sky-100 hover:text-sky-600 disabled:opacity-30 cursor-pointer"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -153,13 +152,12 @@ export default function TimelineTable() {
         </div>
       </div>
 
-      {/* Content */}
       {loading ? (
         <div className="flex min-h-[300px] items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <span className="animate-bounce text-5xl">💧</span>
             <p className="text-sm font-medium text-slate-500">
-              Loading timeline...
+              Loading records...
             </p>
           </div>
         </div>
