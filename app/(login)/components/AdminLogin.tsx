@@ -203,7 +203,7 @@ export default function AdminForm() {
 
         <AppButton
           type="submit"
-          label={loading ? 'Logging in...' : 'Login'}
+          label={loading ? 'Logging...' : 'Login'}
           loading={loading}
           className="w-full h-12 text-sm sm:text-base font-semibold btn-primary text-white shadow-md hover:shadow-lg transition-all duration-200"
         />

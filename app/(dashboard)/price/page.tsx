@@ -125,14 +125,12 @@ export default function WaterFormPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col">
-            <div className="mb-5">
-              <Dropdown
-                label="Select Bottle Type"
-                options={waterTypes}
-                value={formData.type}
-                onChange={handleTypeChange}
-              />
-            </div>
+            <Dropdown
+              label="Select Bottle Type"
+              options={waterTypes}
+              value={formData.type}
+              onChange={handleTypeChange}
+            />
 
             <WaterInputField
               label="Per Bottle Price"

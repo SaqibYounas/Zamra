@@ -61,16 +61,15 @@ export default function ChangePasswordPage() {
     const localErrors: Record<string, string> = {};
 
     if (!formData.oldPassword.trim()) {
-      localErrors.oldPassword = 'Current password parameter is required.';
+      localErrors.oldPassword = 'Current password is required.';
     }
 
     if (!formData.newPassword.trim()) {
-      localErrors.newPassword = 'New password parameter cannot be blank.';
+      localErrors.newPassword = 'New password is required.';
     }
 
     if (!formData.confirmPassword.trim()) {
-      localErrors.confirmPassword =
-        'Please repeat the new password confirmation.';
+      localErrors.confirmPassword = 'Please confirm your new password.';
     }
 
     if (Object.keys(localErrors).length > 0) {
@@ -80,7 +79,7 @@ export default function ChangePasswordPage() {
 
     if (formData.newPassword !== formData.confirmPassword) {
       setFieldErrors({
-        confirmPassword: 'New password and confirmation do not match.',
+        confirmPassword: 'Passwords do not match.',
       });
       return;
     }

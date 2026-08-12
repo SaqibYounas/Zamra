@@ -287,14 +287,12 @@ export default function ProductionPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col">
-            <div className="mb-4">
-              <Dropdown
-                label="Select Bottle Type"
-                options={waterTypes}
-                value={type}
-                onChange={handleTypeChange}
-              />
-            </div>
+            <Dropdown
+              label="Select Bottle Type"
+              options={waterTypes}
+              value={type}
+              onChange={handleTypeChange}
+            />
 
             <div className="flex flex-col gap-5 mb-6 [&>div]:m-0 [&>div]:p-0">
               {renderFields()}

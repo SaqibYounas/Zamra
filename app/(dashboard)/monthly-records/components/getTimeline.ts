@@ -5,6 +5,21 @@ import {
   TimelineDay,
 } from './timelineTypes';
 
+/**
+ * Fetches the daily stock/price/sales/cost/profit timeline for one month.
+ *
+ * DUMMY IMPLEMENTATION — replace the body with a real API call once the
+ * backend endpoint exists, e.g.:
+ *
+ *   export async function fetchMonthlyTimeline(year: number, month: number) {
+ *     const res = await fetch(`/api/timeline?year=${year}&month=${month}`);
+ *     if (!res.ok) throw new Error(`API error ${res.status}`);
+ *     return (await res.json()) as TimelineDay[];
+ *   }
+ *
+ * Keep the return type (TimelineDay[]) identical so TimelineTable and the
+ * PDF export don't need to change when this is swapped out.
+ */
 export async function fetchMonthlyTimeline(
   year: number,
   month: number
@@ -25,7 +40,14 @@ export async function fetchMonthlyTimeline(
       const sold = 10 + Math.round(Math.random() * 190);
       const stock = 10 + Math.round(Math.random() * 190);
       const cost = sold * price;
-      const profit = Math.round(cost * (0.05 + Math.random() * 0.35));
+
+      // ~20% of day/bottle combinations run at a loss, so the PDF's
+      // green/red profit coloring actually has both cases to show.
+      const isLossDay = Math.random() < 0.2;
+      const margin = isLossDay
+        ? -(0.03 + Math.random() * 0.15)
+        : 0.05 + Math.random() * 0.35;
+      const profit = Math.round(cost * margin);
 
       bottles[size] = { stock, price, sold, cost, profit };
     });
