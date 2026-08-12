@@ -14,7 +14,13 @@ import {
   ChartOptions,
   TooltipItem,
 } from 'chart.js';
-import { TrendingUp, Receipt, Layers, DollarSign } from 'lucide-react';
+import {
+  TrendingUp,
+  Receipt,
+  Layers,
+  DollarSign,
+  Banknote,
+} from 'lucide-react';
 
 import RupeesIcon from '@/public/RupeesIcon';
 
@@ -83,10 +89,9 @@ const METRIC_CONFIG: Record<
     isCurrency: true,
   },
 
-  // NEW — bottle-wise selling price graph
   'Selling Price Today': {
     color: 'rgba(14,165,233,0.85)',
-    icon: <DollarSign className="w-5 h-5 text-sky-500" />,
+    icon: <Banknote className="w-5 h-5 text-sky-500" />,
     unit: 'Rs',
     isCurrency: true,
   },
@@ -218,7 +223,7 @@ export default function GraphCard({
 
         <div className="relative flex flex-col items-end">
           <div className="flex items-center text-2xl font-bold text-sky-500">
-            {config.isCurrency ? <RupeesIcon /> : config.icon}
+            {config.isCurrency && <RupeesIcon />}
 
             {totalValue.toLocaleString()}
             {!config.isCurrency && (
