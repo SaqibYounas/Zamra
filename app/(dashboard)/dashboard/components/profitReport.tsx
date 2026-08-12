@@ -103,59 +103,6 @@ const formatRs = (n: number) => n.toLocaleString();
 const shortDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-function MarginGauge({ marginPct }: { marginPct: number }) {
-  const clamped = Math.max(0, Math.min(100, marginPct));
-  return (
-    <div className="flex items-center gap-4">
-      <div className="relative h-24 w-10 rounded-full border border-slate-200 bg-slate-50 overflow-hidden shrink-0">
-        <div
-          className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-amber-400 to-yellow-300 transition-all duration-700"
-          style={{ height: `${clamped}%` }}
-        />
-        <div className="absolute inset-0 rounded-full ring-1 ring-inset ring-slate-200" />
-      </div>
-      <div>
-        <p className="font-mono text-2xl font-bold text-slate-900">
-          {clamped.toFixed(1)}%
-        </p>
-        <p className="text-xs uppercase tracking-widest text-slate-500">
-          Margin fill
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function SummaryStat({
-  label,
-  value,
-  icon,
-  iconColor,
-}: {
-  label: string;
-  value: string | number;
-  icon: ReactNode;
-  iconColor: string;
-}) {
-  return (
-    <div className="bg-slate-100 ring-1 rounded-3xl p-4 sm:p-6 shadow-lg border border-slate-100 hover:shadow-xl transition-all">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 bg-slate-50 rounded-xl">{icon}</div>
-        <p className="text-xs uppercase tracking-widest font-bold text-slate-500">
-          {label}
-        </p>
-      </div>
-      <div
-        className="flex items-center text-2xl font-bold"
-        style={{ color: iconColor }}
-      >
-        <RupeesIcon />
-        {value}
-      </div>
-    </div>
-  );
-}
-
 interface ChartTooltipProps {
   active?: boolean;
   label?: string | number;

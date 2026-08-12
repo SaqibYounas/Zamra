@@ -1,26 +1,21 @@
 function RupeesIcon() {
   return (
     <svg
-      viewBox="0 0 55 24"
+      viewBox="0 0 40 40"
       width="32"
-      height="22"
+      height="32"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <defs>
-        <linearGradient id="rsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#2563EB" />
-          <stop offset="100%" stopColor="#25A7DA" />
-        </linearGradient>
-      </defs>
+      <circle cx="20" cy="20" r="18" fill="#52b8ff" />
 
       <text
-        x="2"
-        y="19"
-        fontFamily="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-        fontSize="22"
-        fontWeight="800"
-        fill="url(#rsGradient)"
-        letterSpacing="-1"
+        x="20"
+        y="25"
+        textAnchor="middle"
+        fontSize="14"
+        fontWeight="700"
+        fill="#ffffff"
+        fontFamily="Arial, sans-serif"
       >
         Rs
       </text>
