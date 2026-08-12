@@ -1,78 +1,17 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { exportToCSV } from '../utils/csvExport';
-import { MONTHS } from './constants';
-import { buildExportRows, getTotals } from './helpers';
-import { generateMonthlyData } from './data';
-import {
-  MonthlyRecordsDesktopTable,
-  MonthlyRecordsMobileCards,
-  MonthlyRecordsSummaryCards,
-  MonthlyRecordsTabs,
-  MonthlyRecordsToolbar,
-} from './components';
+import TimelineTable from './components/TimelineTable';
 
-export default function MonthlyRecordsPage() {
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState(0);
-
-  const currentMonth = MONTHS[currentMonthIndex];
-
-  const monthlyData = useMemo(
-    () => generateMonthlyData(currentMonth.month, currentMonth.year),
-    [currentMonth.month, currentMonth.year]
-  );
-
-  const totals = useMemo(() => getTotals(monthlyData), [monthlyData]);
-
-  const handleExportCSV = () => {
-    const rows = buildExportRows(monthlyData);
-    exportToCSV(`Monthly_${currentMonth.month}.csv`, rows);
-  };
-
+export default function DashboardPage() {
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex flex-col">
-      <div className="p-3 sm:p-4 md:p-6 lg:p-8 w-full flex flex-col gap-4 sm:gap-5 md:gap-6 lg:gap-8">
-        <MonthlyRecordsToolbar
-          currentMonth={currentMonth}
-          currentMonthIndex={currentMonthIndex}
-          monthCount={MONTHS.length}
-          onPrev={() => setCurrentMonthIndex((index) => Math.max(index - 1, 0))}
-          onNext={() =>
-            setCurrentMonthIndex((index) =>
-              Math.min(index + 1, MONTHS.length - 1)
-            )
-          }
-          onExport={handleExportCSV}
-        />
+    <div className="min-h-screen bg-slate-50">
+      <main className="mx-auto max-w-7xl px-4 pt-24 pb-6 sm:px-6 lg:px-8 lg:pt-12">
+        <h1 className="mb-8 text-center text-2xl font-bold text-slate-800 sm:text-3xl">
+          Stock Timeline
+        </h1>
 
-        <MonthlyRecordsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-
-        {activeTab === 0 && (
-          <>
-            <MonthlyRecordsMobileCards monthlyData={monthlyData} />
-            <MonthlyRecordsDesktopTable monthlyData={monthlyData} />
-          </>
-        )}
-
-        {activeTab === 1 && <MonthlyRecordsSummaryCards totals={totals} />}
-      </div>
-
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-          .custom-scrollbar::-webkit-scrollbar { height: 8px; }
-          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-          .custom-scrollbar::-webkit-scrollbar-thumb { 
-            background: #e2e8f0; 
-            border-radius: 20px; 
-            border: 2px solid white;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-        `,
-        }}
-      />
+        <TimelineTable />
+      </main>
     </div>
   );
 }
