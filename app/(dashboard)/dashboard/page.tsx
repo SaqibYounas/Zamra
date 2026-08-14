@@ -29,7 +29,7 @@ import StatCard from './components/StatCard';
 import SetupAlerts from './components/SetupAlerts';
 import CustomerDirectory from './components/CustomerDirectory';
 import ShippingDirectory from './components/ShippingDirectory';
-import ProfitReport from './components/ProfitReport';
+import ProfitReport from './components/profitReport';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { fetchCustomers, fetchShippingAddresses } from '../services/customers';
 import { fetchStockMetrics } from '../services/stock';
