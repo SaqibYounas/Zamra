@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { InvoiceData } from '../../types/types';
+import { InvoiceData } from '../../types/invoice';
+import { formatDate, formatMoneyExact, toNumber } from '@/app/src/lib/format';
 
 interface InvoiceTemplateProps {
   invoiceData: InvoiceData;
@@ -10,18 +11,96 @@ interface InvoiceTemplateProps {
   taxAmount: number;
   totalAmount: number;
   balanceDue: number;
+  /**
+   * DOM id for the PDF export to find. Omit it for the on-screen preview: two
+   * elements sharing an id would make `getElementById` pick the wrong one.
+   */
+  domId?: string;
 }
 
-const InfoRow: React.FC<{
+/**
+ * Print template for the PDF export. Inline hex, not utilities: html2canvas
+ * rasterises this off-screen, and the document stays on white paper either way.
+ */
+const C = {
+  marine: '#0e1c2b',
+  brand: '#0084c9',
+  ink: '#0e1c2b',
+  inkSoft: '#33475d',
+  inkMuted: '#64798f',
+  line: '#e3eaf3',
+  panel: '#f4f7fb',
+  white: '#ffffff',
+  danger: '#a3202b',
+  success: '#0a6b45',
+};
+
+const Field: React.FC<{
   label: string;
   value: React.ReactNode;
-  labelWidth?: string;
-}> = ({ label, value, labelWidth = 'w-20' }) => (
-  <div className="flex items-start gap-2">
-    <span className={`${labelWidth} shrink-0 font-bold text-slate-900`}>
-      {label}:
+  strong?: boolean;
+}> = ({ label, value, strong }) => (
+  <div className="flex gap-2" style={{ fontSize: 10.5, lineHeight: 1.5 }}>
+    <span
+      className="w-20 shrink-0"
+      style={{ color: C.inkMuted, fontWeight: 500 }}
+    >
+      {label}
     </span>
-    <span className="flex-1 text-slate-600 font-medium break-words">
+    <span
+      className="min-w-0 flex-1 break-words"
+      style={{
+        color: strong ? C.ink : C.inkSoft,
+        fontWeight: strong ? 700 : 500,
+      }}
+    >
+      {value || '—'}
+    </span>
+  </div>
+);
+
+const PartyBlock: React.FC<{
+  title: string;
+  children: React.ReactNode;
+}> = ({ title, children }) => (
+  <div
+    className="rounded-lg p-4"
+    style={{ backgroundColor: C.panel, border: `1px solid ${C.line}` }}
+  >
+    <p
+      className="mb-2"
+      style={{
+        fontSize: 9,
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
+        color: C.brand,
+        fontWeight: 700,
+      }}
+    >
+      {title}
+    </p>
+    <div className="space-y-1">{children}</div>
+  </div>
+);
+
+const TotalRow: React.FC<{
+  label: string;
+  value: string;
+  color?: string;
+  bold?: boolean;
+}> = ({ label, value, color, bold }) => (
+  <div
+    className="flex items-baseline justify-between gap-3 py-1"
+    style={{ borderBottom: `1px solid ${C.line}`, fontSize: 10.5 }}
+  >
+    <span style={{ color: C.inkMuted, fontWeight: 500 }}>{label}</span>
+    <span
+      style={{
+        color: color ?? C.ink,
+        fontWeight: bold ? 700 : 600,
+        fontVariantNumeric: 'tabular-nums',
+      }}
+    >
       {value}
     </span>
   </div>
@@ -34,218 +113,354 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
   taxAmount,
   totalAmount,
   balanceDue,
+  domId,
 }) => {
+  const { companyInfo, meta, billTo, shipTo, logisticInfo, items } =
+    invoiceData;
+
   return (
     <div
-      id="invoice-doc"
-      className="w-[800px] h-[1120px] bg-white p-12 flex flex-col text-slate-800 text-xs relative select-none"
+      id={domId}
+      className="flex select-none flex-col"
+      style={{
+        width: 800,
+        height: 1120,
+        backgroundColor: C.white,
+        color: C.ink,
+        fontFamily: 'Helvetica, Arial, sans-serif',
+      }}
     >
-      {/* BRAND/META LAYER */}
-      <div className="border-b-2 border-teal-700 pb-4 mb-6">
-        <div className="flex justify-between items-baseline mb-3">
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
-            {invoiceData.companyInfo.name}
+      {/* Header band */}
+      <div
+        className="flex items-start justify-between gap-6 px-12 py-8"
+        style={{ backgroundColor: C.marine, color: C.white }}
+      >
+        <div>
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-block"
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 999,
+                backgroundColor: C.brand,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 9,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                color: '#9fbcd6',
+                fontWeight: 700,
+              }}
+            >
+              Zamra Water
+            </span>
+          </div>
+
+          <h1
+            className="mt-2"
+            style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}
+          >
+            {companyInfo.name}
           </h1>
-          <div className="flex gap-3 text-[11px] font-mono text-slate-500 items-center">
-            <div>
-              <span className="font-sans text-black font-bold">Date:</span>{' '}
-              {invoiceData.meta.date}
-            </div>
-            <div className="bg-surface border border-slate-200 rounded-full px-3 py-1 flex items-center gap-1">
-              <span className="font-sans text-slate-700 font-bold">
-                Invoice No:
-              </span>
-              <span className="text-teal-700 font-black">
-                {invoiceData.meta.invoiceNo}
-              </span>
-            </div>
-          </div>
+
+          <p style={{ fontSize: 10.5, color: '#9fbcd6', marginTop: 4 }}>
+            {companyInfo.address} · {companyInfo.city}
+          </p>
+          <p style={{ fontSize: 10.5, color: '#9fbcd6' }}>
+            {companyInfo.phone} · {companyInfo.email}
+          </p>
         </div>
-        <div className="grid grid-cols-3 gap-4 text-[11px] pt-2 border-t border-slate-100">
-          <InfoRow
-            label="Manager"
-            value={invoiceData.companyInfo.poc}
-            labelWidth="w-16"
-          />
-          <InfoRow
-            label="Address"
-            value={invoiceData.companyInfo.address}
-            labelWidth="w-16"
-          />
-          <InfoRow
-            label="City"
-            value={invoiceData.companyInfo.city}
-            labelWidth="w-16"
-          />
+
+        <div className="text-right">
+          <p
+            style={{
+              fontSize: 9,
+              letterSpacing: 1.6,
+              textTransform: 'uppercase',
+              color: '#9fbcd6',
+              fontWeight: 700,
+            }}
+          >
+            Invoice
+          </p>
+          <p style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>
+            {meta.invoiceNo || '—'}
+          </p>
+          <p style={{ fontSize: 10.5, color: '#9fbcd6', marginTop: 6 }}>
+            Issued {formatDate(meta.date)}
+          </p>
+          <p style={{ fontSize: 10.5, color: '#9fbcd6' }}>
+            Manager: {companyInfo.poc}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-8 relative mb-6">
-        <div className="flex flex-col">
-          <h3 className="text-teal-700 text-[10px] font-black uppercase tracking-wider mb-2 border-b border-slate-100 pb-0.5">
-            Bill To
-          </h3>
-          <div className="space-y-1.5">
-            <InfoRow
-              label="Company"
-              value={
-                <span className="font-bold text-slate-900">
-                  {invoiceData.billTo.name}
-                </span>
-              }
-            />
-            <InfoRow label="Attention" value={invoiceData.billTo.attn} />
-            <InfoRow label="Address" value={invoiceData.billTo.address} />
-            <InfoRow label="Phone" value={invoiceData.billTo.phone} />
-          </div>
-        </div>
-        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-px bg-slate-200" />
-        <div className="flex flex-col">
-          <h3 className="text-teal-700 text-[10px] font-black uppercase tracking-wider mb-2 border-b border-slate-100 pb-0.5">
-            Ship To
-          </h3>
-          <div className="space-y-1.5">
-            <InfoRow
-              label="Warehouse"
-              value={
-                <span className="font-bold text-slate-900">
-                  {invoiceData.shipTo.name}
-                </span>
-              }
-            />
-            <InfoRow label="Attention" value={invoiceData.shipTo.attn} />
-            <InfoRow label="Address" value={invoiceData.shipTo.address} />
-            <InfoRow label="Phone" value={invoiceData.shipTo.phone} />
-          </div>
-        </div>
-      </div>
+      <div className="flex flex-1 flex-col px-12 py-8">
+        {/* Parties */}
+        <div className="grid grid-cols-2 gap-6">
+          <PartyBlock title="Bill to">
+            <Field label="Name" value={billTo.name} strong />
+            <Field label="Attention" value={billTo.attn} />
+            <Field label="Address" value={billTo.address} />
+            <Field label="City" value={billTo.city} />
+            <Field label="Phone" value={billTo.phone} />
+            <Field label="Email" value={billTo.email} />
+          </PartyBlock>
 
-      <div className="bg-slate-50 border border-slate-100 rounded-md mb-6 px-3 py-2">
-        <table className="w-full border-collapse table-fixed">
+          <PartyBlock title="Ship to">
+            <Field label="Name" value={shipTo.name} strong />
+            <Field label="Attention" value={shipTo.attn} />
+            <Field label="Address" value={shipTo.address} />
+            <Field label="City" value={shipTo.city} />
+            <Field label="Phone" value={shipTo.phone} />
+          </PartyBlock>
+        </div>
+
+        {/* Logistics strip */}
+        <div
+          className="mt-6 grid grid-cols-6 rounded-lg"
+          style={{ border: `1px solid ${C.line}` }}
+        >
+          {(
+            [
+              ...logisticFields.map((field) => ({
+                label: field.label,
+                value: String(
+                  logisticInfo[field.key as keyof typeof logisticInfo] ?? ''
+                ),
+              })),
+              {
+                label: 'Dispatch date',
+                value: formatDate(logisticInfo.shipDate),
+              },
+            ] satisfies { label: string; value: string }[]
+          ).map((cell, index) => (
+            <div
+              key={cell.label}
+              className="px-3 py-2.5"
+              style={{
+                borderLeft: index === 0 ? 'none' : `1px solid ${C.line}`,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 8,
+                  letterSpacing: 0.8,
+                  textTransform: 'uppercase',
+                  color: C.inkMuted,
+                  fontWeight: 700,
+                }}
+              >
+                {cell.label}
+              </p>
+              <p
+                style={{
+                  fontSize: 10,
+                  color: C.ink,
+                  fontWeight: 600,
+                  marginTop: 3,
+                }}
+              >
+                {cell.value || '—'}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Items */}
+        <table
+          className="mt-6 w-full"
+          style={{ borderCollapse: 'collapse', fontSize: 10.5 }}
+        >
           <thead>
-            <tr className="text-slate-500 text-[9px] font-bold uppercase text-center">
-              {logisticFields.map((f) => (
-                <th key={f.key} className="pb-1 font-bold">
-                  {f.label}
+            <tr style={{ backgroundColor: C.marine, color: C.white }}>
+              {[
+                { label: 'Code', align: 'left' as const, width: 56 },
+                { label: 'Description', align: 'left' as const },
+                { label: 'Size', align: 'left' as const, width: 80 },
+                { label: 'Qty', align: 'right' as const, width: 56 },
+                { label: 'Rate', align: 'right' as const, width: 96 },
+                { label: 'Amount', align: 'right' as const, width: 110 },
+              ].map((column) => (
+                <th
+                  key={column.label}
+                  style={{
+                    width: column.width,
+                    textAlign: column.align,
+                    padding: '8px 10px',
+                    fontSize: 8.5,
+                    letterSpacing: 0.8,
+                    textTransform: 'uppercase',
+                    fontWeight: 700,
+                  }}
+                >
+                  {column.label}
                 </th>
               ))}
-              <th className="pb-1 font-bold">DISPATCH DATE</th>
             </tr>
           </thead>
-          <tbody>
-            <tr className="text-slate-800 font-semibold text-center font-mono">
-              {logisticFields.map((f) => (
-                <td key={f.key} className="py-1 text-[10px]">
-                  {
-                    invoiceData.logisticInfo[
-                      f.key as keyof typeof invoiceData.logisticInfo
-                    ]
-                  }
-                </td>
-              ))}
-              <td className="py-1 text-[10px]">
-                {invoiceData.logisticInfo.shipDate}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
 
-      <div className="mb-6">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-slate-900 text-white text-[10px] font-bold uppercase text-left">
-              <th className="py-2 px-2 w-12 text-center rounded-tl-md">Id</th>
-              <th className="py-2 px-2 text-left">Description</th>
-              <th className="py-2 px-2 w-16 text-center">Qty</th>
-              <th className="py-2 px-2 w-24 text-right">Unit Rate</th>
-              <th className="py-2 px-2 w-28 text-right rounded-tr-md">
-                Amount
-              </th>
-            </tr>
-          </thead>
-          <tbody className="text-slate-700 font-medium">
-            {invoiceData.items.map((item, idx) => (
+          <tbody>
+            {items.map((item, index) => (
               <tr
                 key={item.id}
-                className={`text-[11px] ${idx % 2 === 1 ? 'bg-slate-50' : 'bg-white'} border-b border-slate-100`}
+                style={{
+                  backgroundColor: index % 2 === 1 ? C.panel : C.white,
+                  borderBottom: `1px solid ${C.line}`,
+                }}
               >
-                <td className="py-2 px-2 text-center font-mono">{item.no}</td>
-                <td className="py-2 px-2 text-left text-slate-800 font-semibold">
+                <td style={{ padding: '7px 10px', color: C.inkMuted }}>
+                  {item.no}
+                </td>
+                <td
+                  style={{ padding: '7px 10px', color: C.ink, fontWeight: 600 }}
+                >
                   {item.description || '—'}
                 </td>
-                <td className="py-2 px-2 text-center font-mono">{item.qty}</td>
-                <td className="py-2 px-2 text-right font-mono">
-                  Rs {item.unitPrice.toFixed(2)}
+                <td style={{ padding: '7px 10px', color: C.inkSoft }}>
+                  {item.bottleType || '—'}
                 </td>
-                <td className="py-2 px-2 text-right font-bold text-slate-900 font-mono">
-                  Rs {(item.qty * item.unitPrice).toFixed(2)}
+                <td
+                  style={{
+                    padding: '7px 10px',
+                    textAlign: 'right',
+                    color: C.inkSoft,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {toNumber(item.qty)}
+                </td>
+                <td
+                  style={{
+                    padding: '7px 10px',
+                    textAlign: 'right',
+                    color: C.inkSoft,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {formatMoneyExact(item.unitPrice)}
+                </td>
+                <td
+                  style={{
+                    padding: '7px 10px',
+                    textAlign: 'right',
+                    color: C.ink,
+                    fontWeight: 700,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {formatMoneyExact(
+                    toNumber(item.qty) * toNumber(item.unitPrice)
+                  )}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
 
-      <div className="flex justify-end mt-4">
-        <div className="w-72 rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-2 text-[11px]">
-          <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-200">
-            <span className="text-slate-900 font-bold">Subtotal:</span>
-            <span className="font-mono text-slate-700 font-bold">
-              Rs {subtotal.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-200">
-            <span className="text-slate-900 font-bold">
-              Tax ({invoiceData.taxRate}%):
-            </span>
-            <span className="font-mono text-slate-600 font-semibold">
-              Rs {taxAmount.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-200">
-            <span className="text-slate-900 font-bold">Shipping:</span>
-            <span className="font-mono text-slate-700 font-semibold">
-              Rs {Number(invoiceData.shipping).toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-200">
-            <span className="text-slate-900 font-bold">Misc Charges:</span>
-            <span className="font-mono text-slate-700 font-semibold">
-              Rs {Number(invoiceData.other).toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-rose-600 pb-1 border-b border-slate-200 font-bold">
-            <span>Previous Due:</span>
-            <span className="font-mono">
-              Rs {Number(invoiceData.previousDue).toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-slate-500 pb-1 border-b border-slate-200">
-            <span className="text-slate-900 font-bold">Amount Paid:</span>
-            <span className="font-mono text-emerald-700 font-bold">
-              Rs {Number(invoiceData.payment.paidAmount).toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between text-slate-800 font-bold pb-2 border-b border-slate-200">
-            <span className="text-slate-900 font-bold">Balance Due:</span>
-            <span className="font-mono text-rose-600 text-xs">
-              Rs {balanceDue.toFixed(2)}
-            </span>
-          </div>
-          <div className="flex justify-between items-center -mx-4 -mb-4 px-4 py-3 bg-teal-700 rounded-b-lg text-white font-black">
-            <span className="uppercase tracking-wide">Total</span>
-            <span className="font-mono text-sm">
-              Rs {totalAmount.toFixed(2)}
-            </span>
+        {/* Totals */}
+        <div className="mt-6 flex justify-end">
+          <div style={{ width: 300 }}>
+            <TotalRow label="Subtotal" value={formatMoneyExact(subtotal)} />
+            <TotalRow
+              label={`Tax (${invoiceData.taxRate || 0}%)`}
+              value={formatMoneyExact(taxAmount)}
+            />
+            <TotalRow
+              label="Shipping"
+              value={formatMoneyExact(invoiceData.shipping)}
+            />
+            <TotalRow
+              label="Misc charges"
+              value={formatMoneyExact(invoiceData.other)}
+            />
+            <TotalRow
+              label="Previous due"
+              value={formatMoneyExact(invoiceData.previousDue)}
+              color={C.danger}
+            />
+            <TotalRow
+              label="Amount paid"
+              value={formatMoneyExact(invoiceData.payment.paidAmount)}
+              color={C.success}
+            />
+            <TotalRow
+              label="Invoice total"
+              value={formatMoneyExact(totalAmount)}
+              bold
+            />
+
+            <div
+              className="mt-3 flex items-center justify-between rounded-lg px-4 py-3"
+              style={{ backgroundColor: C.marine, color: C.white }}
+            >
+              <span
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 1.4,
+                  textTransform: 'uppercase',
+                  fontWeight: 700,
+                  color: '#9fbcd6',
+                }}
+              >
+                Balance due
+              </span>
+              <span
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                {formatMoneyExact(balanceDue)}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Footer stays pinned to the bottom of the page regardless of how much/little content is above it */}
-      <div className="text-center pt-4 border-t border-slate-100 mt-auto">
-        <div className="text-[10px] font-black text-teal-700 tracking-[0.4em] uppercase">
-          Thank You For Your Business
+        {/* Footer pinned to the bottom of the page */}
+        <div
+          className="mt-auto pt-6"
+          style={{ borderTop: `1px solid ${C.line}` }}
+        >
+          <div className="flex items-end justify-between gap-6">
+            <div>
+              <p style={{ fontSize: 9, color: C.inkMuted, lineHeight: 1.6 }}>
+                Payments are due per the agreed terms
+                {logisticInfo.terms ? ` (${logisticInfo.terms})` : ''}. Please
+                quote invoice {meta.invoiceNo || '—'} with any payment.
+              </p>
+              <p
+                className="mt-3"
+                style={{
+                  fontSize: 9,
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  color: C.brand,
+                  fontWeight: 700,
+                }}
+              >
+                Thank you for your business
+              </p>
+            </div>
+
+            <div className="text-right">
+              <div
+                style={{
+                  width: 150,
+                  borderTop: `1px solid ${C.inkMuted}`,
+                  paddingTop: 5,
+                }}
+              >
+                <p style={{ fontSize: 9, color: C.inkMuted }}>
+                  Authorised signature
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

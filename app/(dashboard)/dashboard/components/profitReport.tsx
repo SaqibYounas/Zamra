@@ -1,21 +1,57 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  ResponsiveContainer,
-  ComposedChart,
-  AreaChart,
   Area,
+  AreaChart,
   Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
   Line,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
 } from 'recharts';
-import { TrendingUp, Receipt, Wallet } from 'lucide-react';
-import RupeesIcon from '@/public/RupeesIcon';
+import {
+  BarChart3,
+  Coins,
+  Percent,
+  Receipt,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
+
+import { Card, CardBody, CardHeader } from '@/app/src/components/ui/Card';
+import { StatTile } from '@/app/src/components/ui/StatTile';
+import { SegmentedControl } from '@/app/src/components/ui/SegmentedControl';
+import {
+  EmptyState,
+  ErrorState,
+} from '@/app/src/components/ui/StatePlaceholders';
+import {
+  SkeletonChart,
+  SkeletonStatTiles,
+} from '@/app/src/components/ui/Skeleton';
+import {
+  getChartChrome,
+  METRIC_COLORS,
+  rechartsAxis,
+  rechartsGrid,
+  type ChartChrome,
+} from '@/app/src/lib/chartTheme';
+import { useTheme } from '@/app/src/lib/useTheme';
+import {
+  formatCompact,
+  formatMoney,
+  formatPercent,
+  formatDateShort,
+  toNumber,
+} from '@/app/src/lib/format';
+import { fetchMonthlyProfit } from '../../services/monthlyProfit';
+import { useAsyncData } from '../../hooks/useAsyncData';
+
 interface DailyDetail {
   date: string;
   soldQty: string | number;
@@ -24,7 +60,7 @@ interface DailyDetail {
   profit: string | number;
 }
 
-interface ProfitReport {
+interface ProfitReportData {
   totalRevenue: number;
   totalCost: number;
   totalProfit: number;
@@ -32,294 +68,360 @@ interface ProfitReport {
   details: DailyDetail[];
 }
 
-function generateDummyReport(): ProfitReport {
-  const details: DailyDetail[] = [];
-  const monthlyProfitHistory: number[] = [];
-  const today = new Date();
+type ChartView = 'trend' | 'breakdown';
 
-  let totalRevenue = 0;
-  let totalCost = 0;
-  let totalProfit = 0;
+/**
+ * Normalises the `/api/monthly-profit` payload once, since the backend mixes
+ * money as strings and numbers across its fields.
+ */
+function normalizeReport(payload: unknown): ProfitReportData | null {
+  if (!payload || typeof payload !== 'object') return null;
 
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
+  const raw = payload as Record<string, unknown>;
+  if (raw.success === false) return null;
 
-    const soldQty = 40 + Math.round(Math.random() * 160);
-    const rate = 220 + Math.random() * 40;
-    const perBottleCost = 95 + Math.random() * 25;
+  const history = Array.isArray(raw.monthlyProfitHistory)
+    ? (raw.monthlyProfitHistory as unknown[]).map(toNumber)
+    : [];
 
-    const revenue = soldQty * rate;
-    const cost = soldQty * perBottleCost;
-    const profit = revenue - cost;
-
-    totalRevenue += revenue;
-    totalCost += cost;
-    totalProfit += profit;
-
-    monthlyProfitHistory.push(Math.round(profit));
-    details.push({
-      date: d.toISOString().slice(0, 10),
-      soldQty,
-      revenue: revenue.toFixed(2),
-      cost: cost.toFixed(2),
-      profit: profit.toFixed(2),
-    });
-  }
+  const details = Array.isArray(raw.details)
+    ? (raw.details as DailyDetail[])
+    : [];
 
   return {
-    totalRevenue: Math.round(totalRevenue),
-    totalCost: Math.round(totalCost),
-    totalProfit: Math.round(totalProfit),
-    monthlyProfitHistory,
+    totalRevenue: toNumber(raw.totalRevenue),
+    totalCost: toNumber(raw.totalCost),
+    totalProfit: toNumber(raw.totalProfit),
+    monthlyProfitHistory: history,
     details,
   };
 }
 
-async function fetchProfitReport(): Promise<ProfitReport> {
-  try {
-    const res = await fetch('/api/monthly-profit', { cache: 'no-store' });
-
-    if (!res.ok) {
-      throw new Error(`API error ${res.status}`);
-    }
-
-    const data = (await res.json()) as ProfitReport;
-
-    if (!data || !Array.isArray(data.monthlyProfitHistory)) {
-      throw new Error('Invalid API response');
-    }
-
-    return data;
-  } catch (err) {
-    console.warn('Profit API failed, falling back to dummy report', err);
-    // fallback to local generated data so UI still renders
-    return generateDummyReport();
-  }
-}
-
-const formatRs = (n: number) => n.toLocaleString();
-
-const shortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-interface ChartTooltipProps {
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
   active?: boolean;
   label?: string | number;
   payload?: readonly {
     dataKey?: string | number;
-    name?: ReactNode;
+    name?: string;
     color?: string;
-    value?: ReactNode;
+    value?: number;
   }[];
-}
-
-function ChartTooltip(props: unknown) {
-  const { active, payload, label } = props as ChartTooltipProps;
+}) {
   if (!active || !payload?.length) return null;
+
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-xl">
-      <p className="mb-1 font-bold text-slate-500">{label}</p>
-      {payload.map((p) => (
-        <p
-          key={p.dataKey as string}
-          style={{ color: p.color }}
-          className="font-mono"
-        >
-          {p.name}: Rs{' '}
-          {typeof p.value === 'number' ? formatRs(p.value) : p.value}
-        </p>
-      ))}
+    <div className="rounded-field border border-line bg-surface px-3 py-2 shadow-pop">
+      <p className="mb-1 text-2xs font-semibold uppercase tracking-wide text-ink-muted">
+        {label}
+      </p>
+      <ul className="space-y-0.5">
+        {payload.map((entry) => (
+          <li
+            key={String(entry.dataKey)}
+            className="flex items-center gap-2 text-xs"
+          >
+            <span
+              className="size-2 shrink-0 rounded-full"
+              style={{ backgroundColor: entry.color }}
+              aria-hidden
+            />
+            <span className="text-ink-muted">{entry.name}</span>
+            <span className="tabular ml-auto font-semibold text-ink">
+              {formatMoney(entry.value)}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main dashboard section
-// ---------------------------------------------------------------------------
-
+/**
+ * Monthly profit section, driven entirely by `/api/monthly-profit`. On failure it
+ * reports and offers a retry; it never substitutes generated figures.
+ */
 export default function ProfitReport() {
-  const [report, setReport] = useState<ProfitReport | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<ChartView>('trend');
 
-  useEffect(() => {
-    let mounted = true;
-    fetchProfitReport()
-      .then((data) => {
-        if (mounted) setReport(data);
-      })
-      .catch(() => {
-        if (mounted) setError('Could not load the profit report. Try again.');
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Recharts takes colours as SVG attributes, where `var()` does not resolve,
+  // so the chrome is resolved from the active theme here.
+  const chrome: ChartChrome = getChartChrome(useTheme());
 
-  const trendData = useMemo(() => {
-    if (!report) return [];
-    return report.monthlyProfitHistory.map((profit, idx) => ({
-      day: `D${idx + 1}`,
-      profit,
-    }));
-  }, [report]);
+  // Normalised inside the loader, so an unparseable response reaches the hook
+  // as a failure rather than as an empty report.
+  const {
+    data: report,
+    error,
+    loading,
+    refresh,
+  } = useAsyncData<ProfitReportData>(
+    async () => {
+      const payload = await fetchMonthlyProfit();
 
-  const dailyData = useMemo(() => {
-    if (!report) return [];
-    return report.details.map((row) => ({
-      date: shortDate(row.date),
-      revenue: Number(row.revenue),
-      cost: Number(row.cost),
-      profit: Number(row.profit),
-    }));
-  }, [report]);
+      return (
+        normalizeReport(payload) ?? {
+          success: false as const,
+          message:
+            (payload as { message?: string })?.message ||
+            'The profit report could not be loaded.',
+        }
+      );
+    },
+    {
+      key: 'monthly-profit',
+      fallbackMessage: 'The profit report could not be loaded.',
+    }
+  );
 
-  const marginPct = useMemo(() => {
-    if (!report || report.totalRevenue === 0) return 0;
-    return (report.totalProfit / report.totalRevenue) * 100;
-  }, [report]);
+  const trendData = useMemo(
+    () =>
+      (report?.monthlyProfitHistory ?? []).map((profit, index) => ({
+        day: `Day ${index + 1}`,
+        profit,
+      })),
+    [report]
+  );
+
+  const dailyData = useMemo(
+    () =>
+      (report?.details ?? []).map((row) => ({
+        date: formatDateShort(row.date) || String(row.date),
+        revenue: toNumber(row.revenue),
+        cost: toNumber(row.cost),
+        profit: toNumber(row.profit),
+      })),
+    [report]
+  );
+
+  const marginPct =
+    report && report.totalRevenue !== 0
+      ? (report.totalProfit / report.totalRevenue) * 100
+      : 0;
+
+  const hasTrend = trendData.some((row) => row.profit !== 0);
+  const hasDaily = dailyData.length > 0;
+  const activeHasData = view === 'trend' ? hasTrend : hasDaily;
 
   if (loading) {
     return (
-      <div className="flex min-h-[300px] items-center justify-center bg-slate-100 rounded-3xl border border-slate-100 shadow-lg">
-        <div className="flex flex-col items-center gap-4">
-          <span className="text-5xl animate-bounce">💧</span>
-        </div>
-      </div>
+      <section className="space-y-4">
+        <SkeletonStatTiles count={4} />
+        <Card>
+          <CardBody>
+            <SkeletonChart className="h-72" />
+          </CardBody>
+        </Card>
+      </section>
     );
   }
 
   if (error || !report) {
     return (
-      <div className="flex min-h-[200px] flex-col items-center justify-center gap-2 bg-slate-100 rounded-3xl border border-slate-100 shadow-lg">
-        <p className="text-sm font-semibold text-rose-600">
-          {error ?? 'No data.'}
-        </p>
-      </div>
+      <Card>
+        <CardHeader
+          title="Monthly profit"
+          description="Revenue, cost and profit for the current period"
+          icon={<TrendingUp className="size-4" />}
+        />
+        <CardBody>
+          <ErrorState
+            title="Profit report unavailable"
+            description={error ?? 'No profit data was returned.'}
+            onRetry={refresh}
+            size="block"
+          />
+        </CardBody>
+      </Card>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* <div className="flex flex-col gap-1">
-        <span className="text-xs uppercase tracking-[0.2em] font-bold text-sky-500">
-          Production &amp; Sales
-        </span>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
-          Monthly Profit Report
-        </h2>
-        <p className="text-sm text-slate-500">
-          Last 30 days · cost priced per bottle at time of sale
-        </p>
-      </div> */}
+    <section className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile
+          label="Revenue"
+          value={formatMoney(report.totalRevenue)}
+          icon={<Coins className="size-4" />}
+          tone="brand"
+          footnote="Sales recorded this period"
+        />
+        <StatTile
+          label="Cost"
+          value={formatMoney(report.totalCost)}
+          icon={<Receipt className="size-4" />}
+          tone="danger"
+          footnote="Production and expenses"
+        />
+        <StatTile
+          label="Profit"
+          value={formatMoney(report.totalProfit)}
+          icon={<Wallet className="size-4" />}
+          tone={report.totalProfit >= 0 ? 'success' : 'danger'}
+          footnote={report.totalProfit >= 0 ? 'Net gain' : 'Net loss'}
+        />
+        <StatTile
+          label="Margin"
+          value={formatPercent(marginPct)}
+          icon={<Percent className="size-4" />}
+          tone={marginPct >= 0 ? 'success' : 'danger'}
+          footnote="Profit as a share of revenue"
+        />
+      </div>
 
-      {/* Profit trend — area chart */}
-      <section className="bg-slate-100 ring-1 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-100 hover:shadow-xl transition-all">
-        <h3 className="mb-4 font-bold text-lg text-slate-900">
-          Profit trend (30 days)
-        </h3>
-        <div className="h-72 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ left: 0, right: 10 }}>
-              <defs>
-                <linearGradient id="profitFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#eab308" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#eab308" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid
-                stroke="#e2e8f0"
-                strokeDasharray="3 3"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="day"
-                stroke="#64748b"
-                tick={{ fontSize: 11, fontWeight: 600 }}
-                interval={4}
-              />
-              <YAxis
-                stroke="#64748b"
-                tick={{ fontSize: 11, fontWeight: 600 }}
-                tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip content={ChartTooltip} />
-              <Area
-                type="monotone"
-                dataKey="profit"
-                name="Profit"
-                stroke="#eab308"
-                strokeWidth={2}
-                fill="url(#profitFill)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
+      <Card>
+        <CardHeader
+          title={
+            view === 'trend' ? 'Daily profit trend' : 'Revenue, cost and profit'
+          }
+          description={
+            view === 'trend'
+              ? 'Profit recorded for each day of the period'
+              : 'Daily revenue and cost bars with the profit line on top'
+          }
+          icon={
+            view === 'trend' ? (
+              <TrendingUp className="size-4" />
+            ) : (
+              <BarChart3 className="size-4" />
+            )
+          }
+          actions={
+            <SegmentedControl
+              label="Chart view"
+              value={view}
+              onChange={setView}
+              options={[
+                { value: 'trend', label: 'Trend' },
+                { value: 'breakdown', label: 'Breakdown' },
+              ]}
+            />
+          }
+        />
 
-      {/* Revenue vs Cost vs Profit — composed chart */}
-      <section className="bg-slate-100 ring-1 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-lg border border-slate-100 hover:shadow-xl transition-all">
-        <h3 className="mb-4 font-bold text-lg text-slate-900">
-          Revenue vs cost vs profit, per day
-        </h3>
-        <div className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={dailyData} margin={{ left: 0, right: 10 }}>
-              <CartesianGrid
-                stroke="#e2e8f0"
-                strokeDasharray="3 3"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="date"
-                stroke="#64748b"
-                tick={{ fontSize: 11, fontWeight: 600 }}
-                interval={4}
-              />
-              <YAxis
-                stroke="#64748b"
-                tick={{ fontSize: 11, fontWeight: 600 }}
-                tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
-              />
-              <Tooltip content={ChartTooltip} />
-              <Legend
-                wrapperStyle={{
-                  fontSize: 12,
-                  color: '#64748b',
-                  fontWeight: 600,
-                }}
-                iconType="circle"
-              />
-              <Bar
-                dataKey="revenue"
-                name="Revenue"
-                fill="rgba(79,70,229,0.85)"
-                radius={[4, 4, 0, 0]}
-                barSize={10}
-              />
-              <Bar
-                dataKey="cost"
-                name="Cost"
-                fill="rgba(244,63,94,0.6)"
-                radius={[4, 4, 0, 0]}
-                barSize={10}
-              />
-              <Line
-                type="monotone"
-                dataKey="profit"
-                name="Profit"
-                stroke="#eab308"
-                strokeWidth={2}
-                dot={false}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-    </div>
+        <CardBody>
+          {!activeHasData ? (
+            <EmptyState
+              title="No figures for this period yet"
+              description="Daily revenue, cost and profit appear here as soon as sales are recorded."
+              icon={<TrendingUp className="size-5" />}
+            />
+          ) : (
+            <div className="h-72 w-full sm:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                {view === 'trend' ? (
+                  <AreaChart
+                    data={trendData}
+                    margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="zamraProfit"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="0%"
+                          stopColor={METRIC_COLORS.profit}
+                          stopOpacity={0.28}
+                        />
+                        <stop
+                          offset="100%"
+                          stopColor={METRIC_COLORS.profit}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid {...rechartsGrid(chrome)} />
+                    <XAxis
+                      dataKey="day"
+                      {...rechartsAxis(chrome)}
+                      interval="preserveStartEnd"
+                      minTickGap={24}
+                      tickFormatter={(value: string) =>
+                        value.replace('Day ', '')
+                      }
+                    />
+                    <YAxis
+                      {...rechartsAxis(chrome)}
+                      width={52}
+                      tickFormatter={(value: number) => formatCompact(value)}
+                    />
+                    <Tooltip
+                      content={<ChartTooltip />}
+                      cursor={{ stroke: METRIC_COLORS.profit, strokeWidth: 1 }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="profit"
+                      name="Profit"
+                      stroke={METRIC_COLORS.profit}
+                      strokeWidth={2}
+                      fill="url(#zamraProfit)"
+                      activeDot={{ r: 4, strokeWidth: 0 }}
+                    />
+                  </AreaChart>
+                ) : (
+                  <ComposedChart
+                    data={dailyData}
+                    margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid {...rechartsGrid(chrome)} />
+                    <XAxis
+                      dataKey="date"
+                      {...rechartsAxis(chrome)}
+                      interval="preserveStartEnd"
+                      minTickGap={20}
+                    />
+                    <YAxis
+                      {...rechartsAxis(chrome)}
+                      width={52}
+                      tickFormatter={(value: number) => formatCompact(value)}
+                    />
+                    <Tooltip
+                      content={<ChartTooltip />}
+                      cursor={{ fill: chrome.cursorFill }}
+                    />
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                    />
+                    <Bar
+                      dataKey="revenue"
+                      name="Revenue"
+                      fill={METRIC_COLORS.revenue}
+                      radius={[3, 3, 0, 0]}
+                      maxBarSize={14}
+                    />
+                    <Bar
+                      dataKey="cost"
+                      name="Cost"
+                      fill={METRIC_COLORS.cost}
+                      radius={[3, 3, 0, 0]}
+                      maxBarSize={14}
+                      fillOpacity={0.75}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="profit"
+                      name="Profit"
+                      stroke={METRIC_COLORS.profit}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </ComposedChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+    </section>
   );
 }

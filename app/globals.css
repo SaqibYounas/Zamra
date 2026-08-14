@@ -1,167 +1,738 @@
 @import 'tailwindcss';
 
-:root {
-  --background: white;
-  --foreground: #0f172a;
-  --font-sans: 'Geist Sans', Arial, Helvetica, sans-serif;
-  --font-mono: 'Geist Mono', monospace;
+/* ==========================================================================
+   ZAMRA DESIGN SYSTEM
+   Single source of truth for colour, type, spacing, radii, shadows, motion.
+   Every token below is exposed to Tailwind as a real utility
+   (e.g. --color-brand-600 -> bg-brand-600 / text-brand-600 / border-brand-600)
+   so components never hardcode hex values.
+   ========================================================================== */
 
+@theme {
+  /* ---------------------------------------------------------------- type -- */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  /* --------------------------------------------------------------- brand --
+     Aqua: the water in Zamra Water. Primary actions, active nav, focus. */
+  --color-brand-50: #eff9ff;
+  --color-brand-100: #dff2ff;
+  --color-brand-200: #b8e7ff;
+  --color-brand-300: #7ad5ff;
+  --color-brand-400: #34beff;
+  --color-brand-500: #0aa5ec;
+  --color-brand-600: #0084c9;
+  --color-brand-700: #0169a3;
+  --color-brand-800: #065986;
+  --color-brand-900: #0b4a6f;
+  --color-brand-950: #072f4a;
+
+  /* -------------------------------------------------------------- marine --
+     Deep industrial navy. Dark surfaces: sidebar, invoice header, login. */
+  --color-marine-50: #f3f7fb;
+  --color-marine-100: #e4ecf5;
+  --color-marine-200: #c9d9e9;
+  --color-marine-300: #9fbcd6;
+  --color-marine-400: #6e99be;
+  --color-marine-500: #4c7ba6;
+  --color-marine-600: #3a628a;
+  --color-marine-700: #305070;
+  --color-marine-800: #2c445e;
+  --color-marine-900: #1b2f45;
+  --color-marine-950: #0e1c2b;
+
+  /* ------------------------------------------------------------- surfaces */
+  --color-canvas: #f4f7fb;
   --color-surface: #ffffff;
-  --color-surface-2: white;
-  --color-border: #dbeafe;
-  --color-primary: #4f46e5;
-  --color-primary-strong: #4338ca;
-  --color-primary-dark: #312e81;
-  --color-secondary: #22d3ee;
-  --color-muted: #64748b;
-  --color-text: #0f172a;
-  --color-text-muted: #667085;
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-disabled: #cbd5e1;
-  --color-glow: rgba(79, 70, 229, 0.16);
+  --color-surface-sunken: #eef3f9;
+  --color-surface-raised: #ffffff;
+
+  /* --------------------------------------------------------------- lines -- */
+  --color-line: #e3eaf3;
+  --color-line-strong: #cddaea;
+
+  /* ----------------------------------------------------------------- ink -- */
+  --color-ink: #0e1c2b;
+  --color-ink-soft: #33475d;
+  --color-ink-muted: #64798f;
+  --color-ink-faint: #93a5b8;
+  --color-ink-invert: #f6fafd;
+
+  /* ------------------------------------------------------- on-solid text --
+     Text placed on a solid brand/danger fill. A token rather than `text-white`
+     because dark mode uses bright fills, which need dark text to stay legible. */
+  --color-brand-fg: #ffffff;
+  --color-danger-fg: #ffffff;
+
+  /* -------------------------------------------------------------- status -- */
+  --color-success: #0f9d63;
+  --color-success-soft: #e3f8ee;
+  --color-success-ink: #0a6b45;
+
+  --color-warning: #c97a08;
+  --color-warning-soft: #fdf3e2;
+  --color-warning-ink: #8a5406;
+
+  --color-danger: #dc3a45;
+  --color-danger-soft: #fdeced;
+  --color-danger-ink: #a3202b;
+
+  --color-info: #2f6fed;
+  --color-info-soft: #ebf1fe;
+  --color-info-ink: #1d4bab;
+
+  /* --------------------------------------------------------- data series --
+     Categorical palette for charts. Order matters: 1..5 map to the five
+     bottle sizes so a size keeps its colour across every chart and the PDF. */
+  --color-series-1: #0aa5ec;
+  --color-series-2: #7c5cf0;
+  --color-series-3: #0f9d63;
+  --color-series-4: #e0821b;
+  --color-series-5: #d94a86;
+  --color-series-6: #14a5a5;
+
+  /* -------------------------------------------------------------- radius -- */
+  --radius-field: 0.625rem;
+  --radius-card: 1rem;
+  --radius-panel: 1.25rem;
+
+  /* ------------------------------------------------------------- shadows -- */
+  --shadow-card: 0 1px 2px rgba(14, 28, 43, 0.04), 0 1px 3px rgba(14, 28, 43, 0.06);
+  --shadow-raised: 0 4px 6px -2px rgba(14, 28, 43, 0.05),
+    0 12px 20px -8px rgba(14, 28, 43, 0.1);
+  --shadow-pop: 0 8px 12px -6px rgba(14, 28, 43, 0.08),
+    0 24px 48px -16px rgba(14, 28, 43, 0.18);
+  --shadow-focus: 0 0 0 3px rgba(10, 165, 236, 0.18);
+
+  /* -------------------------------------------------------------- motion -- */
+  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --animate-fade-in-up: fade-in-up 0.28s var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 0.2s var(--ease-out-soft) both;
+  --animate-toast-in: toast-in 0.3s var(--ease-out-soft) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-pop-in: pop-in 0.18s var(--ease-out-soft) both;
 }
 
-.bg-primary {
-  background-color: var(--color-primary);
-}
-.btn-primary-loading {
-  background-color: rgb(from var(--color-primary) r g b / 70%);
-}
-
-.bg-primary-strong {
-  background-color: var(--color-primary-strong);
-}
-
-.bg-primary-dark {
-  background-color: var(--color-primary-dark);
-}
-
-.bg-secondary {
-  background-color: var(--color-secondary);
-}
-
-.bg-disabled {
-  background-color: var(--color-disabled);
-}
-
-.bg-surface {
-  background-color: var(--color-surface);
-}
-
-.bg-surface-2 {
-  background-color: var(--color-surface-2);
-}
-
-.border-surface {
-  border-color: var(--color-border);
-}
-
-.text-text {
-  color: var(--color-text);
-}
-
-.text-muted {
-  color: var(--color-text-muted);
-}
-
-.text-surface {
-  color: var(--color-surface);
-}
-
-.btn-primary {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary) 0%,
-    var(--color-secondary) 100%
-  );
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 18px 35px -24px rgba(79, 70, 229, 0.45);
-}
-
-.btn-primary:hover {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary-strong) 0%,
-    var(--color-secondary) 100%
-  );
-  box-shadow: 0 24px 48px -30px rgba(79, 70, 229, 0.35);
-}
-
-.focus-border-primary:focus {
-  border-color: var(--color-primary);
-}
-
-.focus-ring-primary:focus {
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.16);
-}
-
-html,
-body,
-#__next {
-  min-height: 100%;
-}
-
-body,
-#__next {
-  min-height: 100vh;
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
-}
-
-::selection {
-  background: var(--color-primary);
-  color: white;
-}
-
-.bg-white,
-.bg-slate-50,
-.bg-slate-100,
-.bg-gray-50,
-.bg-gray-100,
-.bg-zinc-50,
-.bg-zinc-100,
-.bg-neutral-50,
-.bg-neutral-100 {
-  background-color: var(--color-surface) !important;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a;
-    --foreground: #f8fafc;
-    --color-surface: #111827;
-    --color-surface-2: #1f2937;
-    --color-border: #334155;
-    --color-text: #f8fafc;
-    --color-text-muted: #cbd5e1;
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: var(--background);
-  border-radius: 8px;
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #60a5fa;
-  border-radius: 8px;
-  border: 3px solid var(--background);
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: #3b82f6;
+@keyframes shimmer {
+  from {
+    background-position: -180% 0;
+  }
+  to {
+    background-position: 180% 0;
+  }
 }
 
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #60a5fa var(--background);
+/* ==========================================================================
+   DARK THEME
+   Only the semantic tokens are redefined — every utility and primitive above
+   reads them through `var()`, so the whole app flips without a single
+   `dark:` variant in a component.
+   ==========================================================================
+
+   `data-theme` is set on <html> before first paint by the inline script in the
+   root layout (see app/src/lib/theme.ts), which resolves the stored preference
+   or falls back to the OS setting. That is why one attribute selector is enough
+   here: the attribute is always present, so there is no `prefers-color-scheme`
+   duplicate of this block to keep in sync.
+
+   These rules sit outside `@layer` on purpose: unlayered declarations outrank
+   the layered `:root` block Tailwind generates from `@theme`. */
+[data-theme='dark'] {
+  /* Makes native controls, scrollbars and form widgets render dark too. */
+  color-scheme: dark;
+
+  /* --------------------------------------------------------- surfaces --
+     Four steps of depth. Canvas is the darkest so cards read as lifted;
+     `sunken` is used for table headers and inset rows. */
+  --color-canvas: #0a1622;
+  --color-surface: #122234;
+  --color-surface-sunken: #0d1b29;
+  --color-surface-raised: #16293c;
+
+  --color-line: #203549;
+  --color-line-strong: #2b445c;
+
+  /* -------------------------------------------------------------- ink --
+     Contrast against `surface`: ink 15:1, soft 9.5:1, muted 6.5:1,
+     faint 5.1:1 — every step clears WCAG AA for body text. */
+  --color-ink: #eaf2f9;
+  --color-ink-soft: #bed0de;
+  --color-ink-muted: #93a9bd;
+  --color-ink-faint: #7c95ab;
+
+  /* `--color-ink-invert` is deliberately absent. It means "text on a
+     permanently dark surface" — the sidebar, tooltips, the invoice summary
+     panel — and those surfaces are dark in both themes, so inverting it here
+     would make that text unreadable. */
+
+  /* ------------------------------------------------------------ brand --
+     The brand scale is remapped rather than kept fixed, because these steps
+     are used semantically: 50 as a soft tint, 600 as the solid action, 700
+     and 800 as text sitting on the tint. On a dark canvas those roles need
+     the opposite end of the ramp. */
+  --color-brand-50: #0d2a3f;
+  --color-brand-600: #34beff;
+  --color-brand-700: #6bd0ff;
+  --color-brand-800: #a5e0ff;
+
+  /* Bright fills need dark text, not white. */
+  --color-brand-fg: #071219;
+  --color-danger-fg: #2a0d10;
+
+  /* ----------------------------------------------------------- status --
+     Solid colours brighten (they carry dots, bars and borders); the `soft`
+     backgrounds become deep tints and the `ink` variants become the readable
+     foreground on top of them. */
+  --color-success: #34d399;
+  --color-success-soft: #0c2b21;
+  --color-success-ink: #6ee7b7;
+
+  --color-warning: #f0b429;
+  --color-warning-soft: #2f2410;
+  --color-warning-ink: #fcd34d;
+
+  --color-danger: #f87171;
+  --color-danger-soft: #331519;
+  --color-danger-ink: #fca5a5;
+
+  --color-info: #6f9bff;
+  --color-info-soft: #16223f;
+  --color-info-ink: #a9c4fd;
+
+  /* ---------------------------------------------------------- shadows --
+     Soft grey shadows disappear on a dark canvas, so these go deeper and
+     lean on the surface steps for separation instead. */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-raised: 0 4px 6px -2px rgba(0, 0, 0, 0.4),
+    0 12px 20px -8px rgba(0, 0, 0, 0.45);
+  --shadow-pop: 0 8px 12px -6px rgba(0, 0, 0, 0.45),
+    0 24px 48px -16px rgba(0, 0, 0, 0.6);
+  --shadow-focus: 0 0 0 3px rgba(52, 190, 255, 0.28);
+}
+
+/* A handful of places need more than a token swap. */
+[data-theme='dark'] {
+  /* A white sheen is far too hot against a dark surface. */
+  & .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.06) 50%,
+      transparent 100%
+    );
+  }
+
+  /* `marine-300` is a light hairline here — too loud for a hover state. */
+  & .field-shell:hover:not([data-disabled='true']) {
+    border-color: var(--color-line-strong);
+  }
+
+  /* The grid overlay on dark brand panels needs less contrast, not more. */
+  & .marine-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    color: var(--color-ink);
+  }
+
+  /* Visible only for keyboard users, consistent everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-brand-200);
+    color: var(--color-brand-950);
+  }
+
+  /* Numeric data should never jitter between values. */
+  table,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-marine-300);
+  }
+
+  /* Number inputs: spinners fight with our own field chrome. */
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   COMPONENT PRIMITIVES
+   Shared visual language. Components compose these instead of re-declaring
+   the same border/shadow/padding recipe in every file.
+   ========================================================================== */
+
+@layer components {
+  /* ----------------------------------------------------------- surfaces -- */
+  .surface-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+
+  .surface-panel {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-card);
+  }
+
+  /* Subtle grid used behind dark header bands. */
+  .marine-grid {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ------------------------------------------------------------- fields -- */
+  .field-shell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding-inline: 0.75rem;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-field);
+    color: var(--color-ink);
+    transition:
+      border-color 0.15s var(--ease-out-soft),
+      box-shadow 0.15s var(--ease-out-soft),
+      background-color 0.15s var(--ease-out-soft);
+  }
+
+  .field-shell:hover:not([data-disabled='true']) {
+    border-color: var(--color-marine-300);
+  }
+
+  .field-shell:focus-within {
+    border-color: var(--color-brand-500);
+    box-shadow: var(--shadow-focus);
+  }
+
+  .field-shell[data-invalid='true'] {
+    border-color: var(--color-danger);
+  }
+
+  .field-shell[data-invalid='true']:focus-within {
+    box-shadow: 0 0 0 3px rgba(220, 58, 69, 0.16);
+  }
+
+  .field-shell[data-disabled='true'] {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink-muted);
+    cursor: not-allowed;
+  }
+
+  .field-shell[data-tone='dark'] {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: var(--color-ink-invert);
+  }
+
+  .field-shell[data-tone='dark']:hover:not([data-disabled='true']) {
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .field-shell[data-tone='dark']:focus-within {
+    border-color: var(--color-brand-400);
+    box-shadow: 0 0 0 3px rgba(52, 190, 255, 0.22);
+  }
+
+  .field-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    padding-block: 0.625rem;
+    font-size: 0.875rem;
+    color: inherit;
+  }
+
+  .field-input:focus {
+    outline: none;
+  }
+
+  .field-input::placeholder {
+    color: var(--color-ink-faint);
+  }
+
+  .field-shell[data-tone='dark'] .field-input::placeholder {
+    color: rgba(246, 250, 253, 0.45);
+  }
+
+  .field-input:disabled {
+    cursor: not-allowed;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-ink-soft);
+  }
+
+  .field-shell[data-tone='dark'] ~ .field-label,
+  .field-label[data-tone='dark'] {
+    color: var(--color-marine-200);
+  }
+
+  /* ------------------------------------------------------------ buttons -- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: var(--radius-field);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+      background-color 0.15s var(--ease-out-soft),
+      border-color 0.15s var(--ease-out-soft),
+      color 0.15s var(--ease-out-soft),
+      box-shadow 0.15s var(--ease-out-soft),
+      transform 0.15s var(--ease-out-soft);
+  }
+
+  .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .btn:not(:disabled):active {
+    transform: translateY(1px);
+  }
+
+  .btn-primary {
+    background-color: var(--color-brand-600);
+    color: var(--color-brand-fg);
+    box-shadow: 0 1px 2px rgba(1, 105, 163, 0.24);
+  }
+
+  .btn-primary:not(:disabled):hover {
+    background-color: var(--color-brand-700);
+  }
+
+  .btn-secondary {
+    background-color: var(--color-surface);
+    border-color: var(--color-line-strong);
+    color: var(--color-ink-soft);
+    box-shadow: var(--shadow-card);
+  }
+
+  .btn-secondary:not(:disabled):hover {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--color-ink-muted);
+  }
+
+  .btn-ghost:not(:disabled):hover {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-ink);
+  }
+
+  .btn-danger {
+    background-color: var(--color-danger);
+    color: var(--color-danger-fg);
+  }
+
+  .btn-danger:not(:disabled):hover {
+    background-color: var(--color-danger-ink);
+  }
+
+  .btn-marine {
+    background-color: var(--color-marine-900);
+    color: var(--color-ink-invert);
+  }
+
+  .btn-marine:not(:disabled):hover {
+    background-color: var(--color-marine-950);
+  }
+
+  /* ------------------------------------------------------------- badges -- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3125rem;
+    padding: 0.1875rem 0.5rem;
+    border-radius: 999px;
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  /* -------------------------------------------------------------- table -- */
+  .data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
+  }
+
+  /* Scoped to `thead` on purpose: a row-header inside `tbody` must not inherit
+     `position: sticky; top: 0`, or every row's first cell piles up at the top
+     of the scroll container. */
+  .data-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--color-surface-sunken);
+    padding: 0.625rem 0.875rem;
+    font-size: var(--text-2xs);
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-muted);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  /* Second header row of a grouped table sits below the first. Set via an
+     attribute so it outranks the `top: 0` above without `!important`. */
+  .data-table thead th[data-header-row='2'] {
+    top: 2.3125rem;
+  }
+
+  .data-table tbody th {
+    padding: 0.6875rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: left;
+    color: var(--color-ink);
+    border-bottom: 1px solid var(--color-line);
+    white-space: nowrap;
+  }
+
+  .data-table tbody tr:last-child th {
+    border-bottom: 0;
+  }
+
+  /* Row-label column pinned while the table scrolls sideways. Declared here so
+     it always outranks the sticky-header rules above. */
+  .data-table thead th[data-sticky-col] {
+    left: 0;
+    z-index: 20;
+  }
+
+  .data-table tbody th[data-sticky-col] {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background-color: var(--color-surface);
+    border-right: 1px solid var(--color-line);
+  }
+
+  .data-table tbody tr:hover th[data-sticky-col] {
+    background-color: var(--color-brand-50);
+  }
+
+  .data-table td {
+    padding: 0.6875rem 0.875rem;
+    font-size: 0.875rem;
+    color: var(--color-ink-soft);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .data-table tbody tr {
+    transition: background-color 0.12s var(--ease-out-soft);
+  }
+
+  .data-table tbody tr:hover {
+    background-color: var(--color-brand-50);
+  }
+
+  /* Row actions stay reachable when a wide table scrolls sideways; without this
+     the buttons are the first thing to leave the viewport. */
+  .data-table th[data-actions-col],
+  .data-table td[data-actions-col] {
+    position: sticky;
+    right: 0;
+    background-color: var(--color-surface);
+    border-left: 1px solid var(--color-line);
+  }
+
+  /* Outranks the `z-index: 10` on `thead th`, so the corner cell stays on top. */
+  .data-table thead th[data-actions-col] {
+    z-index: 11;
+    background-color: var(--color-surface-sunken);
+  }
+
+  .data-table tbody tr:hover td[data-actions-col] {
+    background-color: var(--color-brand-50);
+  }
+
+  /* ----------------------------------------------------------- skeleton -- */
+  .skeleton {
+    border-radius: var(--radius-field);
+    background-color: var(--color-surface-sunken);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.85) 50%,
+      transparent 100%
+    );
+    background-size: 180% 100%;
+    background-repeat: no-repeat;
+    animation: var(--animate-shimmer);
+  }
+
+  /* ------------------------------------------------------- theme toggle --
+     The icon is chosen by CSS rather than by React, so the correct one is
+     painted before hydration and the toggle needs no state. Each icon shows
+     the theme you would switch *to*. */
+  .theme-icon-light {
+    display: block;
+  }
+
+  .theme-icon-dark {
+    display: none;
+  }
+
+  [data-theme='dark'] .theme-icon-light {
+    display: none;
+  }
+
+  [data-theme='dark'] .theme-icon-dark {
+    display: block;
+  }
+
+  /* ------------------------------------------------------------ scroller --
+     Marks a horizontally scrollable region so wide tables/charts never push
+     the page itself sideways on small screens. */
+  .scroll-x {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }

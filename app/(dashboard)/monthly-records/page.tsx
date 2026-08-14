@@ -1,17 +1,30 @@
-'use client';
-
+import type { Metadata } from 'next';
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
 import TimelineTable from './components/TimelineTable';
 
-export default function DashboardPage() {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto max-w-7xl px-4 pt-24 pb-6 sm:px-6 lg:px-8 lg:pt-12">
-        <h1 className="mb-8 text-center text-2xl font-bold text-slate-800 sm:text-3xl">
-          Monthly Records{' '}
-        </h1>
+export const metadata: Metadata = {
+  title: 'Monthly Records',
+  description:
+    'Day-by-day stock, price, sales, cost and profit for every bottle size.',
+};
 
-        <TimelineTable />
-      </main>
-    </div>
+/**
+ * Server component: only the ledger itself is interactive, so the page frame
+ * stays out of the client bundle.
+ */
+export default function MonthlyRecordsPage() {
+  return (
+    <PageContainer>
+      <PageHeader
+        eyebrow="Overview"
+        title="Monthly records"
+        description="A day-by-day ledger of stock, pricing, sales, cost and profit. Switch months, focus a single bottle size, or export the period as PDF or CSV."
+      />
+
+      <TimelineTable />
+    </PageContainer>
   );
 }

@@ -1,11 +1,8 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
-import { BOTTLE_SIZES, BottleSize, TimelineDay } from './timelineTypes';
+import { BOTTLE_TYPES, BottleType, TimelineDay } from '../../types/timeline';
 
-// ---------------------------------------------------------------------------
-// Modern color system
-// ---------------------------------------------------------------------------
-
+// Print palette; @react-pdf cannot read the app's CSS tokens.
 const COLORS = {
   navy: '#0f172a', // header/footer band
   ink: '#1e293b',
@@ -24,7 +21,7 @@ const COLORS = {
 
 // One accent color per bottle size — reused on the cover summary cards and
 // on each detail page's header band so the report reads consistently.
-const ACCENTS: Record<BottleSize, string> = {
+const ACCENTS: Record<BottleType, string> = {
   '500ml': '#0ea5e9', // sky
   '1.5L': '#8b5cf6', // violet
   '5L': '#f59e0b', // amber
@@ -111,6 +108,15 @@ const styles = StyleSheet.create({
   },
 
   note: { marginTop: 20, fontSize: 8, color: COLORS.subtle },
+  sampleStamp: {
+    marginBottom: 12,
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.lossBg,
+    color: COLORS.lossText,
+    fontSize: 9,
+    fontFamily: 'Helvetica-Bold',
+  },
   legendRow: { flexDirection: 'row', gap: 16, marginTop: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendSwatch: { width: 8, height: 8, borderRadius: 2 },
@@ -197,11 +203,16 @@ const styles = StyleSheet.create({
 interface Props {
   monthLabel: string;
   days: TimelineDay[];
+  /**
+   * Stamps the cover when the figures are locally generated. A PDF leaves the
+   * app and looks authoritative, so it must carry the warning with it.
+   */
+  isPlaceholder?: boolean;
 }
 
 function sumMetric(
   days: TimelineDay[],
-  size: BottleSize,
+  size: BottleType,
   key: 'cost' | 'profit'
 ): number {
   return days.reduce((total, day) => total + day.bottles[size][key], 0);
@@ -232,14 +243,18 @@ function FooterBand({ label }: { label: string }) {
   );
 }
 
-export default function TimelineReportPdf({ monthLabel, days }: Props) {
+export default function TimelineReportPdf({
+  monthLabel,
+  days,
+  isPlaceholder = false,
+}: Props) {
   const generatedAt = new Date().toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
 
-  const totalProfit = BOTTLE_SIZES.reduce(
+  const totalProfit = BOTTLE_TYPES.reduce(
     (t, size) => t + sumMetric(days, size, 'profit'),
     0
   );
@@ -253,12 +268,19 @@ export default function TimelineReportPdf({ monthLabel, days }: Props) {
         <View style={styles.body}>
           <Text style={styles.coverEyebrow}>Production &amp; Sales</Text>
           <Text style={styles.coverTitle}>Monthly Stock Timeline</Text>
+
+          {isPlaceholder ? (
+            <Text style={styles.sampleStamp}>
+              SAMPLE DATA — these figures are generated for layout purposes and
+              are not real production records.
+            </Text>
+          ) : null}
           <Text style={styles.coverSubtitle}>
             {monthLabel} · Generated {generatedAt}
           </Text>
 
           <View style={styles.summaryGrid}>
-            {BOTTLE_SIZES.map((size) => {
+            {BOTTLE_TYPES.map((size) => {
               const profit = sumMetric(days, size, 'profit');
               const cost = sumMetric(days, size, 'cost');
               const isProfit = profit >= 0;
@@ -359,7 +381,7 @@ export default function TimelineReportPdf({ monthLabel, days }: Props) {
       </Page>
 
       {/* One detail page per bottle size */}
-      {BOTTLE_SIZES.map((size) => (
+      {BOTTLE_TYPES.map((size) => (
         <Page key={size} size="A4" style={styles.page}>
           <HeaderBand label="Monthly Stock Timeline" />
 

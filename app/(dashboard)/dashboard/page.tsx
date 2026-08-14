@@ -1,198 +1,249 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Layers, Receipt, TrendingUp, Droplets } from 'lucide-react';
-import GraphCard from './components/Graph';
-import StatCard from './components/StatCard';
-import DataTable, { DataTableColumn } from './components/DataTable';
-import ProfitReport from './components/profitReport';
-import { fetchCustomers } from '../services/getCustomers';
-import { getStock } from '../services/stockManagement';
+import { useCallback, useMemo } from 'react';
 import {
-  Customer,
-  ShippingAddress,
-  StockMetrics,
-  StockBottleType,
-} from './types';
-import { fetchShipping } from '../services/getShipping';
+  FilePlus2,
+  Gauge,
+  Layers,
+  PackageCheck,
+  Receipt,
+  RefreshCw,
+  Scale,
+  Tag,
+  TrendingUp,
+} from 'lucide-react';
+import Link from 'next/link';
 
-const BOTTLE_LABELS: StockBottleType[] = [
-  '500ml',
-  '1.5L',
-  '5L',
-  '19L',
-  '19L Refill',
-];
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
+import { Badge } from '@/app/src/components/ui/Badge';
+import Button from '@/app/src/components/ui/Button';
+import { Card, CardBody } from '@/app/src/components/ui/Card';
+import { ErrorState } from '@/app/src/components/ui/StatePlaceholders';
+import { SkeletonStatTiles } from '@/app/src/components/ui/Skeleton';
 
-const customerColumns: DataTableColumn<Customer>[] = [
-  { key: 'id', label: '#' },
-  { key: 'companyName', label: 'Company' },
-  { key: 'attentionPoc', label: 'Contact Person' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'email', label: 'Email' },
-  { key: 'city', label: 'City' },
-];
+import MetricChart from './components/MetricChart';
+import StatCard from './components/StatCard';
+import SetupAlerts from './components/SetupAlerts';
+import CustomerDirectory from './components/CustomerDirectory';
+import ShippingDirectory from './components/ShippingDirectory';
+import ProfitReport from './components/ProfitReport';
+import { useAsyncData } from '../hooks/useAsyncData';
+import { fetchCustomers, fetchShippingAddresses } from '../services/customers';
+import { fetchStockMetrics } from '../services/stock';
+import { fetchActiveCostPrices } from '../services/costPrices';
+import { fetchActiveSellingPrices } from '../services/sellingPrices';
+import { buildRateSummaries } from '../utils/pricing';
+import { BOTTLE_TYPES, type BottleType } from '../data/bottleTypes';
 
-const shippingColumns: DataTableColumn<ShippingAddress>[] = [
-  { key: 'id', label: '#' },
-  { key: 'warehouseName', label: 'Warehouse' },
-  { key: 'attentionTo', label: 'Contact Person' },
-  { key: 'phone', label: 'Phone' },
-  { key: 'deliveryAddress', label: 'Address' },
-];
-
-function sumBottles(metric?: Partial<Record<StockBottleType, number>>) {
+function sumBottles(metric?: Partial<Record<BottleType, number>> | null) {
   if (!metric) return 0;
-  return BOTTLE_LABELS.reduce((sum, size) => sum + (metric[size] ?? 0), 0);
+  return BOTTLE_TYPES.reduce((sum, size) => sum + (metric[size] ?? 0), 0);
 }
 
+/** Jumps straight to the tasks the dashboard is usually opened to start. */
+const QUICK_ACTIONS = [
+  { href: '/production', label: 'Log production', icon: Gauge },
+  { href: '/bill-generate', label: 'New invoice', icon: FilePlus2 },
+  { href: '/price', label: 'Cost price', icon: Scale },
+  { href: '/selling-price', label: 'Selling price', icon: Tag },
+];
+
 export default function DashboardPage() {
-  const [stockData, setStockData] = useState<StockMetrics | undefined>(
-    undefined
+  // Five independent datasets, each owning its loading and error state, so one
+  // failing read cannot blank the rest and every card can retry on its own.
+  const stock = useAsyncData(fetchStockMetrics, {
+    key: 'stock-metrics',
+    fallbackMessage: 'Stock metrics could not be loaded.',
+  });
+
+  const customers = useAsyncData(fetchCustomers, {
+    key: 'customers',
+    fallbackMessage: 'Customers could not be loaded.',
+  });
+
+  const shipping = useAsyncData(fetchShippingAddresses, {
+    key: 'shipping-addresses',
+    fallbackMessage: 'Shipping addresses could not be loaded.',
+  });
+
+  const costs = useAsyncData(fetchActiveCostPrices, { key: 'cost-prices' });
+  const rates = useAsyncData(fetchActiveSellingPrices, {
+    key: 'selling-prices',
+  });
+
+  const refreshAll = useCallback(() => {
+    stock.refresh();
+    customers.refresh();
+    shipping.refresh();
+    costs.refresh();
+    rates.refresh();
+  }, [stock, customers, shipping, costs, rates]);
+
+  const metrics = stock.data;
+
+  const summaries = useMemo(
+    () => buildRateSummaries(costs.data ?? [], rates.data ?? []),
+    [costs.data, rates.data]
   );
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>(
-    []
-  );
-  const [loading, setLoading] = useState(true);
-  const [today, setToday] = useState('');
 
-  useEffect(() => {
-    setToday(
-      new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-      })
-    );
-  }, []);
-
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        const [customersResponse, shippingResponse, stockResponse] =
-          await Promise.all([fetchCustomers(), fetchShipping(), getStock()]);
-
-        setCustomers(Array.isArray(customersResponse) ? customersResponse : []);
-        setShippingAddresses(
-          Array.isArray(shippingResponse) ? shippingResponse : []
-        );
-
-        if (
-          stockResponse &&
-          typeof stockResponse === 'object' &&
-          !('success' in stockResponse)
-        ) {
-          setStockData(stockResponse as StockMetrics);
-        } else {
-          console.error('Stock loading error', stockResponse);
-        }
-      } catch (error) {
-        console.error('Table loading error', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchDashboardData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <span className="text-5xl animate-bounce">💧</span>
-        </div>
-      </div>
-    );
-  }
-
-  const totalProfitOverall = (stockData?.monthlyProfitHistory ?? []).reduce(
-    (sum, v) => sum + v,
+  const totalProfit = (metrics?.monthlyProfitHistory ?? []).reduce(
+    (sum, value) => sum + value,
     0
   );
-  const totalCost = sumBottles(stockData?.costs);
-  const totalStock = sumBottles(stockData?.overallStock);
+  const totalCost = sumBottles(metrics?.costs);
+  const overallStock = sumBottles(metrics?.overallStock);
+
+  // `null` means the stock rows carry no date, so today cannot be separated
+  // from the running total; the tile is omitted rather than duplicated.
+  const todayStock = metrics?.todayStock ?? null;
+
+  const refreshing =
+    stock.refreshing || customers.refreshing || shipping.refreshing;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <main className="mx-auto max-w-7xl px-4 pt-24 pb-6 sm:px-6 lg:px-8 lg:pt-12">
-        {/* Header */}
-        <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-sky-500/10 ring-1 ring-sky-500/20">
-              <Droplets className="w-7 h-7 text-sky-500" />
-            </div>
-            <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-sky-500">
-                Overview
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight">
-                Dashboard
-              </h1>
-            </div>
-          </div>
-
-          {today && (
-            <div className="flex items-center gap-2 self-start rounded-full bg-slate-100 border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-500 sm:self-auto">
-              {today}
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
-          <StatCard
-            label="Total Profit Overall"
-            value={totalProfitOverall}
-            icon={<TrendingUp className="w-5 h-5 text-yellow-600" />}
-            isCurrency
+    <PageContainer>
+      <PageHeader
+        eyebrow="Overview"
+        title="Dashboard"
+        description="Live stock, cost and profit across every bottle size, straight from your plant records."
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            label="Refresh"
+            loadingLabel="Refreshing…"
+            loading={refreshing}
+            onClick={refreshAll}
+            icon={<RefreshCw className="size-3.5" />}
+            size="sm"
           />
+        }
+        meta={
+          !stock.loading && !stock.error ? (
+            <Badge tone="success" dot>
+              Data synced
+            </Badge>
+          ) : null
+        }
+      />
+
+      {/* What needs attention, before any numbers. */}
+      <SetupAlerts
+        summaries={summaries}
+        loading={costs.loading || rates.loading}
+        unavailable={Boolean(costs.error || rates.error)}
+      />
+
+      {/* Quick actions: every task used to start with a sidebar click. */}
+      <nav aria-label="Quick actions" className="flex flex-wrap gap-2">
+        {QUICK_ACTIONS.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="btn btn-secondary h-9 px-3 text-xs"
+          >
+            <Icon className="size-3.5" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      {/* KPIs */}
+      {stock.loading ? (
+        <SkeletonStatTiles count={4} />
+      ) : stock.error ? (
+        // Zeroes here would read as "no production", not "the service is down".
+        <Card>
+          <CardBody>
+            <ErrorState
+              title="Stock metrics unavailable"
+              description={stock.error}
+              onRetry={stock.refresh}
+              retrying={stock.refreshing}
+              size="block"
+            />
+          </CardBody>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {todayStock ? (
+            <StatCard
+              label="Produced today"
+              value={sumBottles(todayStock)}
+              unit=" units"
+              tone="brand"
+              icon={<PackageCheck className="size-4" />}
+              breakdown={todayStock}
+            />
+          ) : null}
+
           <StatCard
-            label="Total Cost"
-            value={totalCost}
-            icon={<Receipt className="w-5 h-5 text-rose-600" />}
-            isCurrency
-          />
-          <StatCard
-            label="Total Stock"
-            value={totalStock}
-            icon={<Layers className="w-5 h-5 text-sky-500" />}
+            label="Overall stock"
+            value={overallStock}
             unit=" units"
+            tone="neutral"
+            icon={<Layers className="size-4" />}
+            breakdown={metrics?.overallStock}
+          />
+          <StatCard
+            label="Production cost"
+            value={totalCost}
+            isCurrency
+            tone="danger"
+            icon={<Receipt className="size-4" />}
+            breakdown={metrics?.costs}
+          />
+          <StatCard
+            label="Profit to date"
+            value={totalProfit}
+            isCurrency
+            tone={totalProfit >= 0 ? 'success' : 'danger'}
+            icon={<TrendingUp className="size-4" />}
           />
         </div>
+      )}
 
-        <div className="mb-10">
-          <ProfitReport />
-        </div>
+      <ProfitReport />
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-10">
-          <GraphCard
-            title="Overall Stock"
-            label="Total Stock"
-            rawStockData={stockData}
-          />
-          <GraphCard
-            title="Selling Price Today"
-            label="Current Selling Price (Bottle Wise)"
-            rawStockData={stockData}
-          />
-        </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <MetricChart
+          title="Overall Stock"
+          label="Stock by bottle size"
+          description="Units currently accounted for per size"
+          rawStockData={metrics ?? undefined}
+          loading={stock.loading}
+          error={stock.error}
+          onRetry={stock.refresh}
+        />
+        <MetricChart
+          title="Selling Price Today"
+          label="Selling price by bottle size"
+          description="Active customer rate per bottle"
+          rawStockData={metrics ?? undefined}
+          loading={stock.loading}
+          error={stock.error}
+          onRetry={stock.refresh}
+        />
+      </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <DataTable
-            title="Customers"
-            columns={customerColumns}
-            rows={customers}
-            pageSize={10}
-          />
-          <DataTable
-            title="Shipping Addresses"
-            columns={shippingColumns}
-            rows={shippingAddresses}
-            pageSize={10}
-          />
-        </div>
-      </main>
-    </div>
+      {/* Full width, not the 2-up grid the charts use: six columns plus row
+          actions cannot fit half a page without clipping. */}
+      <CustomerDirectory
+        rows={customers.data ?? []}
+        loading={customers.loading}
+        error={customers.error}
+        onRefresh={customers.refresh}
+      />
+
+      <ShippingDirectory
+        rows={shipping.data ?? []}
+        loading={shipping.loading}
+        error={shipping.error}
+        onRefresh={shipping.refresh}
+      />
+    </PageContainer>
   );
 }

@@ -110,7 +110,6 @@ export function setupApiToastInterceptors(onUnauthorized?: () => void) {
 
       if (showToast) {
         const payload = response.data;
-        console.log(payload);
 
         const isFailure = payload?.success === false || Boolean(payload?.error);
 

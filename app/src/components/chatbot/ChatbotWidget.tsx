@@ -1,113 +1,117 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, Droplet } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Bot, MessageSquare, Send, Sparkles, X } from 'lucide-react';
 import axios from 'axios';
+
+type ChatMessage = {
+  id: number;
+  text: string;
+  isBot: boolean;
+  failed?: boolean;
+};
+
+const GREETING: ChatMessage = {
+  id: 0,
+  isBot: true,
+  text: 'Hi — I can answer questions about your inventory, pricing, sales and operational records. What would you like to know?',
+};
+
+/** Starter prompts so the empty panel suggests what it is actually good for. */
+const SUGGESTIONS = [
+  'How much stock did we produce today?',
+  'What is our current profit margin?',
+  'Which bottle size sells the most?',
+];
 
 export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      text: 'Welcome to Zamra Water Plant Portal. How can I assist you with inventory, sales, or operational data today?',
-      isBot: true,
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const widgetRef = useRef<HTMLDivElement>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const nextId = useRef(1);
 
+  const close = useCallback(() => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  }, []);
+
+  // Keep the newest message in view as the conversation grows.
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
   }, [messages, isTyping]);
 
   useEffect(() => {
-    if (!isOpen && !isClosing) return;
+    if (!isOpen) return;
 
-    const handleClickOutside = (event: MouseEvent) => {
+    inputRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+    };
+
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
-        widgetRef.current &&
-        !widgetRef.current.contains(event.target as Node)
+        !panelRef.current?.contains(target) &&
+        !triggerRef.current?.contains(target)
       ) {
-        closeChat();
+        setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('mousedown', onPointerDown);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('mousedown', onPointerDown);
     };
-  }, [isOpen, isClosing]);
+  }, [isOpen, close]);
 
-  useEffect(() => {
-    return () => {
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
-      }
-    };
-  }, []);
+  const send = async (text: string) => {
+    const question = text.trim();
+    if (!question || isTyping) return;
 
-  const openChat = () => {
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = null;
-    }
-
-    setIsClosing(false);
-    setIsOpen(true);
-  };
-
-  const closeChat = () => {
-    if (!isOpen && !isClosing) return;
-
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current);
-    }
-
-    setIsClosing(true);
-    closeTimeoutRef.current = setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-      closeTimeoutRef.current = null;
-    }, 220);
-  };
-
-  const handleSendMessage = async (textToSend: string) => {
-    const cleanInput = textToSend.trim();
-    if (!cleanInput) return;
-
-    setMessages((prev) => [...prev, { text: cleanInput, isBot: false }]);
-    if (textToSend === input) setInput('');
-
+    setMessages((current) => [
+      ...current,
+      { id: nextId.current++, text: question, isBot: false },
+    ]);
+    setInput('');
     setIsTyping(true);
+
     try {
       const response = await axios.post(
         '/api/chatbot',
-        {
-          message: cleanInput,
-        },
-        {
-          headers: {
-            'x-skip-api-toast': 'true',
-          },
-        }
+        { message: question },
+        { headers: { 'x-skip-api-toast': 'true' } }
       );
-      const replyText =
-        response.data?.answer || response.data?.message || 'Response received';
 
-      setMessages((prev) => [...prev, { text: replyText, isBot: true }]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
+      const reply =
+        response.data?.answer ||
+        response.data?.message ||
+        'I could not find an answer for that.';
+
+      setMessages((current) => [
+        ...current,
+        { id: nextId.current++, text: reply, isBot: true },
+      ]);
+    } catch {
+      setMessages((current) => [
+        ...current,
         {
-          text: 'Failed to connect to the server. Please try again.',
+          id: nextId.current++,
           isBot: true,
+          failed: true,
+          text: 'I could not reach the assistant service. Please check your connection and try again.',
         },
       ]);
     } finally {
@@ -115,96 +119,156 @@ export function ChatbotWidget() {
     }
   };
 
-  return (
-    <div
-      ref={widgetRef}
-      className="fixed bottom-6 right-6 z-50 font-sans antialiased selection:bg-blue-500/30"
-    >
-      <button
-        onClick={() => (isOpen || isClosing ? closeChat() : openChat())}
-        className={`flex items-center justify-center w-14 h-14 text-white rounded-full shadow-xl transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none cursor-pointer focus:ring-4 focus:ring-blue-500/40 ${
-          isOpen ? 'bg-slate-900 rotate-90' : 'bg-blue-600 hover:bg-blue-700'
-        }`}
-      >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <MessageSquare className="h-6 w-6" />
-        )}
-      </button>
+  const showSuggestions = messages.length === 1 && !isTyping;
 
-      {(isOpen || isClosing) && (
+  return (
+    <div className="fixed bottom-5 right-4 z-40 flex flex-col items-end sm:bottom-6 sm:right-6">
+      {isOpen ? (
         <div
-          className={`absolute bottom-20 right-0 w-85 sm:w-[400px] h-[550px] bg-white border border-slate-200/80 rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 transform origin-bottom-right ${
-            isClosing ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-          }`}
+          ref={panelRef}
+          role="dialog"
+          aria-label="Zamra assistant"
+          className="mb-3 flex h-[min(32rem,calc(100dvh-7rem))] w-[calc(100vw-2rem)] animate-fade-in-up flex-col overflow-hidden rounded-panel border border-line bg-surface shadow-pop sm:w-[23rem]"
         >
-          <div className="bg-blue-900 px-5 py-4 text-white flex items-center justify-between border-b border-slate-800">
-            <div className="flex items-center space-x-3">
-              <div className="relative flex items-center justify-center w-10 h-10 bg-blue-600/10 rounded-xl border border-blue-500/20">
-                <Droplet className="h-5 w-5 text-blue-400 fill-blue-400/20" />
-                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-slate-900 rounded-full animate-pulse"></span>
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm tracking-wide text-slate-100">
-                  Zamra Water Plant
-                </h4>
-                <p className="text-[11px]  text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-                  AI Assistant Copilot
-                </p>
-              </div>
+          <div className="flex shrink-0 items-center gap-3 border-b border-line bg-marine-950 px-4 py-3">
+            <span className="relative flex size-9 items-center justify-center rounded-field bg-brand-500/15 text-brand-300 ring-1 ring-brand-400/25">
+              <Bot className="size-[1.1rem]" />
+              <span
+                className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full bg-success ring-2 ring-marine-950"
+                aria-hidden
+              />
+            </span>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">
+                Zamra Assistant
+              </p>
+              <p className="truncate text-2xs text-marine-300">
+                Answers from your plant records
+              </p>
             </div>
+
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close assistant"
+              className="flex size-8 items-center justify-center rounded-md text-marine-300 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <X className="size-4" />
+            </button>
           </div>
 
-          <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-slate-50/60">
-            {messages.map((msg, index) => (
+          <div
+            ref={scrollRef}
+            className="flex-1 space-y-3 overflow-y-auto bg-canvas px-4 py-4"
+          >
+            {messages.map((message) => (
               <div
-                key={index}
-                className={`flex items-start space-x-2.5 ${msg.isBot ? 'justify-start' : 'justify-end space-x-reverse'}`}
+                key={message.id}
+                className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}
               >
-                <div
-                  className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-[13px] leading-relaxed shadow-xs ${
-                    msg.isBot
-                      ? 'bg-white text-slate-800 border border-slate-200/60 rounded-tl-xs'
-                      : 'bg-blue-600 text-white rounded-tr-xs font-medium'
+                <p
+                  className={`max-w-[85%] whitespace-pre-line rounded-card px-3.5 py-2.5 text-xs leading-relaxed ${
+                    message.isBot
+                      ? message.failed
+                        ? 'border border-danger/25 bg-danger-soft text-danger-ink'
+                        : 'border border-line bg-surface text-ink-soft'
+                      : 'bg-brand-600 text-brand-fg'
                   }`}
                 >
-                  {msg.text}
-                </div>
+                  {message.text}
+                </p>
               </div>
             ))}
 
-            {isTyping && (
-              <div className="flex items-start justify-start space-x-2.5">
-                <div className="bg-white border border-slate-200/60 px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                </div>
+            {isTyping ? (
+              <div className="flex justify-start">
+                <span
+                  className="flex items-center gap-1 rounded-card border border-line bg-surface px-3.5 py-3"
+                  aria-label="Assistant is typing"
+                >
+                  {[0, 150, 300].map((delay) => (
+                    <span
+                      key={delay}
+                      className="size-1.5 animate-bounce rounded-full bg-ink-faint"
+                      style={{ animationDelay: `${delay}ms` }}
+                    />
+                  ))}
+                </span>
               </div>
-            )}
+            ) : null}
 
-            <div ref={messagesEndRef} />
+            {showSuggestions ? (
+              <div className="space-y-1.5 pt-1">
+                <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wide text-ink-faint">
+                  <Sparkles className="size-3" /> Try asking
+                </p>
+                {SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => send(suggestion)}
+                    className="block w-full rounded-field border border-line bg-surface px-3 py-2 text-left text-xs text-ink-soft transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-800"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
 
-          <div className="p-3 bg-white border-t border-slate-200/60 flex items-center space-x-2 shrink-0">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(input)}
-              placeholder="Ask anything about business records..."
-              className="flex-1 bg-slate-50 focus:bg-white text-slate-800 placeholder-slate-400 text-xs rounded-xl px-4 py-3 border border-slate-200/80 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/5 transition-all duration-200"
-            />
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              send(input);
+            }}
+            className="flex shrink-0 items-center gap-2 border-t border-line bg-surface p-3"
+          >
+            <label htmlFor="chatbot-input" className="sr-only">
+              Ask the assistant
+            </label>
+            <div className="field-shell h-10 min-h-0">
+              <input
+                id="chatbot-input"
+                ref={inputRef}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="Ask about stock, sales, profit…"
+                autoComplete="off"
+                className="field-input py-0 text-xs"
+              />
+            </div>
+
             <button
-              onClick={() => handleSendMessage(input)}
-              className="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition-all duration-200 active:scale-95 shadow-md shadow-blue-500/10 focus:outline-none cursor-pointer"
+              type="submit"
+              disabled={!input.trim() || isTyping}
+              aria-label="Send message"
+              className="btn btn-primary size-10 shrink-0 p-0"
             >
-              <Send className="h-3.5 w-3.5" />
+              <Send className="size-4" />
             </button>
-          </div>
+          </form>
         </div>
-      )}
+      ) : null}
+
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        aria-label={isOpen ? 'Close assistant' : 'Open assistant'}
+        className={`flex size-14 items-center justify-center rounded-full shadow-pop transition-all duration-200 hover:scale-105 active:scale-95 ${
+          isOpen
+            ? 'bg-marine-950 text-white'
+            : 'bg-brand-600 text-brand-fg hover:bg-brand-700'
+        }`}
+      >
+        {isOpen ? (
+          <X className="size-5" />
+        ) : (
+          <MessageSquare className="size-5" />
+        )}
+      </button>
     </div>
   );
 }

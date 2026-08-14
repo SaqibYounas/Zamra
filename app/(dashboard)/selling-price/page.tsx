@@ -1,60 +1,82 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import SellingPriceForm from './component/SellingPriceForm';
-import TodayPriceTable from './component/PriceTable';
-import { fetchActivePrices } from '../services/priceManagement';
-import { SellingPrice } from './types';
+import { useCallback, useMemo } from 'react';
+import { RefreshCw } from 'lucide-react';
 
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
+import Button from '@/app/src/components/ui/Button';
+
+import { useAsyncData } from '../hooks/useAsyncData';
+import { fetchActiveCostPrices } from '../services/costPrices';
+import { fetchActiveSellingPrices } from '../services/sellingPrices';
+import { buildRateSummaries } from '../utils/pricing';
+import RateBoard from './components/RateBoard';
+import SellingPriceForm from './components/SellingPriceForm';
+
+/**
+ * Selling price — the customer-facing rate per bottle. The board above the form
+ * shows the cost each rate is measured against, so the margin is visible first.
+ */
 export default function SellingPricePage() {
-  const [prices, setPrices] = useState<SellingPrice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const costs = useAsyncData(fetchActiveCostPrices, {
+    key: 'cost-prices',
+    fallbackMessage: 'Current prices could not be loaded.',
+  });
 
-  async function getPrices() {
-    try {
-      setLoading(true);
+  const rates = useAsyncData(fetchActiveSellingPrices, {
+    key: 'selling-prices',
+    fallbackMessage: 'Current selling prices could not be loaded.',
+  });
 
-      const data = await fetchActivePrices();
+  // The `?? []` fallbacks stay inside the memo: creating them in the render body
+  // would make a new array identity every render and defeat it.
+  const summaries = useMemo(
+    () => buildRateSummaries(costs.data ?? [], rates.data ?? []),
+    [costs.data, rates.data]
+  );
 
-      setPrices(data || []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    getPrices();
-  }, []);
+  const refreshAll = useCallback(() => {
+    costs.refresh();
+    rates.refresh();
+  }, [costs, rates]);
 
   return (
-    <main
-      className="
-    min-h-screen
-    w-full
-    flex
-    items-center
-    justify-center
-    px-3
-    sm:px-6
-    lg:px-8
-    py-10
-  "
-    >
-      <div
-        className="
-      w-full
-      max-w-5xl
-      mx-auto
-    "
-      >
-        <TodayPriceTable prices={prices} loading={loading} />
+    <PageContainer width="form">
+      <PageHeader
+        eyebrow="Operations"
+        title="Selling price"
+        description="Set what customers pay per bottle and see the margin against production cost before you commit to it."
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            label="Refresh"
+            loadingLabel="Refreshing…"
+            loading={costs.refreshing || rates.refreshing}
+            onClick={refreshAll}
+            icon={<RefreshCw className="size-3.5" />}
+          />
+        }
+      />
 
-        <div className="mt-5 sm:mt-8">
-          <SellingPriceForm prices={prices} />
-        </div>
-      </div>
-    </main>
+      <SellingPriceForm
+        prices={costs.data ?? []}
+        summaries={summaries}
+        onSaved={refreshAll}
+      />
+
+      <RateBoard
+        summaries={summaries}
+        loading={costs.loading || rates.loading}
+        // Cost prices are the backbone: without them no rate can be saved, so
+        // only that failure is treated as a page-level error.
+        error={costs.error}
+        onRetry={refreshAll}
+      />
+    </PageContainer>
   );
 }

@@ -1,138 +1,182 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import Button from '../../src/components/button/Button';
+import Link from 'next/link';
+import { Eye, FilePlus2, Pencil, Receipt, RefreshCw } from 'lucide-react';
 
-const invoices = [
-  {
-    id: 'INV-1001',
-    date: '2026-04-05',
-    customer: 'Khan Water Traders',
-    amount: 1840.0,
-    status: 'Paid',
-  },
-  {
-    id: 'INV-1002',
-    date: '2026-04-03',
-    customer: 'Ali General Store',
-    amount: 2920.0,
-    status: 'Pending',
-  },
-  {
-    id: 'INV-1003',
-    date: '2026-03-28',
-    customer: 'Sunrise Catering',
-    amount: 1350.0,
-    status: 'Paid',
-  },
-  {
-    id: 'INV-1004',
-    date: '2026-03-22',
-    customer: 'Green Valley Farms',
-    amount: 2140.0,
-    status: 'Unpaid',
-  },
-];
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
+import { Card, CardBody, CardHeader } from '@/app/src/components/ui/Card';
+import {
+  DataTable,
+  type DataTableColumn,
+} from '@/app/src/components/ui/DataTable';
+import { Badge } from '@/app/src/components/ui/Badge';
+import Button, { IconButton } from '@/app/src/components/ui/Button';
+import { formatDate, formatMoneyExact } from '@/app/src/lib/format';
 
-export default function InvoicesPage() {
+import { useAsyncData } from '../hooks/useAsyncData';
+import { fetchInvoices } from '../services/invoices';
+import type { InvoiceSummary } from '../types/invoice';
+import { STATUS_TONES } from './components/statusTone';
+
+/**
+ * Invoice history. Rows come from the invoice service; selecting one opens its
+ * detail page, where it can be edited or removed.
+ */
+export default function InvoiceHistoryPage() {
   const router = useRouter();
 
+  const invoices = useAsyncData<InvoiceSummary[]>(fetchInvoices, {
+    key: 'invoices',
+    fallbackMessage: 'Invoices could not be loaded.',
+  });
+
+  const rows = invoices.data ?? [];
+
+  const columns: DataTableColumn<InvoiceSummary>[] = [
+    {
+      key: 'invoiceNo',
+      label: 'Invoice number',
+      render: (row) => (
+        <Link
+          href={`/invoices/${row.id}`}
+          className="font-semibold text-brand-700 underline-offset-2 hover:underline"
+        >
+          {row.invoiceNo || row.id}
+        </Link>
+      ),
+    },
+    {
+      key: 'customer',
+      label: 'Customer',
+      render: (row) => (
+        <span
+          className="block max-w-[16rem] truncate"
+          title={row.customer || undefined}
+        >
+          {row.customer || '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'date',
+      label: 'Date',
+      render: (row) => (
+        <span className="whitespace-nowrap">{formatDate(row.date)}</span>
+      ),
+    },
+    {
+      key: 'amount',
+      label: 'Amount',
+      align: 'right',
+      notSearchable: true,
+      render: (row) => (
+        <span className="tabular whitespace-nowrap font-semibold text-ink">
+          {formatMoneyExact(row.amount)}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      align: 'right',
+      render: (row) => (
+        <Badge tone={STATUS_TONES[row.status] ?? 'neutral'} dot>
+          {row.status ?? 'Unknown'}
+        </Badge>
+      ),
+    },
+  ];
+
   return (
-    <div className="min-h-screen  bg-surface-2 flex flex-col items-center justify-center py-8 px-4 sm:py-10 sm:px-6 lg:px-8">
-      <main className="w-full max-w-4xl">
-        <div className="bg-surface shadow-lg rounded-3xl p-6 md:p-10">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-            <div>
-              <p className="text-teal-600 uppercase tracking-[0.4em] text-[11px] font-black mb-2">
-                Invoices
-              </p>
-              <h1 className="text-3xl sm:text-4xl font-black text-slate-900">
-                Previous Invoices
-              </h1>
-              <p className="mt-2 text-sm text-slate-500 max-w-2xl">
-                Review and manage all previously generated invoices for Zamra
-                Water customers.
-              </p>
-            </div>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Billing"
+        title="Invoice history"
+        description="Every invoice raised for Zamra Water customers, with its status and balance."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
             <Button
-              label="Create New Invoice"
+              type="button"
+              variant="secondary"
+              size="sm"
+              label="Refresh"
+              loadingLabel="Refreshing…"
+              loading={invoices.refreshing}
+              onClick={invoices.refresh}
+              icon={<RefreshCw className="size-3.5" />}
+            />
+            <Button
+              type="button"
+              label="New invoice"
+              icon={<FilePlus2 className="size-4" />}
               onClick={() => router.push('/bill-generate')}
-              className="md:w-auto p-6 cursor-pointer"
             />
           </div>
+        }
+      />
 
-          <div className="rounded-3xl border border-surface bg-surface p-6 shadow-xl shadow-[rgba(15,23,42,0.1)]">
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-separate border-spacing-y-2 text-left">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-                      Invoice
-                    </th>
-                    <th className="px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-                      Customer
-                    </th>
-                    <th className="px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-500 text-right">
-                      Amount
-                    </th>
-                    <th className="px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-500 text-right">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-xs font-black uppercase tracking-[0.2em] text-slate-500 text-right">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {invoices.map((invoice) => (
-                    <tr
-                      key={invoice.id}
-                      className="rounded-3xl border border-slate-200 bg-slate-50 transition hover:bg-slate-100"
-                    >
-                      <td className="px-4 py-4 text-sm font-black text-slate-900">
-                        {invoice.id}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-600">
-                        {invoice.date}
-                      </td>
-                      <td className="px-4 py-4 text-sm text-slate-800">
-                        {invoice.customer}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm font-black text-slate-900">
-                        Rs{invoice.amount.toFixed(2)}
-                      </td>
-                      <td className="px-4 py-4 text-right text-sm font-black uppercase tracking-[0.2em] text-slate-500">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-[10px] font-black tracking-[0.2em] ${
-                            invoice.status === 'Paid'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : invoice.status === 'Pending'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-rose-100 text-rose-700'
-                          }`}
-                        >
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        <button
-                          onClick={() => router.push('/bill-generate')}
-                          className="inline-flex items-center justify-center rounded-2xl bg-(--color-primary) hover:bg-(--color-primary-strong) px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] text-white transition"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+      <Card as="section">
+        <CardHeader
+          title="Saved invoices"
+          description="Search by invoice number or customer, then open one to view it"
+          icon={<Receipt className="size-4" />}
+          metric={
+            !invoices.loading && !invoices.error ? (
+              <Badge tone="brand">
+                {rows.length} {rows.length === 1 ? 'invoice' : 'invoices'}
+              </Badge>
+            ) : undefined
+          }
+        />
+
+        <CardBody>
+          <DataTable
+            columns={columns}
+            rows={rows}
+            getRowId={(row) => row.id}
+            pageSize={10}
+            loading={invoices.loading}
+            error={invoices.error}
+            onRetry={invoices.refresh}
+            searchable={rows.length > 0}
+            searchPlaceholder="Search invoices…"
+            emptyTitle="No invoices to show"
+            emptyDescription="Invoices you generate will be listed here."
+            emptyAction={
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                label="Create an invoice"
+                icon={<FilePlus2 className="size-3.5" />}
+                onClick={() => router.push('/bill-generate')}
+              />
+            }
+            rowActions={(row) => (
+              <>
+                <IconButton
+                  variant="secondary"
+                  size="sm"
+                  label={`View invoice ${row.invoiceNo || row.id}`}
+                  icon={<Eye className="size-3.5" />}
+                  onClick={() => router.push(`/invoices/${row.id}`)}
+                />
+                <IconButton
+                  variant="secondary"
+                  size="sm"
+                  label={`Update invoice ${row.invoiceNo || row.id}`}
+                  icon={<Pencil className="size-3.5" />}
+                  onClick={() => router.push(`/invoices/${row.id}/edit`)}
+                />
+              </>
+            )}
+          />
+        </CardBody>
+      </Card>
+    </PageContainer>
   );
 }
