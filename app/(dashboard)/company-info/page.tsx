@@ -1,9 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Building2, User, MapPin, Phone, Mail, Globe } from 'lucide-react';
-import WaterInputField from '../../src/components/inputFields/InputField';
-import Button from '../../src/components/button/Button';
+import React, { useState } from 'react';
+import {
+  Building2,
+  Globe,
+  Mail,
+  MapPin,
+  Phone,
+  ReceiptText,
+  Save,
+  User,
+} from 'lucide-react';
+
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
+import { Card, CardBody, CardHeader } from '@/app/src/components/ui/Card';
+import { FieldsetHeading } from '@/app/src/components/ui/FieldsetHeading';
+import { Alert } from '@/app/src/components/ui/Alert';
+import { Badge } from '@/app/src/components/ui/Badge';
+import TextField from '@/app/src/components/ui/TextField';
+import Button from '@/app/src/components/ui/Button';
 import { saveCompanyInfo } from '../services/companyInfo';
 
 interface CompanyInfoResponse {
@@ -12,62 +30,76 @@ interface CompanyInfoResponse {
   [key: string]: unknown;
 }
 
+type CompanyForm = {
+  name: string;
+  owner: string;
+  address: string;
+  city: string;
+  contact: string;
+  email: string;
+};
+
+const EMPTY_FORM: CompanyForm = {
+  name: '',
+  owner: '',
+  address: '',
+  city: '',
+  contact: '',
+  email: '',
+};
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function CompanyInformation() {
+  const [payload, setPayload] = useState<CompanyForm>(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
-
-  const [payload, setPayload] = useState({
-    name: '',
-    owner: '',
-    address: '',
-    city: '',
-    contact: '',
-    email: '',
-  });
-
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState('');
+  const [savedDetails, setSavedDetails] = useState<CompanyForm | null>(null);
 
-  const handleChange = (field: keyof typeof payload, value: string) => {
-    setPayload((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  /** True once the form matches what was last saved in this session. */
+  const matchesSaved =
+    savedDetails !== null &&
+    (Object.keys(payload) as (keyof CompanyForm)[]).every(
+      (field) => payload[field].trim() === savedDetails[field].trim()
+    );
 
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
+  const handleChange = (field: keyof CompanyForm, value: string) => {
+    setPayload((previous) => ({ ...previous, [field]: value }));
+    setFieldErrors((previous) =>
+      previous[field] ? { ...previous, [field]: '' } : previous
+    );
+    setFormError('');
   };
 
-  const submitForm = async () => {
-    const localErrors: Record<string, string> = {};
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    if (!payload.name.trim())
-      localErrors.name = 'Please enter the company name.';
+    const errors: Record<string, string> = {};
 
-    if (!payload.owner.trim())
-      localErrors.owner = 'Please enter the owner name.';
-
-    if (!payload.city.trim()) localErrors.city = 'Please enter the city.';
-
-    if (!payload.contact.trim())
-      localErrors.contact = 'Please enter the contact number.';
-
+    if (!payload.name.trim()) errors.name = 'Company name is required.';
+    if (!payload.owner.trim()) errors.owner = 'Owner name is required.';
+    if (!payload.city.trim()) errors.city = 'City is required.';
+    if (!payload.contact.trim()) errors.contact = 'Contact number is required.';
     if (!payload.address.trim())
-      localErrors.address = 'Please enter the company address.';
+      errors.address = 'Company address is required.';
 
-    if (!payload.email.trim())
-      localErrors.email = 'Please enter the email address.';
-    if (Object.keys(localErrors).length > 0) {
-      setFieldErrors(localErrors);
+    if (!payload.email.trim()) {
+      errors.email = 'Email address is required.';
+    } else if (!EMAIL_PATTERN.test(payload.email)) {
+      errors.email = 'Enter a valid email address.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
-    try {
-      setLoading(true);
-      setFieldErrors({});
+    setLoading(true);
+    setFieldErrors({});
+    setFormError('');
 
+    try {
       const response = (await saveCompanyInfo({
         companyName: payload.name,
         ownerName: payload.owner,
@@ -77,134 +109,195 @@ export default function CompanyInformation() {
         email: payload.email,
       })) as CompanyInfoResponse;
 
-      if (response && response.success === false) {
-        setPayload({
-          name: '',
-          owner: '',
-          address: '',
-          city: '',
-          contact: '',
-          email: '',
-        });
+      if (response?.success === false) {
+        setFormError(
+          response.message || 'Company information could not be saved.'
+        );
+        return;
       }
-    } catch (err) {
-      const errorObject = err as Error;
-      console.error(errorObject?.message || 'An unexpected error occurred.');
+
+      // Values stay on screen after saving: there is no read endpoint, so
+      // clearing the form would leave no way to confirm what was stored.
+      setSavedDetails(payload);
+    } catch (error) {
+      setFormError(
+        (error as Error)?.message || 'An unexpected error occurred.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    await submitForm();
-  };
-
-  useEffect(() => {
-    const handleGlobalEnter = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !loading) {
-        e.preventDefault();
-        submitForm();
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalEnter);
-
-    return () => {
-      window.removeEventListener('keydown', handleGlobalEnter);
-    };
-  }, [loading, payload]);
-
   return (
-    <div className="min-h-screen flex items-start md:items-center justify-center pt-24 pb-10 px-4 sm:py-12 sm:px-6 lg:px-8 md:pl-20">
-      <main className="w-full max-w-sm sm:max-w-xl md:max-w-2xl lg:max-w-3xl rounded-2xl bg-gray-50 p-4 sm:p-8 lg:p-10 ring-1 shadow-lg border border-gray-200/50">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-center">
-            Update Company Information
-          </h1>
-        </div>
+    <PageContainer width="form">
+      <PageHeader
+        eyebrow="Settings"
+        title="Company information"
+        description="Business details recorded for the plant. These identify your company on generated invoices."
+      />
 
-        <div className="p-0 sm:p-2">
-          <form onSubmit={handleSubmit} className="flex flex-col">
-            <div className="flex flex-col sm:flex-row gap-5">
-              <WaterInputField
-                name="name"
-                label="Company Name"
-                type="text"
-                icon={Building2}
-                value={payload.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="Enter Company Name"
-                error={fieldErrors.name}
+      <Card as="section">
+        <CardHeader
+          title="Business details"
+          description="All fields are required"
+          icon={<Building2 className="size-4" />}
+          metric={
+            savedDetails && matchesSaved ? (
+              <Badge tone="success" dot>
+                Saved this session
+              </Badge>
+            ) : undefined
+          }
+        />
+
+        <CardBody>
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
+            {formError ? <Alert tone="danger">{formError}</Alert> : null}
+
+            {savedDetails && matchesSaved ? (
+              <Alert tone="success" title="Saved">
+                These are the details new invoices will carry. They stay on
+                screen for this session — there is no endpoint to read them back
+                after a reload.
+              </Alert>
+            ) : null}
+
+            {savedDetails && !matchesSaved ? (
+              <Alert tone="info" title="Unsaved changes">
+                You have edited the details since they were last saved. Save
+                again to apply them to new invoices.
+              </Alert>
+            ) : null}
+
+            <section className="space-y-4">
+              <FieldsetHeading
+                title="Identity"
+                description="How the business is named on paperwork"
+                icon={<Building2 className="size-3.5" />}
               />
 
-              <WaterInputField
-                name="owner"
-                label="Owner Name"
-                type="text"
-                icon={User}
-                value={payload.owner}
-                onChange={(e) => handleChange('owner', e.target.value)}
-                placeholder="Enter Owner Name"
-                error={fieldErrors.owner}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <TextField
+                  name="name"
+                  label="Company name"
+                  type="text"
+                  icon={Building2}
+                  autoComplete="organization"
+                  value={payload.name}
+                  onChange={(event) => handleChange('name', event.target.value)}
+                  placeholder="Zamra Water Plant"
+                  error={fieldErrors.name}
+                  required
+                />
+
+                <TextField
+                  name="owner"
+                  label="Owner name"
+                  type="text"
+                  icon={User}
+                  value={payload.owner}
+                  onChange={(event) =>
+                    handleChange('owner', event.target.value)
+                  }
+                  placeholder="Owner or managing partner"
+                  error={fieldErrors.owner}
+                  required
+                />
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <FieldsetHeading
+                title="Location"
+                description="Printed in the invoice header"
+                icon={<MapPin className="size-3.5" />}
+              />
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <TextField
+                    name="address"
+                    label="Address"
+                    type="text"
+                    icon={MapPin}
+                    autoComplete="street-address"
+                    value={payload.address}
+                    onChange={(event) =>
+                      handleChange('address', event.target.value)
+                    }
+                    placeholder="Street, area and landmark"
+                    error={fieldErrors.address}
+                    required
+                  />
+                </div>
+
+                <TextField
+                  name="city"
+                  label="City"
+                  type="text"
+                  icon={Globe}
+                  autoComplete="address-level2"
+                  value={payload.city}
+                  onChange={(event) => handleChange('city', event.target.value)}
+                  placeholder="City"
+                  error={fieldErrors.city}
+                  required
+                />
+
+                <TextField
+                  name="contact"
+                  label="Contact number"
+                  type="tel"
+                  icon={Phone}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  value={payload.contact}
+                  onChange={(event) =>
+                    handleChange('contact', event.target.value)
+                  }
+                  placeholder="+92 300 0000000"
+                  error={fieldErrors.contact}
+                  required
+                />
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <FieldsetHeading
+                title="Contact"
+                description="Where customers reply about invoices"
+                icon={<ReceiptText className="size-3.5" />}
+              />
+
+              <TextField
+                name="email"
+                label="Email"
+                type="email"
+                icon={Mail}
+                inputMode="email"
+                autoComplete="email"
+                value={payload.email}
+                onChange={(event) => handleChange('email', event.target.value)}
+                placeholder="billing@zamrawater.com"
+                error={fieldErrors.email}
+                required
+              />
+            </section>
+
+            <div className="flex justify-end border-t border-line pt-4">
+              <Button
+                type="submit"
+                label="Save company"
+                loadingLabel="Saving…"
+                loading={loading}
+                icon={<Save className="size-4" />}
+                className="sm:w-auto"
+                fullWidth
               />
             </div>
-
-            <div className="flex flex-col sm:flex-row gap-5">
-              <WaterInputField
-                name="city"
-                label="City"
-                type="text"
-                icon={Globe}
-                value={payload.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-                placeholder="Enter City Name"
-                error={fieldErrors.city}
-              />
-
-              <WaterInputField
-                name="contact"
-                label="Contact"
-                type="text"
-                icon={Phone}
-                value={payload.contact}
-                onChange={(e) => handleChange('contact', e.target.value)}
-                placeholder="Enter Contact Number"
-                error={fieldErrors.contact}
-              />
-            </div>
-
-            <WaterInputField
-              name="address"
-              label="Address"
-              type="text"
-              icon={MapPin}
-              value={payload.address}
-              onChange={(e) => handleChange('address', e.target.value)}
-              placeholder="Enter Company Address"
-              error={fieldErrors.address}
-            />
-
-            <WaterInputField
-              name="email"
-              label="Email"
-              type="email"
-              icon={Mail}
-              value={payload.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="Enter Company Email"
-              error={fieldErrors.email}
-            />
-
-            <Button
-              label={loading ? 'Saving...' : 'Save Company'}
-              type="submit"
-              className="w-full py-3 text-sm sm:text-base"
-              disabled={loading}
-            />
           </form>
-        </div>
-      </main>
-    </div>
+        </CardBody>
+      </Card>
+    </PageContainer>
   );
 }

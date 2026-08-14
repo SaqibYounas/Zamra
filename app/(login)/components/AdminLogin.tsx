@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Lock,
-  ShieldCheck,
-  Factory,
-  CloudRain,
-  Eye,
-  EyeOff,
-} from 'lucide-react';
+import { Eye, EyeOff, Lock, LogIn, Mail } from 'lucide-react';
 
-import WaterInputField from '../../src/components/inputFields/InputField';
-import AppButton from '../../src/components/button/Button';
+import TextField from '../../src/components/ui/TextField';
+import Button from '../../src/components/ui/Button';
+import { Alert } from '../../src/components/ui/Alert';
 import { validateEmail } from '../utils/helpers';
 import { loginUser } from '../services/api';
 
@@ -23,189 +17,138 @@ interface FormState {
   passwordError: string;
 }
 
-export default function AdminForm() {
+const EMPTY_ERRORS = { emailError: '', passwordError: '' };
+
+export default function AdminLogin() {
   const router = useRouter();
 
   const [formState, setFormState] = useState<FormState>({
     email: '',
     password: '',
-    emailError: '',
-    passwordError: '',
+    ...EMPTY_ERRORS,
   });
 
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleChange = (field: keyof FormState, value: string) => {
-    setFormState((prev) => ({
-      ...prev,
+  const handleChange = (field: 'email' | 'password', value: string) => {
+    setFormState((previous) => ({
+      ...previous,
       [field]: value,
-
-      ...(field === 'email' && {
-        emailError: '',
-      }),
-
-      ...(field === 'password' && {
-        passwordError: '',
-      }),
+      [field === 'email' ? 'emailError' : 'passwordError']: '',
     }));
+    setFormError('');
   };
 
-  const submitForm = async () => {
-    let hasError = false;
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    const errors: Partial<FormState> = {};
+    const errors = { ...EMPTY_ERRORS };
 
     if (!formState.email.trim()) {
-      errors.emailError = 'Email is required';
-
-      hasError = true;
+      errors.emailError = 'Email is required.';
     } else if (!validateEmail(formState.email)) {
-      errors.emailError = 'Invalid email';
-
-      hasError = true;
+      errors.emailError = 'Enter a valid email address.';
     }
 
     if (!formState.password.trim()) {
-      errors.passwordError = 'Password is required';
-
-      hasError = true;
+      errors.passwordError = 'Password is required.';
     }
 
-    if (hasError) {
-      setFormState((prev) => ({
-        ...prev,
-        ...errors,
-      }));
-
+    if (errors.emailError || errors.passwordError) {
+      setFormState((previous) => ({ ...previous, ...errors }));
       return;
     }
 
     setLoading(true);
+    setFormError('');
 
     try {
       const login = await loginUser(formState.email, formState.password);
 
       if (login.success) {
         router.push('/dashboard');
-      } else {
-        const message = login.message || '';
+        return;
+      }
 
-        setFormState((prev) => ({
-          ...prev,
-          emailError: message.toLowerCase().includes('email') ? message : '',
+      // Attribute the backend message to a field when it clearly belongs to
+      // one; otherwise surface it once, above the form.
+      const message = login.message || 'Invalid email or password.';
+      const lower = message.toLowerCase();
 
-          passwordError: message.toLowerCase().includes('password')
-            ? message
-            : '',
-        }));
+      setFormState((previous) => ({
+        ...previous,
+        emailError: lower.includes('email') ? message : '',
+        passwordError: lower.includes('password') ? message : '',
+      }));
+
+      if (!lower.includes('email') && !lower.includes('password')) {
+        setFormError(message);
       }
     } catch (error) {
-      const err = error as Error;
-
-      setFormState((prev) => ({
-        ...prev,
-
-        passwordError: err.message || 'Invalid email or password',
-      }));
+      setFormError(
+        (error as Error)?.message || 'Something went wrong. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    await submitForm();
-  };
-
-  useEffect(() => {
-    const handleGlobalEnter = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !loading) {
-        e.preventDefault();
-
-        submitForm();
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalEnter);
-
-    return () => {
-      window.removeEventListener('keydown', handleGlobalEnter);
-    };
-  }, [loading, formState]);
-
   return (
-    <div className="w-full max-w-md sm:max-w-lg mx-auto p-5 sm:p-6 md:p-8 bg-linear-to-br from-slate-900/90 to-slate-800/90 rounded-3xl shadow-xl border border-slate-700/50 relative overflow-hidden">
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-blue-500 to-transparent opacity-20" />
-
-      <div className="flex items-center gap-3 mb-6 sm:mb-8">
-        <div className="p-3 bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-xl">
-          <Factory size={24} />
-        </div>
-
-        <div>
-          <h3 className="text-lg sm:text-xl font-bold text-white">
-            Admin Control
-          </h3>
-
-          <p className="text-xs sm:text-sm text-sky-300  tracking-wider font-medium mt-1">
-            Authorized Personnel Only
-          </p>
-        </div>
+    <div className="surface-panel p-6 sm:p-8">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-ink">Sign in</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          Use your administrator credentials to open the portal.
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
-        <WaterInputField
-          dark
-          label="Email"
-          icon={ShieldCheck}
-          type="text"
-          placeholder="abc@email.com"
+      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        {formError ? <Alert tone="danger">{formError}</Alert> : null}
+
+        <TextField
+          name="email"
+          label="Email address"
+          icon={Mail}
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="admin@zamrawater.com"
           value={formState.email}
-          onChange={(e) => handleChange('email', e.target.value)}
+          onChange={(event) => handleChange('email', event.target.value)}
           error={formState.emailError}
+          required
         />
 
-        <WaterInputField
-          dark
+        <TextField
+          name="password"
           label="Password"
           icon={Lock}
           type={showPassword ? 'text' : 'password'}
+          autoComplete="current-password"
           placeholder="Enter your password"
           value={formState.password}
-          onChange={(e) => handleChange('password', e.target.value)}
-          togglePassword={() => setShowPassword(!showPassword)}
+          onChange={(event) => handleChange('password', event.target.value)}
+          togglePassword={() => setShowPassword((current) => !current)}
           showPassword={showPassword}
           iconToggle={{
-            show: <EyeOff size={18} />,
-            hide: <Eye size={18} />,
+            show: <EyeOff className="size-4" />,
+            hide: <Eye className="size-4" />,
           }}
           error={formState.passwordError}
+          required
         />
 
-        <div className="p-4 bg-slate-700/40 border border-slate-600/40 rounded-2xl">
-          <div className="flex items-center gap-2 text-blue-300 text-sm mb-2">
-            <CloudRain size={16} />
-            <span className="font-medium">System Status</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-xs sm:text-sm text-slate-400">
-              Filtration Units
-            </span>
-
-            <span className="text-xs sm:text-sm font-semibold text-green-400">
-              Online
-            </span>
-          </div>
-        </div>
-
-        <AppButton
+        <Button
           type="submit"
-          label={loading ? 'Logging...' : 'Login'}
+          size="lg"
+          fullWidth
+          label="Sign in"
+          loadingLabel="Signing in…"
           loading={loading}
-          className="w-full h-12 text-sm sm:text-base font-semibold btn-primary text-white shadow-md hover:shadow-lg transition-all duration-200"
+          icon={<LogIn className="size-4" />}
+          className="mt-2"
         />
       </form>
     </div>

@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode } from 'react';
-import RupeesIcon from '@/public/RupeesIcon';
+import type { ReactNode } from 'react';
+import { StatTile, type StatTone } from '@/app/src/components/ui/StatTile';
+import { formatMoney, formatNumber } from '@/app/src/lib/format';
 
 interface StatCardProps {
   label: string;
@@ -9,39 +10,66 @@ interface StatCardProps {
   icon: ReactNode;
   isCurrency?: boolean;
   unit?: string;
-  iconBg?: string;
+  tone?: StatTone;
+  loading?: boolean;
+  /**
+   * Per-bottle-size contribution to this metric. Rendered as a proportional
+   * bar so the headline number also shows *where* it comes from.
+   */
+  breakdown?: Record<string, number>;
 }
 
+/**
+ * Dashboard KPI: the shared StatTile plus an optional bottle-size breakdown.
+ */
 export default function StatCard({
   label,
   value,
   icon,
   isCurrency = false,
   unit = '',
-  iconBg = 'bg-sky-100',
+  tone = 'brand',
+  loading = false,
+  breakdown,
 }: StatCardProps) {
+  const formatted = isCurrency
+    ? formatMoney(value)
+    : `${formatNumber(value)}${unit}`;
+
+  const entries = Object.entries(breakdown ?? {}).filter(
+    ([, amount]) => amount > 0
+  );
+  const total = entries.reduce((sum, [, amount]) => sum + amount, 0);
+
   return (
-    <div className="group ring-1 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <h3 className="mb-2 text-center text-sm font-bold text-slate-700">
-        {label}
-      </h3>
-
-      <div className="flex items-center justify-between">
-        <div
-          className={`flex h-10 w-10 items-center justify-center rounded-xl ${iconBg}`}
-        >
-          {icon}
-        </div>
-
-        <div className="flex items-center gap-1 text-xl font-bold text-blue-400">
-          {isCurrency && <RupeesIcon />}
-          <span>{value.toLocaleString()}</span>
-
-          {!isCurrency && unit && (
-            <span className="text-sm font-medium text-slate-500">{unit}</span>
-          )}
-        </div>
-      </div>
-    </div>
+    <StatTile
+      label={label}
+      value={formatted}
+      icon={icon}
+      tone={tone}
+      loading={loading}
+      footnote={
+        entries.length > 0 && total > 0 ? (
+          <span className="w-full">
+            <span className="flex h-1 w-full overflow-hidden rounded-full bg-surface-sunken">
+              {entries.map(([size, amount], index) => (
+                <span
+                  key={size}
+                  title={`${size}: ${isCurrency ? formatMoney(amount) : formatNumber(amount)}`}
+                  style={{
+                    width: `${(amount / total) * 100}%`,
+                    backgroundColor: `var(--color-series-${(index % 6) + 1})`,
+                  }}
+                />
+              ))}
+            </span>
+            <span className="mt-1.5 block truncate text-ink-faint">
+              Across {entries.length} bottle{' '}
+              {entries.length === 1 ? 'size' : 'sizes'}
+            </span>
+          </span>
+        ) : undefined
+      }
+    />
   );
 }

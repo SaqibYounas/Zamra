@@ -1,44 +1,74 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Sidebar from '../src/components/sidebar/Sidebar';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { usePathname } from 'next/navigation';
+import Sidebar from '../src/components/layout/Sidebar';
+import { TopBar } from '../src/components/layout/TopBar';
 import { ChatbotWidget } from '../src/components/chatbot/ChatbotWidget';
+import { sidebarCollapsed } from '../src/lib/preferences';
 
+/**
+ * Dashboard shell: fixed navigation rail + scrolling content column. Client-side
+ * only because it owns the rail/drawer state; the pages it wraps need not be.
+ */
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Read the persisted rail preference with an explicit server snapshot, so the
+  // prerendered markup and the first client render always agree.
+  const collapsed = useSyncExternalStore(
+    sidebarCollapsed.subscribe,
+    sidebarCollapsed.get,
+    sidebarCollapsed.getServerSnapshot
+  );
+
+  const toggleCollapsed = useCallback(() => sidebarCollapsed.toggle(), []);
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
+
+  // Escape closes the drawer, and the page behind it must not scroll while it
+  // is open. Route changes close it too — the cleanup runs on navigation.
   useEffect(() => {
-    const updateSidebarState = () => {
-      setSidebarOpen(window.innerWidth >= 768);
+    if (!mobileOpen) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileOpen(false);
     };
 
-    updateSidebarState();
-    window.addEventListener('resize', updateSidebarState);
+    document.addEventListener('keydown', onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
-    return () => window.removeEventListener('resize', updateSidebarState);
-  }, []);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [mobileOpen, pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden relative">
+    <div className="min-h-dvh bg-canvas">
       <Sidebar
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        collapsed={collapsed}
+        onToggleCollapsed={toggleCollapsed}
+        mobileOpen={mobileOpen}
+        onCloseMobile={closeMobile}
       />
 
-      <main
-        className={`flex-1 bg-(--color-surface-2) transition-all duration-300 overflow-y-auto ${
-          sidebarOpen ? 'md:pl-64' : 'md:pl-20'
+      <div
+        className={`flex min-h-dvh flex-col transition-[padding] duration-200 ease-out ${
+          collapsed ? 'md:pl-[4.75rem]' : 'md:pl-[16.5rem]'
         }`}
       >
-        {children}
-      </main>
+        <TopBar onOpenMobile={() => setMobileOpen(true)} />
+
+        <main id="main" className="flex-1">
+          {children}
+        </main>
+      </div>
 
       <ChatbotWidget />
     </div>

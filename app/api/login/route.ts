@@ -1,65 +1,93 @@
-import { BACKEND_API } from '../url';
-import axios, { AxiosError } from 'axios';
+import { AxiosError } from 'axios';
 import { NextResponse } from 'next/server';
+import { NO_STORE, postUnauthenticated } from '../_lib/backendClient';
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_AGE,
+  sessionCookieOptions,
+} from '../_lib/session';
+
+/**
+ * Admin sign-in.
+ *
+ * `POST` -> backend `/auth/login`
+ *
+ * On success the backend's access token is stored in an httpOnly cookie; it is
+ * never returned to the browser, so the token cannot be read by client scripts.
+ * This is the one route that runs without an existing session.
+ */
 
 interface LoginRequestBody {
   email?: string;
   password?: string;
 }
 
-interface BackendErrorResponse {
+interface BackendErrorPayload {
   message?: string;
+  error?: string;
 }
 
 export async function POST(request: Request) {
+  const { email, password } = (await request.json()) as LoginRequestBody;
+
+  if (!email?.trim() || !password?.trim()) {
+    return NextResponse.json(
+      { success: false, message: 'Email and password are required.' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const body = (await request.json()) as LoginRequestBody;
-    const { email, password } = body;
-
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
-
-    const response = await axios.post(`${BACKEND_API}/auth/login`, {
+    const { data } = await postUnauthenticated('/auth/login', {
       email,
       password,
     });
 
-    const data = response.data;
+    if (!data?.access_token) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Sign-in succeeded but no session token was returned.',
+        },
+        { status: 502 }
+      );
+    }
 
-    const res = NextResponse.json({
-      success: true,
-      message: 'Welcome back!',
-      user: data.user,
-    });
+    const response = NextResponse.json(
+      { success: true, message: 'Welcome back!', user: data.user },
+      // Carries a session cookie; must never be stored anywhere.
+      { headers: { 'Cache-Control': NO_STORE } }
+    );
 
-    res.cookies.set({
-      name: 'token',
+    response.cookies.set({
+      name: SESSION_COOKIE,
       value: data.access_token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24,
+      maxAge: SESSION_MAX_AGE,
+      ...sessionCookieOptions,
     });
 
-    return res;
+    return response;
   } catch (error) {
-    const axiosError = error as AxiosError<BackendErrorResponse>;
-    const errorMessage =
-      axiosError.response?.data?.message || 'Something went wrong';
+    const axiosError = error as AxiosError<BackendErrorPayload>;
+    const payload = axiosError.response?.data;
 
-    const errorStatus = axiosError.response?.status || 500;
+    // Credentials must never reach the log; the status and reason are enough.
+    console.error(
+      '[api] Sign-in failed:',
+      axiosError.response?.status ?? axiosError.code ?? 'unknown',
+      axiosError.message
+    );
 
     return NextResponse.json(
       {
         success: false,
-        message: errorMessage,
+        message:
+          payload?.message ||
+          payload?.error ||
+          (error as Error).message ||
+          'Sign-in failed. Please check your credentials and try again.',
       },
-      { status: errorStatus }
+      { status: axiosError.response?.status || 502 }
     );
   }
 }

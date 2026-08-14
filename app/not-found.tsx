@@ -1,53 +1,71 @@
-'use client';
-
 import Link from 'next/link';
+import { Compass, Droplets, LayoutDashboard } from 'lucide-react';
+import { NAV_SECTIONS } from './src/lib/navigation';
 
+/** Server component — nothing here is interactive beyond links. */
 export default function NotFoundPage() {
+  const suggestions = NAV_SECTIONS.flatMap((section) => section.items).slice(
+    0,
+    4
+  );
+
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
-      <div className="max-w-3xl w-full rounded-4xl border border-slate-200 bg-white p-10 shadow-xl shadow-slate-200/40">
-        <div className="text-center">
-          <p className="text-teal-600 text-sm font-black uppercase tracking-[0.4em] mb-4">
-            Page Not Found
-          </p>
-          <h1 className="text-5xl sm:text-6xl font-black text-slate-900 mb-5">
-            404
-          </h1>
-          <p className="text-slate-500 text-base sm:text-lg leading-8 max-w-2xl mx-auto">
-            The page you are looking for cannot be found. It may have been moved
-            or removed.
-          </p>
+    <div className="flex min-h-dvh items-center justify-center bg-canvas px-4 py-12">
+      <div className="w-full max-w-xl">
+        <div className="mb-6 flex items-center justify-center gap-2 text-ink-muted">
+          <Droplets className="size-4 text-brand-600" />
+          <span className="text-2xs font-semibold uppercase tracking-[0.14em]">
+            Zamra Water
+          </span>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 mt-10">
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 mb-3">
-              What you can do
-            </h2>
-            <ul className="space-y-2 text-sm text-slate-600">
-              <li>- Check the URL for mistakes</li>
-              <li>- Go back to the dashboard</li>
-              <li>- Refresh the page and try again</li>
-            </ul>
-          </div>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-slate-400 mb-3">
-              Need help?
-            </h2>
-            <p className="text-sm text-slate-600 leading-7">
-              If the issue continues, contact the admin or return to the app
-              home for the latest navigation.
+        <div className="surface-panel p-6 sm:p-8">
+          <div className="text-center">
+            <span className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+              <Compass className="size-6" />
+            </span>
+
+            <p className="mt-4 text-2xs font-semibold uppercase tracking-[0.14em] text-brand-600">
+              Error 404
+            </p>
+
+            <h1 className="mt-1 text-xl font-semibold text-ink sm:text-2xl">
+              We could not find that page
+            </h1>
+
+            <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
+              The link may be out of date or mistyped. Here are the places you
+              are most likely looking for.
             </p>
           </div>
-        </div>
 
-        <div className="mt-10 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-2xl bg-teal-600 px-6 py-3 text-sm font-black uppercase tracking-[0.2em] text-white transition hover:bg-teal-700"
-          >
-            Back to Dashboard
-          </Link>
+          <ul className="mt-6 grid gap-2 sm:grid-cols-2">
+            {suggestions.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="block rounded-card border border-line bg-surface p-3.5 transition-colors hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <span className="block text-sm font-semibold text-ink">
+                    {item.label}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-ink-muted">
+                    {item.description}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-6 flex justify-center">
+            <Link
+              href="/dashboard"
+              className="btn btn-primary h-11 px-4 text-sm"
+            >
+              <LayoutDashboard className="size-4" />
+              Back to dashboard
+            </Link>
+          </div>
         </div>
       </div>
     </div>

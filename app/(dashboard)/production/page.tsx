@@ -1,313 +1,237 @@
 'use client';
 
-import { useState, ChangeEvent, useEffect } from 'react';
-import WaterInputField from '../../src/components/inputFields/InputField';
-import AppButton from '../../src/components/button/Button';
-import Dropdown from '../../src/components/dropdown/Dropdown';
-import { waterTypes } from '../data/waterTypes';
-import { saveStock } from '../services/stockManagement';
-import { showApiToast } from '@/app/src/lib/apiToast';
+import { useMemo, useState } from 'react';
+import { Boxes, Gauge, Layers, PackageCheck, Save } from 'lucide-react';
 
-interface StockFormData {
-  totalPet: string;
-  bottlePerPet: string;
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
+import { Card, CardBody, CardHeader } from '@/app/src/components/ui/Card';
+import { Alert } from '@/app/src/components/ui/Alert';
+import { Badge } from '@/app/src/components/ui/Badge';
+import TextField from '@/app/src/components/ui/TextField';
+import Button from '@/app/src/components/ui/Button';
+import { formatNumber, toNumber } from '@/app/src/lib/format';
+
+import BottleTypeSelector from '../components/BottleTypeSelector';
+import { BOTTLE_TYPES, type BottleType } from '../data/bottleTypes';
+import { saveDailyStock } from '../services/stock';
+
+interface PackagingRule {
+  /** Bottles in one pet/pack; sent to the backend as `bottlePerPet`. */
+  perPet: number;
+  inputLabel: string;
+  unit: string;
+  hint: string;
 }
 
-interface StockMangRequestBody {
-  bottleType: string;
-  totalPet: string;
-  bottlePerPet?: string;
-}
+/**
+ * How each size is counted on the floor. Keyed by the full union, so a new size
+ * is a type error until its rule is defined.
+ */
+const PACKAGING: Record<BottleType, PackagingRule> = {
+  '500ml': {
+    perPet: 12,
+    inputLabel: 'Total pets produced',
+    unit: 'pets',
+    hint: 'One pet contains 12 bottles',
+  },
+  '1.5L': {
+    perPet: 6,
+    inputLabel: 'Total pets produced',
+    unit: 'pets',
+    hint: 'One pet contains 6 bottles',
+  },
+  '5L': {
+    perPet: 4,
+    inputLabel: 'Total bottles produced',
+    unit: 'bottles',
+    hint: 'Counted in packs of 4',
+  },
+  '19L': {
+    perPet: 1,
+    inputLabel: 'Total bottles produced',
+    unit: 'bottles',
+    hint: 'Counted individually',
+  },
+  '19L Refill': {
+    perPet: 1,
+    inputLabel: 'Total refills completed',
+    unit: 'refills',
+    hint: 'Counted individually',
+  },
+};
 
 export default function ProductionPage() {
-  const [type, setType] = useState<string>(waterTypes[0]?.value || '');
-
-  const [formData, setFormData] = useState<StockFormData>({
-    totalPet: '',
-    bottlePerPet: '',
-  });
-
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
+  const [bottleType, setBottleType] = useState<BottleType>(BOTTLE_TYPES[0]);
+  const [quantity, setQuantity] = useState('');
+  const [fieldError, setFieldError] = useState('');
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (field: keyof StockFormData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const packaging = PACKAGING[bottleType];
 
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({
-        ...prev,
-        [field]: '',
-      }));
-    }
+  const totalBottles = useMemo(
+    () => toNumber(quantity) * packaging.perPet,
+    [quantity, packaging.perPet]
+  );
+
+  const handleTypeChange = (value: BottleType) => {
+    setBottleType(value);
+    setQuantity('');
+    setFieldError('');
+    setFormError('');
   };
 
-  const handleTypeChange = (value: string) => {
-    setType(value);
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-    setFormData({
-      totalPet: '',
-      bottlePerPet: '',
-    });
-
-    setFieldErrors({});
-  };
-
-  const renderFields = () => {
-    switch (type) {
-      case '500ml':
-        return (
-          <>
-            <WaterInputField
-              label="Total Pet"
-              type="number"
-              value={formData.totalPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalPet', e.target.value)
-              }
-              placeholder="Enter total pet"
-              error={fieldErrors.totalPet}
-            />
-
-            <WaterInputField
-              label="Bottle per Pet"
-              type="number"
-              value={12}
-              disabled
-              placeholder="Enter bottle per pet"
-              error={fieldErrors.bottlePerPet}
-              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
-                throw new Error('Function not implemented.');
-              }}
-            />
-          </>
-        );
-
-      case '1.5L':
-        return (
-          <>
-            <WaterInputField
-              label="Total Pet"
-              type="number"
-              value={formData.totalPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalPet', e.target.value)
-              }
-              placeholder="Enter total pet"
-              error={fieldErrors.totalPet}
-            />
-
-            <WaterInputField
-              label="Bottle per Pet"
-              type="number"
-              value={6}
-              disabled
-              placeholder="Enter bottle per pet"
-              error={fieldErrors.bottlePerPet}
-              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
-                throw new Error('Function not implemented.');
-              }}
-            />
-          </>
-        );
-
-      case '5L':
-        return (
-          <>
-            <WaterInputField
-              label="Total Bottles"
-              type="number"
-              value={formData.totalPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalPet', e.target.value)
-              }
-              placeholder="Enter total bottles"
-              error={fieldErrors.totalPet}
-            />
-            <WaterInputField
-              label="Bottle per Pet"
-              type="number"
-              value={4}
-              disabled
-              placeholder="Enter bottle per pet"
-              error={fieldErrors.bottlePerPet}
-              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
-                throw new Error('Function not implemented.');
-              }}
-            />
-          </>
-        );
-
-      case '19L':
-        return (
-          <>
-            <WaterInputField
-              label="Total Bottles"
-              type="number"
-              value={formData.totalPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalPet', e.target.value)
-              }
-              placeholder="Enter quantity"
-              error={fieldErrors.totalPet}
-            />
-            <WaterInputField
-              label="Bottle per Pet"
-              type="number"
-              value={1}
-              disabled
-              placeholder="Enter bottle per pet"
-              error={fieldErrors.bottlePerPet}
-              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
-                throw new Error('Function not implemented.');
-              }}
-            />
-          </>
-        );
-
-      case '19L Refill':
-        return (
-          <>
-            <WaterInputField
-              label="Total Refill"
-              type="number"
-              value={formData.totalPet}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleChange('totalPet', e.target.value)
-              }
-              placeholder="Enter refill today"
-              error={fieldErrors.totalPet}
-            />
-            <WaterInputField
-              label="Bottle per Pet"
-              type="number"
-              value={1}
-              disabled
-              placeholder="Enter bottle per pet"
-              error={fieldErrors.bottlePerPet}
-              onChange={function (e: ChangeEvent<HTMLInputElement>): void {
-                throw new Error('Function not implemented.');
-              }}
-            />
-          </>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const submitForm = async () => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.totalPet.trim()) {
-      errors.totalPet = 'Total pet or bottles is required.';
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors);
+    if (!quantity.trim()) {
+      setFieldError(`${packaging.inputLabel} is required.`);
       return;
     }
 
+    if (toNumber(quantity) <= 0) {
+      setFieldError('Enter a quantity greater than zero.');
+      return;
+    }
+
+    setLoading(true);
+    setFieldError('');
+    setFormError('');
+
     try {
-      setLoading(true);
-      setFieldErrors({});
-
-      const payload: StockMangRequestBody = {
-        bottleType: type,
-        totalPet: formData.totalPet,
-        bottlePerPet:
-          type === '500ml'
-            ? '12'
-            : type === '1.5L'
-              ? '6'
-              : type === '5L'
-                ? '4'
-                : '1',
-      };
-
-      const response = await saveStock(payload);
+      // `saveDailyStock` requests a toast on the response, so success and
+      // API-side failures are announced once, globally — no local duplicate.
+      const response = await saveDailyStock({
+        bottleType,
+        totalPet: quantity,
+        bottlePerPet: String(packaging.perPet),
+      });
 
       if (response?.success === false) {
-        showApiToast(
-          response.message || 'Failed to update stock information.',
-          'error'
+        setFormError(
+          response.message || 'Production could not be saved. Try again.'
         );
-      } else {
-        showApiToast('Stock updated successfully.', 'success');
-
-        setFormData({
-          totalPet: '',
-          bottlePerPet: '',
-        });
+        return;
       }
-    } catch (err) {
-      const errorObject = err as Error;
 
-      showApiToast(
-        errorObject.message || 'An unexpected error occurred.',
-        'error'
+      setQuantity('');
+    } catch (error) {
+      setFormError(
+        (error as Error)?.message || 'An unexpected error occurred.'
       );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    await submitForm();
-  };
-
-  useEffect(() => {
-    const handleGlobalEnter = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !loading) {
-        e.preventDefault();
-
-        submitForm();
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalEnter);
-
-    return () => {
-      window.removeEventListener('keydown', handleGlobalEnter);
-    };
-  }, [loading, formData]);
-
   return (
-    <div className="min-h-screen ">
-      <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full bg-gray-50 ring-1 shadow-lg rounded-2xl p-6 md:p-10 flex flex-col gap-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-center">
-            Production
-          </h1>
+    <PageContainer width="form">
+      <PageHeader
+        eyebrow="Operations"
+        title="Production"
+        description="Log today's bottling output. Quantities feed straight into stock levels, cost totals and the monthly records."
+      />
 
-          <form onSubmit={handleSubmit} className="flex flex-col">
-            <Dropdown
-              label="Select Bottle Type"
-              options={waterTypes}
-              value={type}
+      <Card as="section">
+        <CardHeader
+          title="Log production"
+          description="Pick a bottle size, then enter how much was produced"
+          icon={<Gauge className="size-4" />}
+        />
+
+        <CardBody>
+          <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            {formError ? <Alert tone="danger">{formError}</Alert> : null}
+
+            <BottleTypeSelector
+              value={bottleType}
               onChange={handleTypeChange}
+              caption={(bottle) =>
+                PACKAGING[bottle].perPet > 1
+                  ? `${PACKAGING[bottle].perPet} per pet`
+                  : 'Single unit'
+              }
             />
 
-            <div className="flex flex-col gap-5 mb-6 [&>div]:m-0 [&>div]:p-0">
-              {renderFields()}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextField
+                name="quantity"
+                label={packaging.inputLabel}
+                hint={packaging.hint}
+                icon={Boxes}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={quantity}
+                onChange={(event) => {
+                  setQuantity(event.target.value);
+                  setFieldError('');
+                }}
+                placeholder="0"
+                suffix={packaging.unit}
+                error={fieldError}
+                required
+              />
+
+              <TextField
+                name="bottlePerPet"
+                label="Bottles per pet"
+                hint="Fixed by bottle size"
+                icon={Layers}
+                type="number"
+                value={packaging.perPet}
+                onChange={() => {}}
+                readOnly
+                disabled
+              />
             </div>
 
-            <AppButton
-              type="submit"
-              label={loading ? 'Saving...' : 'Save Production'}
-              loading={loading}
-              disabled={loading}
-              className="w-full py-3 text-sm sm:text-base mt-2"
-            />
+            {/* Confirms what will actually be added to stock. */}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-field border border-line bg-surface-sunken px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-8 items-center justify-center rounded-field bg-brand-50 text-brand-600">
+                  <PackageCheck className="size-4" />
+                </span>
+                <div>
+                  <p className="text-2xs font-semibold uppercase tracking-wide text-ink-muted">
+                    Adds to stock
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink-faint">
+                    {quantity
+                      ? `${formatNumber(quantity)} ${packaging.unit}`
+                      : '—'}
+                    {packaging.perPet > 1 ? ` × ${packaging.perPet}` : ''}
+                  </p>
+                </div>
+              </div>
+
+              <p className="tabular text-xl font-semibold text-ink">
+                {formatNumber(totalBottles)}{' '}
+                <span className="text-xs font-medium text-ink-muted">
+                  bottles
+                </span>
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <Badge tone="neutral">Recorded against today&apos;s date</Badge>
+
+              <Button
+                type="submit"
+                label="Save production"
+                loadingLabel="Saving…"
+                loading={loading}
+                icon={<Save className="size-4" />}
+                className="sm:w-auto"
+                fullWidth
+              />
+            </div>
           </form>
-        </div>
-      </main>
-    </div>
+        </CardBody>
+      </Card>
+    </PageContainer>
   );
 }

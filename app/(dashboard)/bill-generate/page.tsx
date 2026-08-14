@@ -1,18 +1,27 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+
+import {
+  PageContainer,
+  PageHeader,
+} from '@/app/src/components/layout/PageShell';
+import { Badge } from '@/app/src/components/ui/Badge';
 import { InvoiceTemplate } from './components/InvoiceTemplate';
+import InvoicePreviewModal from './components/InvoicePreviewModal';
 import {
   InvoiceForm,
   LOGISTIC_FIELDS,
   FormStatus,
   DropdownState,
 } from './components/InvoiceForm';
-import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../types/types';
-import { fetchCustomers } from '../services/getCustomers';
-import { fetchShipping } from '../services/getShipping';
-import { submitInvoice } from '../services/submitInvoice';
-import { currentSellingPrice } from '../services/sellingPrice';
+import { InvoiceData, ObjectSectionKey, InvoiceItem } from '../types/invoice';
+import { fetchCustomers } from '../services/customers';
+import { fetchShippingAddresses } from '../services/customers';
+import { createInvoice } from '../services/invoices';
+import { fetchActiveSellingPrices } from '../services/sellingPrices';
+import { toNumber } from '@/app/src/lib/format';
+import type { SellingPriceRecord } from '../types/prices';
 
 type CustomerApiResponse = {
   id: number;
@@ -33,7 +42,23 @@ type ShippingApiResponse = {
 };
 
 const todayISO = () => new Date().toISOString().split('T')[0];
-const generateInvoiceNo = () => `ZAM-${Date.now()}`;
+
+/** Short, human-readable reference: ZAM- plus the last 6 digits of the clock. */
+const generateInvoiceNo = () => `ZAM-${String(Date.now()).slice(-6)}`;
+
+const blankItem = (id: number, index: number): InvoiceItem => ({
+  id,
+  no: String(index),
+  description: '',
+  bottleType: '',
+  qty: 1,
+  unitPrice: 0,
+});
+
+/**
+ * A fresh invoice, empty apart from the plant's own details. The date and
+ * invoice number are filled on mount; from the clock during render they'd differ.
+ */
 const initialInvoiceData: InvoiceData = {
   companyInfo: {
     name: 'Zamra Water Planet',
@@ -43,64 +68,23 @@ const initialInvoiceData: InvoiceData = {
     email: 'hello@zamrawater.com',
     poc: 'Sufyan Malik',
   },
-  meta: {
-    date: todayISO(),
-    invoiceNo: generateInvoiceNo().slice(0, 9),
-  },
-  billTo: {
-    attn: 'Accounts Dept',
-    name: 'Client Company Pvt Ltd',
-    address: '456 Gulberg Main Boulevard',
-    city: 'Lahore',
-    phone: '042-3571122',
-    email: 'billing@clientcompany.com',
-  },
-  shipTo: {
-    attn: 'Store Manager',
-    name: 'Client Company Warehouse',
-    address: 'Plot 12, Sundar Industrial Estate',
-    city: 'Lahore',
-    phone: '042-3571123',
-  },
+  meta: { date: '', invoiceNo: '' },
+  billTo: { attn: '', name: '', address: '', city: '', phone: '', email: '' },
+  shipTo: { attn: '', name: '', address: '', city: '', phone: '' },
   logisticInfo: {
-    poNo: 'PO-998',
-    shipDate: todayISO(),
-    shipVia: 'Company Van',
-    salesperson: 'Admin',
-    fob: 'Destination',
-    terms: 'Net 30',
+    poNo: '',
+    shipDate: '',
+    shipVia: '',
+    salesperson: '',
+    fob: '',
+    terms: '',
   },
-  items: [
-    {
-      id: 1,
-      no: '1',
-      description: '500ml Premium Bottle (Box of 24)',
-      qty: 10,
-      unitPrice: 50.0,
-      bottleType: '',
-    },
-    {
-      id: 2,
-      no: '2',
-      description: '1.5L Premium Bottle (Box of 12)',
-      qty: 5,
-      unitPrice: 80.0,
-      bottleType: '',
-    },
-    {
-      id: 3,
-      no: '3',
-      description: '19L Corporate Water Gallon',
-      qty: 2,
-      unitPrice: 250.0,
-      bottleType: '',
-    },
-  ],
-  previousDue: 1500,
-  payment: { paidAmount: 1000 },
-  taxRate: 3.8,
-  shipping: 120,
-  other: 50,
+  items: [blankItem(1, 1)],
+  previousDue: 0,
+  payment: { paidAmount: 0 },
+  taxRate: 0,
+  shipping: 0,
+  other: 0,
 };
 
 const initialStatus: FormStatus = {
@@ -110,6 +94,7 @@ const initialStatus: FormStatus = {
   successMessage: '',
   fieldErrors: {},
 };
+
 const initialDropdowns: DropdownState = {
   customers: [],
   shippingProfiles: [],
@@ -122,46 +107,49 @@ const initialDropdowns: DropdownState = {
   error: '',
 };
 
-interface sellingPriceRequestBody {
-  sellingPrice: string;
-  priceManagementId: number;
-  priceManagement: {
-    bottleType: string;
-  };
-}
-
 export default function InvoiceFormDashboard() {
   const [invoiceData, setInvoiceData] =
     useState<InvoiceData>(initialInvoiceData);
   const [status, setStatus] = useState<FormStatus>(initialStatus);
   const [dropdowns, setDropdowns] = useState<DropdownState>(initialDropdowns);
-  const [prices, setPrices] = useState<sellingPriceRequestBody[]>([]);
+  const [prices, setPrices] = useState<SellingPriceRecord[]>([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const patchStatus = useCallback((patch: Partial<FormStatus>) => {
-    setStatus((prev) => ({ ...prev, ...patch }));
-  }, []);
-
-  async function getPrices() {
-    try {
-      const sellingprice = await currentSellingPrice();
-      const priceData = sellingprice.data;
-      const normalizedPrices = Array.isArray(priceData)
-        ? priceData
-        : priceData
-          ? [priceData]
-          : [];
-      setPrices(normalizedPrices);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  useEffect(() => {
-    getPrices();
+    setStatus((previous) => ({ ...previous, ...patch }));
   }, []);
 
   const patchDropdowns = useCallback((patch: Partial<DropdownState>) => {
-    setDropdowns((prev) => ({ ...prev, ...patch }));
+    setDropdowns((previous) => ({ ...previous, ...patch }));
+  }, []);
+
+  // Clock-derived defaults, applied after hydration: computing them during
+  // render would make the server and browser markup disagree.
+  useEffect(() => {
+    setInvoiceData((previous) => ({
+      ...previous,
+      meta: {
+        date: previous.meta.date || todayISO(),
+        invoiceNo: previous.meta.invoiceNo || generateInvoiceNo(),
+      },
+      logisticInfo: {
+        ...previous.logisticInfo,
+        shipDate: previous.logisticInfo.shipDate || todayISO(),
+      },
+    }));
+  }, []);
+
+  useEffect(() => {
+    async function loadPrices() {
+      try {
+        const rates = await fetchActiveSellingPrices();
+        setPrices(Array.isArray(rates) ? rates : []);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    loadPrices();
   }, []);
 
   const handleCustomerDropdownOpen = useCallback(async () => {
@@ -174,20 +162,20 @@ export default function InvoiceFormDashboard() {
         : [];
 
       patchDropdowns({
-        customers: customerData.map((c: CustomerApiResponse) => ({
-          id: c.id,
-          name: c.companyName,
-          attn: c.attentionPoc,
-          address: c.mailingAddress,
-          city: c.city,
-          phone: c.phone,
-          email: c.email,
+        customers: customerData.map((customer: CustomerApiResponse) => ({
+          id: customer.id,
+          name: customer.companyName,
+          attn: customer.attentionPoc,
+          address: customer.mailingAddress,
+          city: customer.city,
+          phone: customer.phone,
+          email: customer.email,
         })),
         customersLoaded: true,
       });
     } catch (error) {
       console.error(error);
-      patchDropdowns({ error: 'Could not load saved customers.' });
+      patchDropdowns({ error: 'Saved customers could not be loaded.' });
     } finally {
       patchDropdowns({ customersLoading: false });
     }
@@ -197,25 +185,25 @@ export default function InvoiceFormDashboard() {
     patchDropdowns({ shippingLoading: true, error: '' });
 
     try {
-      const shippingResponse = await fetchShipping();
+      const shippingResponse = await fetchShippingAddresses();
       const shippingData = Array.isArray(shippingResponse)
         ? shippingResponse
         : [];
 
       patchDropdowns({
-        shippingProfiles: shippingData.map((s: ShippingApiResponse) => ({
-          id: s.id,
-          name: s.warehouseName,
-          attn: s.attentionTo,
-          address: s.deliveryAddress,
+        shippingProfiles: shippingData.map((profile: ShippingApiResponse) => ({
+          id: profile.id,
+          name: profile.warehouseName,
+          attn: profile.attentionTo,
+          address: profile.deliveryAddress,
           city: '',
-          phone: s.phone,
+          phone: profile.phone,
         })),
         shippingLoaded: true,
       });
     } catch (error) {
       console.error(error);
-      patchDropdowns({ error: 'Could not load saved warehouses.' });
+      patchDropdowns({ error: 'Saved warehouses could not be loaded.' });
     } finally {
       patchDropdowns({ shippingLoading: false });
     }
@@ -223,9 +211,9 @@ export default function InvoiceFormDashboard() {
 
   const handleInputChange = useCallback(
     (section: ObjectSectionKey, field: string, value: string | number) => {
-      setInvoiceData((prev) => ({
-        ...prev,
-        [section]: { ...prev[section], [field]: value },
+      setInvoiceData((previous) => ({
+        ...previous,
+        [section]: { ...previous[section], [field]: value },
       }));
     },
     []
@@ -236,7 +224,7 @@ export default function InvoiceFormDashboard() {
       field: 'taxRate' | 'shipping' | 'other' | 'previousDue',
       value: number
     ) => {
-      setInvoiceData((prev) => ({ ...prev, [field]: value }));
+      setInvoiceData((previous) => ({ ...previous, [field]: value }));
     },
     []
   );
@@ -247,15 +235,10 @@ export default function InvoiceFormDashboard() {
       field: keyof Omit<InvoiceItem, 'id'>,
       value: string | number
     ) => {
-      setInvoiceData((prev) => ({
-        ...prev,
-        items: prev.items.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                [field]: value,
-              }
-            : item
+      setInvoiceData((previous) => ({
+        ...previous,
+        items: previous.items.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item
         ),
       }));
     },
@@ -263,25 +246,23 @@ export default function InvoiceFormDashboard() {
   );
 
   const addItem = useCallback(() => {
-    setInvoiceData((prev) => ({
-      ...prev,
+    setInvoiceData((previous) => ({
+      ...previous,
       items: [
-        ...prev.items,
-        {
-          id: Date.now(),
-          no: (prev.items.length + 1).toString(),
-          description: '',
-          bottleType: '',
-          qty: 1,
-          unitPrice: 0,
-        },
+        ...previous.items,
+        blankItem(
+          // Monotonic id that cannot collide with the seeded first row.
+          Math.max(0, ...previous.items.map((item) => item.id)) + 1,
+          previous.items.length + 1
+        ),
       ],
     }));
   }, []);
+
   const removeItem = useCallback((id: number) => {
-    setInvoiceData((prev) => ({
-      ...prev,
-      items: prev.items.filter((item) => item.id !== id),
+    setInvoiceData((previous) => ({
+      ...previous,
+      items: previous.items.filter((item) => item.id !== id),
     }));
   }, []);
 
@@ -290,28 +271,22 @@ export default function InvoiceFormDashboard() {
       patchDropdowns({ selectedShippingId: id });
 
       if (!id) {
-        setInvoiceData((prev) => ({
-          ...prev,
-          shipTo: {
-            attn: '',
-            name: '',
-            address: '',
-            city: '',
-            phone: '',
-          },
+        setInvoiceData((previous) => ({
+          ...previous,
+          shipTo: { attn: '', name: '', address: '', city: '', phone: '' },
         }));
         return;
       }
 
       const profile = dropdowns.shippingProfiles.find(
-        (s) => s.id.toString() === id
+        (entry) => entry.id.toString() === id
       );
       if (!profile) return;
 
       patchStatus({ isShippingSame: false });
 
-      setInvoiceData((prev) => ({
-        ...prev,
+      setInvoiceData((previous) => ({
+        ...previous,
         shipTo: {
           attn: profile.attn || '',
           name: profile.name || '',
@@ -329,8 +304,8 @@ export default function InvoiceFormDashboard() {
       patchDropdowns({ selectedCustomerId: id });
 
       if (!id) {
-        setInvoiceData((prev) => ({
-          ...prev,
+        setInvoiceData((previous) => ({
+          ...previous,
           billTo: {
             attn: '',
             name: '',
@@ -344,12 +319,12 @@ export default function InvoiceFormDashboard() {
       }
 
       const customer = dropdowns.customers.find(
-        (customer) => customer.id.toString() === id
+        (entry) => entry.id.toString() === id
       );
       if (!customer) return;
 
-      setInvoiceData((prev) => ({
-        ...prev,
+      setInvoiceData((previous) => ({
+        ...previous,
         billTo: {
           attn: customer.attn || '',
           name: customer.name || '',
@@ -363,86 +338,112 @@ export default function InvoiceFormDashboard() {
     [dropdowns.customers, patchDropdowns]
   );
 
+  // Mirror billing into shipping while the toggle is on.
   useEffect(() => {
     if (!status.isShippingSame) return;
-    setInvoiceData((prev) => ({
-      ...prev,
+
+    setInvoiceData((previous) => ({
+      ...previous,
       shipTo: {
-        attn: prev.billTo.attn,
-        name: prev.billTo.name,
-        address: prev.billTo.address,
-        city: prev.billTo.city,
-        phone: prev.billTo.phone,
+        attn: previous.billTo.attn,
+        name: previous.billTo.name,
+        address: previous.billTo.address,
+        city: previous.billTo.city,
+        phone: previous.billTo.phone,
       },
     }));
   }, [status.isShippingSame, invoiceData.billTo]);
 
-  const subtotal = invoiceData.items.reduce(
-    (acc, item) => acc + item.qty * item.unitPrice,
-    0
-  );
-  const taxAmount = (subtotal * invoiceData.taxRate) / 100;
-  const totalAmount =
-    subtotal +
-    taxAmount +
-    Number(invoiceData.shipping) +
-    Number(invoiceData.other) +
-    Number(invoiceData.previousDue);
-  const balanceDue = Math.max(
-    0,
-    totalAmount - Number(invoiceData.payment.paidAmount)
-  );
+  const totals = useMemo(() => {
+    const subtotal = invoiceData.items.reduce(
+      (sum, item) => sum + toNumber(item.qty) * toNumber(item.unitPrice),
+      0
+    );
+    const taxAmount = (subtotal * toNumber(invoiceData.taxRate)) / 100;
+    const totalAmount =
+      subtotal +
+      taxAmount +
+      toNumber(invoiceData.shipping) +
+      toNumber(invoiceData.other) +
+      toNumber(invoiceData.previousDue);
 
-  const handleValidationAndPrint = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (typeof window === 'undefined') return;
+    return {
+      subtotal,
+      taxAmount,
+      totalAmount,
+      balanceDue: Math.max(
+        0,
+        totalAmount - toNumber(invoiceData.payment.paidAmount)
+      ),
+    };
+  }, [invoiceData]);
 
+  /**
+   * Checks the form and reports what is missing. Separate from submission so the
+   * preview runs the same checks.
+   */
+  const validate = (): boolean => {
     patchStatus({ error: '', successMessage: '' });
 
     const localErrors: Record<string, string> = {};
+
     if (!invoiceData.meta.invoiceNo)
-      localErrors.invoiceNo = 'Invoice ID Tracking Number is required.';
+      localErrors.invoiceNo = 'Invoice number is required.';
     if (!invoiceData.billTo.name)
-      localErrors.name = 'Company Name field is required.';
-    if (!invoiceData.billTo.phone)
-      localErrors.phone = 'Phone Line is required.';
+      localErrors.name = 'Company name is required.';
+    if (!invoiceData.billTo.phone) localErrors.phone = 'Phone is required.';
     if (!invoiceData.billTo.address)
-      localErrors.address = 'Mailing Address is required.';
-    if (!invoiceData.billTo.city)
-      localErrors.city = 'City context parameter is required.';
-    if (!invoiceData.billTo.email)
-      localErrors.email = 'Email Desk address is required.';
+      localErrors.address = 'Mailing address is required.';
+    if (!invoiceData.billTo.city) localErrors.city = 'City is required.';
+    if (!invoiceData.billTo.email) localErrors.email = 'Email is required.';
 
     if (Object.keys(localErrors).length > 0) {
       patchStatus({
         fieldErrors: localErrors,
-        error: 'Please fix the empty parameters marked below.',
+        error: 'Please complete the highlighted fields.',
       });
 
-      const firstEmptyFieldKey = Object.keys(localErrors)[0];
+      const firstField = Object.keys(localErrors)[0];
       setTimeout(() => {
-        const inputElement = document.querySelector(
-          `input[name="${firstEmptyFieldKey}"]`
-        ) as HTMLInputElement;
-        inputElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        inputElement?.focus();
+        const input = document.querySelector(
+          `input[name="${firstField}"]`
+        ) as HTMLInputElement | null;
+        input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input?.focus();
       }, 100);
-      return;
+      return false;
     }
 
-    if (invoiceData.items.length === 0 || !invoiceData.items[0].description) {
+    const billableItems = invoiceData.items.filter(
+      (item) => item.description.trim() && toNumber(item.qty) > 0
+    );
+
+    if (billableItems.length === 0) {
       patchStatus({
         error:
-          'Please append at least one valid row item description parameter.',
+          'Add at least one line item with a description and a quantity above zero.',
       });
-      return;
+      return false;
     }
 
-    patchStatus({
-      fieldErrors: {},
-      successMessage: 'Invoice parameters validated. Loading libraries...',
-      isPrinting: true,
-    });
+    patchStatus({ fieldErrors: {} });
+    return true;
+  };
+
+  /** Opens the preview, but only once the invoice would actually be savable. */
+  const handlePreview = () => {
+    if (validate()) setPreviewOpen(true);
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (validate()) void saveAndDownload();
+  };
+
+  const saveAndDownload = async () => {
+    if (typeof window === 'undefined') return;
+
+    patchStatus({ isPrinting: true });
 
     try {
       const payload = {
@@ -472,38 +473,27 @@ export default function InvoiceFormDashboard() {
         miscCharges: invoiceData.other,
         previousDueArrears: invoiceData.previousDue,
         amountPaid: invoiceData.payment.paidAmount,
-        subtotal,
-        taxAmount,
-        totalAmount,
-        balanceDue,
+        subtotal: totals.subtotal,
+        taxAmount: totals.taxAmount,
+        totalAmount: totals.totalAmount,
+        balanceDue: totals.balanceDue,
         items: invoiceData.items.map((item, index) => ({
           itemCode: item.no,
           description: item.description,
           bottleType: item.bottleType,
-          qty: item.qty,
-          rate: item.unitPrice,
+          qty: toNumber(item.qty),
+          rate: toNumber(item.unitPrice),
           sortOrder: index + 1,
         })),
       };
 
-      const submitResponse = await submitInvoice(payload);
-      if (
-        submitResponse?.success === false ||
-        submitResponse?.status >= 400 ||
-        (submitResponse?.status === undefined &&
-          submitResponse?.success === false)
-      ) {
+      const submitResponse = await createInvoice(payload);
+
+      if (!submitResponse.success) {
         throw new Error(submitResponse.message || 'Invoice submission failed.');
       }
 
-      patchStatus({ successMessage: 'Invoice saved successfully!' });
-      setInvoiceData((prev) => ({
-        ...prev,
-        meta: {
-          ...prev.meta,
-          invoiceNo: generateInvoiceNo(),
-        },
-      }));
+      patchStatus({ successMessage: 'Invoice saved. Preparing your PDF…' });
 
       const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
         import('jspdf'),
@@ -513,12 +503,14 @@ export default function InvoiceFormDashboard() {
       const source = document.getElementById('invoice-doc');
       if (!source) {
         patchStatus({
-          error: 'Invoice layout DOM not found.',
+          error: 'The invoice layout could not be found for export.',
           isPrinting: false,
         });
         return;
       }
 
+      // Render an off-screen clone at a fixed A4-ish width so the PDF is not
+      // affected by the current viewport size.
       const clone = source.cloneNode(true) as HTMLElement;
       clone.classList.remove('hidden');
       clone.style.position = 'absolute';
@@ -534,36 +526,53 @@ export default function InvoiceFormDashboard() {
       host.appendChild(clone);
       document.body.appendChild(host);
 
-      const canvas = await html2canvas(clone, {
-        scale: 2.2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
+      try {
+        const canvas = await html2canvas(clone, {
+          scale: 2.2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
 
-      const imgWidth = pdf.internal.pageSize.getWidth() - 20;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        });
 
-      pdf.addImage(
-        canvas.toDataURL('image/jpeg', 1.0),
-        'JPEG',
-        10,
-        10,
-        imgWidth,
-        imgHeight
-      );
-      pdf.save(`Invoice_${invoiceData.meta.invoiceNo}.pdf`);
+        const imgWidth = pdf.internal.pageSize.getWidth() - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      patchStatus({ successMessage: 'Invoice downloaded successfully!' });
-      document.body.removeChild(host);
-    } catch (e) {
-      console.error(e);
+        pdf.addImage(
+          canvas.toDataURL('image/jpeg', 1.0),
+          'JPEG',
+          10,
+          10,
+          imgWidth,
+          imgHeight
+        );
+        pdf.save(`Invoice_${invoiceData.meta.invoiceNo}.pdf`);
+      } finally {
+        // Always clean up the off-screen host, even if rendering threw.
+        document.body.removeChild(host);
+      }
+
       patchStatus({
-        error: 'Failed to render standard PDF template binaries.',
+        successMessage: `Invoice ${invoiceData.meta.invoiceNo} saved and downloaded.`,
+      });
+
+      setPreviewOpen(false);
+
+      // Start the next invoice with a fresh number.
+      setInvoiceData((previous) => ({
+        ...previous,
+        meta: { ...previous.meta, invoiceNo: generateInvoiceNo() },
+      }));
+    } catch (error) {
+      console.error(error);
+      patchStatus({
+        error:
+          (error as Error)?.message ||
+          'The invoice could not be saved or exported.',
       });
     } finally {
       patchStatus({ isPrinting: false });
@@ -571,16 +580,34 @@ export default function InvoiceFormDashboard() {
   };
 
   return (
-    <>
+    <PageContainer>
+      <PageHeader
+        eyebrow="Billing"
+        title="New invoice"
+        description="Build a customer invoice from live selling prices, save it to your records and download a PDF copy."
+        meta={
+          <>
+            {invoiceData.meta.invoiceNo ? (
+              <Badge tone="brand">#{invoiceData.meta.invoiceNo}</Badge>
+            ) : null}
+            <Badge tone="neutral">
+              {prices.length > 0
+                ? `${prices.length} active rate${prices.length === 1 ? '' : 's'} available`
+                : 'No active selling rates found'}
+            </Badge>
+          </>
+        }
+      />
+
       <InvoiceForm
         invoiceData={invoiceData}
         status={status}
         dropdowns={dropdowns}
-        balanceDue={balanceDue}
+        totals={totals}
         onShippingSameToggle={() =>
           patchStatus({ isShippingSame: !status.isShippingSame })
         }
-        todayPrices={prices ?? []}
+        todayPrices={prices}
         onCustomerSelect={handleCustomerSelect}
         onShippingSelect={handleShippingSelect}
         onCustomerDropdownOpen={handleCustomerDropdownOpen}
@@ -590,19 +617,36 @@ export default function InvoiceFormDashboard() {
         onAddItem={addItem}
         onRemoveItem={removeItem}
         onLedgerChange={handleLedgerChange}
-        onSubmit={handleValidationAndPrint}
+        onSubmit={handleSubmit}
+        onPreview={handlePreview}
       />
 
-      <div className="hidden">
+      <InvoicePreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        onConfirm={() => void saveAndDownload()}
+        submitting={status.isPrinting}
+        invoiceData={invoiceData}
+        logisticFields={LOGISTIC_FIELDS}
+        subtotal={totals.subtotal}
+        taxAmount={totals.taxAmount}
+        totalAmount={totals.totalAmount}
+        balanceDue={totals.balanceDue}
+      />
+
+      {/* Print template: rendered off-screen and cloned for the PDF export.
+          This is the copy that owns the `invoice-doc` id. */}
+      <div className="hidden" aria-hidden>
         <InvoiceTemplate
+          domId="invoice-doc"
           invoiceData={invoiceData}
           logisticFields={LOGISTIC_FIELDS}
-          subtotal={subtotal}
-          taxAmount={taxAmount}
-          totalAmount={totalAmount}
-          balanceDue={balanceDue}
+          subtotal={totals.subtotal}
+          taxAmount={totals.taxAmount}
+          totalAmount={totals.totalAmount}
+          balanceDue={totals.balanceDue}
         />
       </div>
-    </>
+    </PageContainer>
   );
 }

@@ -1,278 +1,424 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
   Download,
+  FileSpreadsheet,
+  Layers,
+  Receipt,
+  TrendingUp,
 } from 'lucide-react';
 
-import { fetchMonthlyTimeline } from './getTimeline';
+import { Card, CardBody, CardHeader } from '@/app/src/components/ui/Card';
+import { StatTile } from '@/app/src/components/ui/StatTile';
+import { Badge } from '@/app/src/components/ui/Badge';
+import { MonthPager } from '@/app/src/components/ui/MonthPager';
+import { Alert } from '@/app/src/components/ui/Alert';
 import {
-  BOTTLE_SIZES,
+  EmptyState,
+  ErrorState,
+} from '@/app/src/components/ui/StatePlaceholders';
+import {
+  SkeletonStatTiles,
+  SkeletonTable,
+} from '@/app/src/components/ui/Skeleton';
+import Button from '@/app/src/components/ui/Button';
+import Dropdown from '@/app/src/components/ui/Dropdown';
+import { formatMoney, formatNumber, monthLabelFor } from '@/app/src/lib/format';
+
+import { exportToCSV } from '../../utils/csvExport';
+import { useAsyncData } from '../../hooks/useAsyncData';
+import {
+  fetchMonthlyTimeline,
+  TIMELINE_IS_PLACEHOLDER,
+} from '../../services/monthlyTimeline';
+import {
+  BOTTLE_TYPES,
+  BottleType,
   CURRENCY_METRICS,
   METRIC_LABELS,
   TIMELINE_METRICS,
   TimelineDay,
+  TimelineMetricKey,
   metricValue,
-  monthLabel,
-} from './timelineTypes';
+} from '../../types/timeline';
 import { downloadTimelinePdf } from './exportTimelinePdf';
 
-function formatCell(value: number, metric: (typeof TIMELINE_METRICS)[number]) {
+const ALL_SIZES = 'all';
+
+const SIZE_OPTIONS = [
+  { label: 'All bottle sizes', value: ALL_SIZES },
+  ...BOTTLE_TYPES.map((size) => ({ label: size, value: size })),
+];
+
+function formatCell(value: number, metric: TimelineMetricKey) {
   return CURRENCY_METRICS.has(metric)
-    ? `Rs ${value.toLocaleString()}`
-    : value.toLocaleString();
+    ? formatMoney(value)
+    : formatNumber(value);
 }
 
+/**
+ * Month-scoped ledger, five metrics per bottle size. The size filter exists
+ * because the full matrix is 25 columns wide and unreadable below desktop.
+ */
 export default function TimelineTable() {
   const now = useMemo(() => new Date(), []);
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [days, setDays] = useState<TimelineDay[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const [period, setPeriod] = useState({
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+  });
+  const [size, setSize] = useState<string>(ALL_SIZES);
   const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  /**
+   * Keyed on the period, so switching months reports `loading` and shows the
+   * skeleton straight away, while the retry button refetches the same month.
+   */
+  const ledger = useAsyncData<TimelineDay[]>(
+    async () => {
+      try {
+        return await fetchMonthlyTimeline(period.year, period.month);
+      } catch {
+        return {
+          success: false as const,
+          message: 'These records could not be loaded. Please try again.',
+        };
+      }
+    },
+    { key: `${period.year}-${period.month}` }
+  );
+
+  const days = ledger.data ?? [];
+  const { loading, error } = ledger;
 
   const isCurrentMonth =
-    year === now.getFullYear() && month === now.getMonth() + 1;
+    period.year === now.getFullYear() && period.month === now.getMonth() + 1;
 
-  useEffect(() => {
-    let mounted = true;
+  const label = monthLabelFor(period.year, period.month);
 
-    setLoading(true);
-    setError(null);
+  const goToPrevMonth = () =>
+    setPeriod((current) =>
+      current.month === 1
+        ? { year: current.year - 1, month: 12 }
+        : { year: current.year, month: current.month - 1 }
+    );
 
-    fetchMonthlyTimeline(year, month)
-      .then((data) => {
-        if (mounted) setDays(data);
-      })
-      .catch(() => {
-        if (mounted) {
-          setError('Could not load the timeline. Try again.');
-        }
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, [year, month]);
-
-  function goToPrevMonth() {
-    if (month === 1) {
-      setYear((y) => y - 1);
-      setMonth(12);
-    } else {
-      setMonth((m) => m - 1);
-    }
-  }
-
-  function goToNextMonth() {
+  const goToNextMonth = () => {
     if (isCurrentMonth) return;
 
-    if (month === 12) {
-      setYear((y) => y + 1);
-      setMonth(1);
-    } else {
-      setMonth((m) => m + 1);
-    }
-  }
+    setPeriod((current) =>
+      current.month === 12
+        ? { year: current.year + 1, month: 1 }
+        : { year: current.year, month: current.month + 1 }
+    );
+  };
 
-  async function handleExport() {
+  /** Bottle types the table is currently showing columns for. */
+  const visibleTypes: readonly BottleType[] =
+    size === ALL_SIZES ? BOTTLE_TYPES : [size as BottleType];
+
+  const totals = useMemo(() => {
+    return days.reduce(
+      (accumulator, day) => {
+        visibleTypes.forEach((bottleSize) => {
+          const metrics = day.bottles[bottleSize];
+          if (!metrics) return;
+
+          accumulator.stock += metrics.stock;
+          accumulator.cost += metrics.cost;
+          accumulator.profit += metrics.profit;
+          accumulator.sold += metrics.sold;
+        });
+
+        return accumulator;
+      },
+      { stock: 0, cost: 0, profit: 0, sold: 0 }
+    );
+    // `visibleTypes` is derived from `size`, which is the real dependency.
+  }, [days, size]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExportPdf = async () => {
     if (!days.length || exporting) return;
 
     setExporting(true);
+    setExportError(null);
 
     try {
-      await downloadTimelinePdf(monthLabel(year, month), days);
-    } catch (err) {
-      console.error('PDF export failed', err);
+      await downloadTimelinePdf(label, days, TIMELINE_IS_PLACEHOLDER);
+    } catch (pdfError) {
+      console.error('PDF export failed', pdfError);
+      setExportError('The PDF could not be generated. Please try again.');
     } finally {
       setExporting(false);
     }
-  }
+  };
+
+  const handleExportCsv = () => {
+    if (!days.length) return;
+
+    const rows = days.flatMap((day) =>
+      visibleTypes.map((bottleSize) => {
+        const metrics = day.bottles[bottleSize];
+
+        return {
+          // First column so the warning is visible without scrolling.
+          ...(TIMELINE_IS_PLACEHOLDER ? { Source: 'SAMPLE DATA' } : {}),
+          Day: day.day,
+          Date: day.date,
+          Bottle: bottleSize,
+          Stock: metrics?.stock ?? 0,
+          Price: metrics?.price ?? 0,
+          Sold: metrics?.sold ?? 0,
+          Cost: metrics?.cost ?? 0,
+          Profit: metrics?.profit ?? 0,
+        };
+      })
+    );
+
+    exportToCSV(
+      `zamra-records-${label.replace(/\s+/g, '-').toLowerCase()}.csv`,
+      rows
+    );
+  };
 
   return (
-    <div className="flex h-full w-full flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-300 hover:shadow-xl sm:p-6 lg:p-8">
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        {' '}
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 p-2 text-white shadow-md">
-            <CalendarDays className="h-5 w-5 text-white" />
-          </div>
+    <div className="space-y-4">
+      {TIMELINE_IS_PLACEHOLDER ? (
+        <Alert tone="warning" title="Sample figures, not your records">
+          The backend has no per-day, per-bottle endpoint yet, so this ledger is
+          filled with generated numbers to show the layout. Do not use them for
+          decisions, and expect exports to be marked as samples.
+        </Alert>
+      ) : null}
 
-          <div>
-            <h3 className="text-lg font-bold text-slate-800 sm:text-xl">
-              {' '}
-              Monthly Records
-            </h3>
-            <p className="hidden text-sm text-slate-500 sm:block">
-              {' '}
-              Daily stock, sales, cost and profit tracking
-            </p>
-          </div>
-        </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:w-auto">
-          {' '}
-          <div className="flex w-full items-center justify-between rounded-xl border border-sky-100 bg-sky-50 px-2 py-1 shadow-sm sm:w-auto sm:justify-center sm:rounded-full">
-            <button
-              onClick={goToPrevMonth}
-              aria-label="Previous month"
-              className="rounded-full p-2 transition-all hover:bg-sky-100 hover:text-sky-600 cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-
-            <span className="flex-1 text-center text-xs font-bold text-slate-700 sm:min-w-[9rem] sm:text-sm">
-              {' '}
-              {monthLabel(year, month)}
-            </span>
-
-            <button
-              onClick={goToNextMonth}
-              disabled={isCurrentMonth}
-              aria-label="Next month"
-              className="rounded-full p-2 transition-all hover:bg-sky-100 hover:text-sky-600 disabled:opacity-30 cursor-pointer"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          <button
-            onClick={handleExport}
-            disabled={!days.length || exporting}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg disabled:opacity-40 sm:w-auto sm:rounded-full cursor-pointer"
-          >
-            <Download className="h-4 w-4" />
-            {exporting ? 'Preparing PDF...' : 'Export PDF'}
-          </button>
-        </div>
-      </div>
-
+      {/* Month summary */}
       {loading ? (
-        <div className="flex min-h-[300px] items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <span className="animate-bounce text-5xl">💧</span>
-            <p className="text-sm font-medium text-slate-500">
-              Loading records...
-            </p>
-          </div>
-        </div>
-      ) : error ? (
-        <div className="flex min-h-[250px] items-center justify-center">
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-6 py-4">
-            <p className="text-sm font-semibold text-rose-600">{error}</p>
-          </div>
-        </div>
-      ) : (
-        <div className="max-h-[70vh] overflow-x-auto overflow-y-auto rounded-2xl border border-slate-200 shadow-sm">
-          {' '}
-          <table className="w-full border-collapse text-xs sm:text-sm">
-            <thead className="sticky top-0 z-20">
-              <tr>
-                <th
-                  rowSpan={2}
-                  className="sticky left-0 top-0 z-30 border-b border-r border-slate-200 bg-white px-3 py-3 text-left font-bold uppercase tracking-widest text-slate-600"
-                >
-                  Day
-                </th>
-
-                {BOTTLE_SIZES.map((size) => (
-                  <th
-                    key={size}
-                    colSpan={TIMELINE_METRICS.length}
-                    className="border-b border-l border-slate-200 bg-gradient-to-r from-sky-100 to-cyan-100 px-3 py-3 text-center font-bold text-slate-800 whitespace-nowrap"
-                  >
-                    {size}
-                  </th>
-                ))}
-              </tr>
-
-              <tr>
-                {BOTTLE_SIZES.map((size) =>
-                  TIMELINE_METRICS.map((metric, idx) => (
-                    <th
-                      key={`${size}-${metric}`}
-                      title={METRIC_LABELS[metric]}
-                      className={`bg-slate-100 px-2 py-2 text-center font-semibold text-slate-700 whitespace-nowrap border-b border-slate-200 ${
-                        idx === 0 ? 'border-l border-slate-200' : ''
-                      }`}
-                    >
-                      {metric}
-                    </th>
-                  ))
-                )}
-              </tr>
-            </thead>
-
-            <tbody>
-              {days.map((day, rowIdx) => {
-                const rowBg = rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
-
-                return (
-                  <tr
-                    key={day.day}
-                    className={`${rowBg} group transition-all duration-300 hover:bg-gradient-to-r hover:from-sky-50 hover:to-cyan-50`}
-                  >
-                    <td
-                      className={`sticky left-0 z-10 border-r border-slate-200 px-3 py-2 font-bold text-sky-700 transition-all duration-300 group-hover:bg-sky-100 ${rowBg}`}
-                    >
-                      {day.day}
-                    </td>
-
-                    {BOTTLE_SIZES.map((size) =>
-                      TIMELINE_METRICS.map((metric, idx) => {
-                        const value = metricValue(day.bottles[size], metric);
-
-                        return (
-                          <td
-                            key={`${day.day}-${size}-${metric}`}
-                            className={`px-3 py-2 text-right text-slate-700 whitespace-nowrap transition-all duration-300 group-hover:text-slate-900 ${
-                              idx === 0 ? 'border-l border-slate-200' : ''
-                            }`}
-                          >
-                            {metric === 'PRF' ? (
-                              <span
-                                className={`inline-flex rounded-lg px-1.5 py-1 text-[10px] sm:px-2 sm:text-xs font-semibold ${
-                                  value > 0
-                                    ? 'bg-emerald-100 text-emerald-700'
-                                    : value < 0
-                                      ? 'bg-rose-100 text-rose-700'
-                                      : 'bg-slate-100 text-slate-600'
-                                }`}
-                              >
-                                {formatCell(value, metric)}
-                              </span>
-                            ) : metric === 'PRD' ? (
-                              <span className="inline-flex rounded-lg bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
-                                {formatCell(value, metric)}
-                              </span>
-                            ) : metric === 'STK' ? (
-                              <span className="inline-flex rounded-lg bg-purple-100 px-2 py-1 text-xs font-semibold text-purple-700">
-                                {formatCell(value, metric)}
-                              </span>
-                            ) : (
-                              formatCell(value, metric)
-                            )}
-                          </td>
-                        );
-                      })
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <SkeletonStatTiles count={4} />
+      ) : error || days.length === 0 ? null : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatTile
+            label="Stock recorded"
+            value={`${formatNumber(totals.stock)} units`}
+            icon={<Layers className="size-4" />}
+            tone="neutral"
+            footnote={size === ALL_SIZES ? 'All sizes' : size}
+          />
+          <StatTile
+            label="Bottles sold"
+            value={formatNumber(totals.sold)}
+            icon={<TrendingUp className="size-4" />}
+            tone="brand"
+            footnote={`Across ${days.length} days`}
+          />
+          <StatTile
+            label="Cost"
+            value={formatMoney(totals.cost)}
+            icon={<Receipt className="size-4" />}
+            tone="danger"
+            footnote="Production and expenses"
+          />
+          <StatTile
+            label="Profit"
+            value={formatMoney(totals.profit)}
+            icon={<TrendingUp className="size-4" />}
+            tone={totals.profit >= 0 ? 'success' : 'danger'}
+            footnote={totals.profit >= 0 ? 'Net gain' : 'Net loss'}
+          />
         </div>
       )}
 
-      <div className="mt-4 rounded-xl bg-slate-50 p-3 text-center text-[10px] font-medium text-slate-500 sm:text-xs">
-        {' '}
-        STK = Stock • PRC = Price • PRD = Sold • CST = Cost • PRF = Profit
-      </div>
+      <Card as="section">
+        <CardHeader
+          title="Daily ledger"
+          description="Stock, price, sales, cost and profit for each day"
+          icon={<CalendarDays className="size-4" />}
+          metric={
+            TIMELINE_IS_PLACEHOLDER ? (
+              <Badge tone="warning">Sample data</Badge>
+            ) : undefined
+          }
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <MonthPager
+                label={label || '—'}
+                onPrev={goToPrevMonth}
+                onNext={goToNextMonth}
+                nextDisabled={isCurrentMonth}
+              />
+
+              <Dropdown
+                name="bottleSize"
+                options={SIZE_OPTIONS}
+                value={size}
+                onChange={setSize}
+                className="w-full sm:w-44"
+              />
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                label="CSV"
+                onClick={handleExportCsv}
+                disabled={!days.length || loading}
+                icon={<FileSpreadsheet className="size-3.5" />}
+              />
+
+              <Button
+                type="button"
+                size="sm"
+                label="Export PDF"
+                loadingLabel="Preparing…"
+                loading={exporting}
+                onClick={handleExportPdf}
+                disabled={!days.length || loading}
+                icon={<Download className="size-3.5" />}
+              />
+            </div>
+          }
+        />
+
+        <CardBody>
+          {exportError ? (
+            <div className="mb-3">
+              <Alert tone="danger">{exportError}</Alert>
+            </div>
+          ) : null}
+
+          {loading ? (
+            <SkeletonTable rows={8} columns={6} />
+          ) : error ? (
+            <ErrorState
+              description={error}
+              onRetry={ledger.refresh}
+              size="block"
+            />
+          ) : days.length === 0 ? (
+            <EmptyState
+              title={`No records for ${label}`}
+              description="Production and sales logged for this month will appear here."
+              icon={<CalendarDays className="size-5" />}
+              size="block"
+            />
+          ) : (
+            <>
+              <div className="scroll-x max-h-[60vh] overflow-y-auto rounded-card border border-line">
+                <table className="data-table">
+                  <thead>
+                    {size === ALL_SIZES ? (
+                      <>
+                        <tr>
+                          <th rowSpan={2} scope="col" data-sticky-col>
+                            Day
+                          </th>
+                          {BOTTLE_TYPES.map((bottleSize) => (
+                            <th
+                              key={bottleSize}
+                              colSpan={TIMELINE_METRICS.length}
+                              scope="colgroup"
+                              className="border-l border-line text-center text-ink-soft"
+                            >
+                              {bottleSize}
+                            </th>
+                          ))}
+                        </tr>
+                        <tr>
+                          {BOTTLE_TYPES.map((bottleSize) =>
+                            TIMELINE_METRICS.map((metric, index) => (
+                              <th
+                                key={`${bottleSize}-${metric}`}
+                                scope="col"
+                                data-header-row="2"
+                                title={METRIC_LABELS[metric]}
+                                className={`text-right ${
+                                  index === 0 ? 'border-l border-line' : ''
+                                }`}
+                              >
+                                {metric}
+                              </th>
+                            ))
+                          )}
+                        </tr>
+                      </>
+                    ) : (
+                      <tr>
+                        <th scope="col" data-sticky-col>
+                          Day
+                        </th>
+                        {TIMELINE_METRICS.map((metric) => (
+                          <th key={metric} scope="col" className="text-right">
+                            {METRIC_LABELS[metric]}
+                          </th>
+                        ))}
+                      </tr>
+                    )}
+                  </thead>
+
+                  <tbody>
+                    {days.map((day) => (
+                      <tr key={day.day}>
+                        <th scope="row" data-sticky-col>
+                          {day.day}
+                        </th>
+
+                        {visibleTypes.map((bottleSize) =>
+                          TIMELINE_METRICS.map((metric, index) => {
+                            const metrics = day.bottles[bottleSize];
+                            const value = metrics
+                              ? metricValue(metrics, metric)
+                              : 0;
+
+                            return (
+                              <td
+                                key={`${day.day}-${bottleSize}-${metric}`}
+                                className={`tabular whitespace-nowrap text-right ${
+                                  index === 0 && size === ALL_SIZES
+                                    ? 'border-l border-line'
+                                    : ''
+                                }`}
+                              >
+                                {metric === 'PRF' ? (
+                                  <span
+                                    className={`tabular font-semibold ${
+                                      value > 0
+                                        ? 'text-success-ink'
+                                        : value < 0
+                                          ? 'text-danger-ink'
+                                          : 'text-ink-muted'
+                                    }`}
+                                  >
+                                    {formatCell(value, metric)}
+                                  </span>
+                                ) : (
+                                  formatCell(value, metric)
+                                )}
+                              </td>
+                            );
+                          })
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                {TIMELINE_METRICS.map((metric) => (
+                  <Badge key={metric} tone="neutral">
+                    <span className="font-mono">{metric}</span>
+                    <span className="font-normal text-ink-muted">
+                      {METRIC_LABELS[metric]}
+                    </span>
+                  </Badge>
+                ))}
+              </div>
+            </>
+          )}
+        </CardBody>
+      </Card>
     </div>
   );
 }
