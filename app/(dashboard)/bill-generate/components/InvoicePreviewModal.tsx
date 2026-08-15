@@ -7,10 +7,6 @@ import Button from '@/app/src/components/ui/Button';
 import { InvoiceTemplate } from './InvoiceTemplate';
 import type { InvoiceData } from '../../types/invoice';
 
-/**
- * The finished document before it is committed, using the same template the
- * export rasterises. Scaled, not reflowed, so proportions stay true.
- */
 export default function InvoicePreviewModal({
   open,
   onClose,
@@ -67,8 +63,6 @@ export default function InvoicePreviewModal({
         </>
       }
     >
-      {/* The outer box reserves the scaled height; without it the transform
-          would leave a large gap below the page. */}
       <div className="scroll-x flex justify-center">
         <div className="h-[560px] w-[400px] shrink-0 sm:h-[700px] sm:w-[500px]">
           <div className="origin-top-left scale-[0.5] sm:scale-[0.625]">

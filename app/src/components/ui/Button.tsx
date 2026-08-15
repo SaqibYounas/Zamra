@@ -15,7 +15,6 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label: ReactNode;
   loading?: boolean;
-  /** Replaces the label while `loading` is true. Falls back to the label. */
   loadingLabel?: string;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -38,11 +37,6 @@ const SIZES: Record<ButtonSize, string> = {
   lg: 'h-12 px-5 text-sm',
 };
 
-/**
- * The one button in the app. Variant carries meaning: `primary` for the single
- * main action on a view, `secondary` for alternatives, `ghost` for low-weight
- * controls, `danger` for destructive confirmations.
- */
 export default function Button({
   label,
   loading = false,
@@ -78,7 +72,6 @@ export default function Button({
   );
 }
 
-/** Square icon-only button. Requires an accessible label. */
 export function IconButton({
   icon,
   label,

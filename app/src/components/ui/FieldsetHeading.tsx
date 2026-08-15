@@ -1,11 +1,5 @@
 import type { ReactNode } from 'react';
 
-/**
- * Heading for a group of fields inside a longer form, e.g. "Bill to" or
- * "Logistics".
- *
- * Pair it with a `<section>` so the grouping is structural, not just visual.
- */
 export function FieldsetHeading({
   title,
   description,
@@ -15,7 +9,6 @@ export function FieldsetHeading({
   title: string;
   description?: string;
   icon?: ReactNode;
-  /** Right-aligned control, e.g. a "load saved customer" select. */
   actions?: ReactNode;
 }) {
   return (

@@ -7,12 +7,6 @@ const TONES = {
   danger: 'border-danger/25 bg-danger-soft text-danger-ink',
 } as const;
 
-/**
- * Inline banner for a form-level or section-level message.
- *
- * `danger` announces as an alert; the other tones announce politely, so a
- * success note never interrupts what the user is doing.
- */
 export function Alert({
   tone = 'info',
   title,

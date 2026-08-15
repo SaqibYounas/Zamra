@@ -1,8 +1,3 @@
-/**
- * The product catalogue, and the contract with the backend: these strings are
- * sent as `bottleType` and key every metric. Changing one changes the backend.
- */
-
 export const BOTTLE_TYPES = [
   '500ml',
   '1.5L',

@@ -1,21 +1,4 @@
 import type { Theme } from './theme';
-
-/**
- * Shared chart language for Chart.js (bar charts) and Recharts (profit report).
- * Two libraries, one palette — a bottle type or a metric keeps the same colour
- * wherever it appears, including the exported PDF.
- *
- * Values are duplicated as literals rather than read from the CSS tokens because
- * canvas cannot resolve custom properties, and Recharts passes colours as SVG
- * attributes, where `var()` does not resolve either. Keep them in step with
- * globals.css by hand.
- */
-
-/**
- * Series colours are theme-independent: each one was picked to read on both a
- * white and a near-black background, so a bottle type never changes colour when
- * the theme flips.
- */
 export const SERIES_COLORS = [
   '#0aa5ec',
   '#7c5cf0',
@@ -38,10 +21,6 @@ export const METRIC_COLORS = {
   price: '#e0821b',
 } as const;
 
-/**
- * Chart chrome — the parts that must follow the theme: grid lines, tick labels,
- * tooltip surface and the hover cursor.
- */
 export interface ChartChrome {
   grid: string;
   tick: string;
@@ -49,7 +28,6 @@ export interface ChartChrome {
   tooltipBackground: string;
   tooltipText: string;
   tooltipBorder: string;
-  /** Fill for the bar-hover highlight behind a column. */
   cursorFill: string;
 }
 
@@ -67,7 +45,6 @@ const DARK_CHROME: ChartChrome = {
   grid: '#203549',
   tick: '#93a9bd',
   axisLine: '#2b445c',
-  // Lighter than the card it floats over, so the tooltip reads as raised.
   tooltipBackground: '#1d3348',
   tooltipText: '#eaf2f9',
   tooltipBorder: '#2b445c',

@@ -13,21 +13,12 @@ import {
   type CacheProfile,
 } from './requestCache';
 
-/**
- * Saved customer billing profiles and delivery destinations. Created by the
- * backend during invoicing; editable and removable from the dashboard.
- */
-
 /** Editable fields of a customer profile. */
 export type CustomerInput = Omit<Customer, 'id'>;
 
 /** Editable fields of a delivery destination. */
 export type ShippingAddressInput = Omit<ShippingAddress, 'id'>;
 
-/**
- * cached: `long` (5 min) under `customers`. Only `createInvoice` changes them,
- * and it invalidates this tag.
- */
 export async function fetchCustomers({
   profile = 'long' as CacheProfile,
   forceRefresh = false,
@@ -50,7 +41,6 @@ export async function fetchCustomers({
   );
 }
 
-/** cached: `long` (5 min) under `shipping-addresses`; see `fetchCustomers`. */
 export async function fetchShippingAddresses({
   profile = 'long' as CacheProfile,
   forceRefresh = false,
@@ -73,10 +63,6 @@ export async function fetchShippingAddresses({
   );
 }
 
-/**
- * Edits a customer profile; toasts the outcome.
- * revalidates: `customers` — invoices read these profiles by id.
- */
 export async function updateCustomer(
   id: number,
   data: CustomerInput
@@ -94,10 +80,6 @@ export async function updateCustomer(
   }
 }
 
-/**
- * Removes a customer profile; toasts the outcome.
- * revalidates: `customers`.
- */
 export async function deleteCustomer(id: number): Promise<MutationOutcome> {
   try {
     const response = await axios.delete(`/api/customers/${id}`, {

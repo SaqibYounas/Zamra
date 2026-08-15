@@ -1,10 +1,6 @@
 import { PageContainer } from '@/app/src/components/layout/PageShell';
 import { Skeleton, SkeletonStatTiles } from '@/app/src/components/ui/Skeleton';
 
-/**
- * Route-level loading UI for every dashboard page. Streams in immediately on
- * navigation so the shell never shows a blank content column.
- */
 export default function DashboardLoading() {
   return (
     <PageContainer>

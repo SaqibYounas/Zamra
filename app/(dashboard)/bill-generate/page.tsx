@@ -633,9 +633,6 @@ export default function InvoiceFormDashboard() {
         totalAmount={totals.totalAmount}
         balanceDue={totals.balanceDue}
       />
-
-      {/* Print template: rendered off-screen and cloned for the PDF export.
-          This is the copy that owns the `invoice-doc` id. */}
       <div className="hidden" aria-hidden>
         <InvoiceTemplate
           domId="invoice-doc"

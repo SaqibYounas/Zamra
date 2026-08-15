@@ -71,9 +71,6 @@ export default function AdminLogin() {
         router.push('/dashboard');
         return;
       }
-
-      // Attribute the backend message to a field when it clearly belongs to
-      // one; otherwise surface it once, above the form.
       const message = login.message || 'Invalid email or password.';
       const lower = message.toLowerCase();
 

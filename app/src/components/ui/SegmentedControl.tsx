@@ -7,13 +7,6 @@ export type SegmentOption<T extends string> = {
   label: string;
   icon?: ReactNode;
 };
-
-/**
- * Tab-style switch between two to four mutually exclusive views.
- *
- * Rendered as a radiogroup so arrow keys and screen readers treat the options
- * as one control rather than a row of unrelated buttons.
- */
 export function SegmentedControl<T extends string>({
   options,
   value,
@@ -25,7 +18,6 @@ export function SegmentedControl<T extends string>({
   options: SegmentOption<T>[];
   value: T;
   onChange: (value: T) => void;
-  /** Accessible name for the group as a whole. */
   label: string;
   size?: 'sm' | 'md';
   className?: string;

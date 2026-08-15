@@ -5,15 +5,7 @@ import {
   forwardPut,
 } from '../../_lib/backendClient';
 
-/**
- * A single customer billing profile. Both paths are empty placeholders: the
- * backend does not publish customer update/delete endpoints yet.
- */
-
-/** TODO: backend base path for updating a customer, e.g. `/customers`. */
 const UPDATE_BASE = '';
-
-/** TODO: backend base path for deleting a customer, e.g. `/customers`. */
 const DELETE_BASE = '';
 
 export async function PUT(

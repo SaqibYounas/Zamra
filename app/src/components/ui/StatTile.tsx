@@ -19,10 +19,6 @@ const ACCENTS: Record<StatTone, string> = {
   neutral: 'bg-line-strong',
 };
 
-/**
- * KPI tile. The value is the loudest element; label and footnote sit either
- * side of it so a row of tiles scans top-to-bottom in one pass.
- */
 export function StatTile({
   label,
   value,

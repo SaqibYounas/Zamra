@@ -11,20 +11,12 @@ interface ConfirmationModalProps {
   confirmText?: string;
   cancelText?: string;
   loading?: boolean;
-  /** Shown on the confirm button while the action runs. */
   loadingText?: string;
-  /** `danger` for destructive/irreversible actions, `question` otherwise. */
   tone?: 'danger' | 'question';
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-/**
- * Confirmation dialog. Built on the shared Modal, so it inherits focus
- * trapping, Escape-to-cancel and focus restoration. While `loading` is true
- * the dialog refuses to dismiss, which stops a half-finished action from
- * being orphaned by a stray backdrop click.
- */
 export default function ConfirmationModal({
   open,
   title,

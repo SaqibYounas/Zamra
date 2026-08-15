@@ -2,11 +2,6 @@ import { toNumber } from '@/app/src/lib/format';
 import { BOTTLE_TYPES, type BottleType } from '../data/bottleTypes';
 import type { CostPrice, SellingPriceRecord } from '../types/prices';
 
-/**
- * Joins the two pricing endpoints into one per-bottle-type view, shared by the
- * rate board and the dashboard's warnings about un-invoiceable sizes.
- */
-
 export interface BottleRateSummary {
   bottleType: BottleType;
   /** `null` when no cost price has been recorded for this type. */
@@ -28,17 +23,11 @@ export function costPriceTotal(price: CostPrice): number {
   );
 }
 
-/**
- * The cost price in force for a bottle type — use this for every lookup, since
- * `GET /price` can return superseded rows. Prefers active, then newest.
- */
 export function findActiveCostPrice(
   costPrices: CostPrice[],
   bottleType: BottleType
 ): CostPrice | undefined {
   const forType = costPrices.filter((price) => price.bottleType === bottleType);
-
-  // Fast path: one row (or none) behaves exactly as a plain lookup would.
   if (forType.length <= 1) return forType[0];
 
   const active = forType.filter((price) => price.isActive === true);
@@ -83,10 +72,6 @@ export function buildRateSummaries(
   });
 }
 
-/**
- * Which bottle types cannot be traded yet: no selling price blocks invoicing,
- * and no cost price blocks setting a selling price.
- */
 export function findPricingGaps(summaries: BottleRateSummary[]) {
   return {
     missingCost: summaries

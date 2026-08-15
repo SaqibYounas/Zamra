@@ -11,15 +11,6 @@ import {
 } from '@headlessui/react';
 import { X } from 'lucide-react';
 
-/**
- * Application modal built on Headless UI's Dialog, which gives us the
- * accessibility behaviour for free: focus trap, focus restore on close,
- * Escape to dismiss, `aria-modal`, and scroll locking.
- *
- * On mobile the panel docks to the bottom of the viewport (thumb-reachable)
- * and becomes a centred card from `sm` upwards.
- */
-
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZES: Record<ModalSize, string> = {
@@ -38,7 +29,6 @@ export function Modal({
   children,
   footer,
   size = 'md',
-  /** Blocks backdrop/Escape dismissal — use while an action is in flight. */
   dismissable = true,
 }: {
   open: boolean;

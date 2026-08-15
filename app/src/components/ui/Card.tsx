@@ -1,14 +1,8 @@
 import type { ReactNode } from 'react';
 
-/**
- * The single card surface used across the app. Server-safe (no client hooks)
- * so pages can render it without opting into a client bundle.
- */
-
 type CardProps = {
   children: ReactNode;
   className?: string;
-  /** `panel` = slightly larger radius, for full-width page sections. */
   variant?: 'card' | 'panel';
   as?: 'div' | 'section' | 'article' | 'aside';
 };
@@ -28,9 +22,7 @@ type CardHeaderProps = {
   title: ReactNode;
   description?: ReactNode;
   icon?: ReactNode;
-  /** Right-aligned controls: filters, buttons, month pickers. */
   actions?: ReactNode;
-  /** Large right-aligned figure, e.g. a table's row count or a chart total. */
   metric?: ReactNode;
   className?: string;
 };

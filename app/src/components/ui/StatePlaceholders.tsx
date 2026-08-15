@@ -4,22 +4,12 @@ import type { ReactNode } from 'react';
 import { AlertTriangle, Inbox, RefreshCw, WifiOff } from 'lucide-react';
 import Button from './Button';
 
-/**
- * "Nothing here" and "that failed" placeholders.
- *
- * They live together because they are one layout with two tones: icon,
- * headline, one line of guidance, and at most one action. Keeping them in a
- * single module means an empty list and a failed request can never drift into
- * looking like different products.
- */
-
 type PlaceholderProps = {
   title: string;
   description?: string;
   icon?: ReactNode;
   action?: ReactNode;
   className?: string;
-  /** `inline` sits inside a card body; `block` fills a page region. */
   size?: 'inline' | 'block';
 };
 
@@ -69,13 +59,6 @@ export function EmptyState({
 }: PlaceholderProps) {
   return <Placeholder tone="neutral" icon={icon} {...props} />;
 }
-
-/**
- * Shown when a request failed.
- *
- * Always pass `onRetry` when the request can simply be run again — a dead end
- * with no way forward is the worst version of this state.
- */
 export function ErrorState({
   title = 'Could not load this data',
   description = 'The request did not complete. Check your connection and try again.',
@@ -93,7 +76,6 @@ export function ErrorState({
   retrying?: boolean;
   size?: 'inline' | 'block';
   className?: string;
-  /** Swaps the icon for a connectivity-specific one. */
   offline?: boolean;
 }) {
   return (

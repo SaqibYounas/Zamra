@@ -13,10 +13,6 @@ interface BottleTypeSelectorProps {
   name?: string;
 }
 
-/**
- * Bottle-size picker as radio cards rather than a select, so each size's own
- * figure stays readable while choosing. Shared by the production and pricing forms.
- */
 export default function BottleTypeSelector({
   value,
   onChange,
@@ -60,9 +56,6 @@ export default function BottleTypeSelector({
                 >
                   {bottle.label}
                 </span>
-
-                {/* Selected state comes from React; only `:focus-visible` needs
-                    the `peer-*` sibling. */}
                 <span
                   aria-hidden
                   className={`flex size-4 shrink-0 items-center justify-center rounded-full border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand-500/40 peer-focus-visible:ring-offset-1 peer-focus-visible:ring-offset-surface ${

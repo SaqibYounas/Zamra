@@ -33,16 +33,11 @@ const HIGHLIGHTS = [
   },
 ];
 
-/**
- * Server component: the marketing half is fully static, so only the form
- * itself ships as a client bundle.
- */
 export default function Login() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
-      {/* Brand panel */}
       <section className="relative hidden flex-col justify-between overflow-hidden bg-marine-950 p-10 text-marine-100 lg:flex xl:p-14">
-        <div className="marine-grid absolute inset-0 opacity-60" aria-hidden />
+        <div className="marine-grid absolute inset-0 opacity-70" aria-hidden />
         <div
           className="absolute -left-24 top-1/4 size-[26rem] rounded-full bg-brand-500/15 blur-3xl"
           aria-hidden
@@ -105,10 +100,6 @@ export default function Login() {
       <section className="relative flex flex-col justify-center bg-canvas px-4 py-10 sm:px-8">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-8 flex items-center gap-3">
-            {/* The brand panel is hidden below `lg`, so the mark is repeated
-                here for narrow screens only. The toggle rides along in this row
-                on small screens, then moves to the panel corner once the row is
-                otherwise empty. */}
             <Image
               src="/Logo.jpg"
               alt="Zamra Water"

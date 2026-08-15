@@ -2,12 +2,6 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-/**
- * Page numbers collapsed around the current page, so the control keeps a fixed
- * width no matter how many pages exist.
- *
- * Returns `1 … 4 5 6 … 20` style output; `'gap'` marks each elision.
- */
 function buildPageWindow(page: number, totalPages: number): (number | 'gap')[] {
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, index) => index + 1);
@@ -41,7 +35,6 @@ export function Pagination({
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  /** Row-count line, e.g. "Showing 1–10 of 42". */
   summary?: string;
   className?: string;
 }) {

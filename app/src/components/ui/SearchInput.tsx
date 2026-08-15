@@ -3,12 +3,6 @@
 import { useId } from 'react';
 import { Search, X } from 'lucide-react';
 
-/**
- * Search box for filtering a list in place.
- *
- * The label is visually hidden because the magnifier icon carries the meaning,
- * but it stays in the accessibility tree.
- */
 export function SearchInput({
   value,
   onChange,
@@ -19,7 +13,6 @@ export function SearchInput({
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  /** Accessible name; falls back to the placeholder. */
   label?: string;
   className?: string;
 }) {

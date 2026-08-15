@@ -8,10 +8,6 @@ import { PageContainer } from '@/app/src/components/layout/PageShell';
 import { Card, CardBody } from '@/app/src/components/ui/Card';
 import Button from '@/app/src/components/ui/Button';
 
-/**
- * Error boundary for the dashboard group: keeps the navigation shell usable
- * and offers a re-render before falling back to a full navigation.
- */
 export default function DashboardError({
   error,
   reset,

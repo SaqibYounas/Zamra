@@ -9,34 +9,29 @@ export interface ApiToast {
   type: ApiToastType;
 }
 
+// Extend Axios config with an optional showToast flag.
 declare module 'axios' {
   export interface AxiosRequestConfig {
     showToast?: boolean;
   }
 }
 
+// Stores all active toast listeners.
 const listeners = new Set<(toast: ApiToast) => void>();
 
 function getToastTitle(type: ApiToastType) {
-  switch (type) {
-    case 'success':
-      return 'Success';
-    case 'error':
-      return 'Error';
-    default:
-      return 'Information';
-  }
+  if (type === 'success') return 'Success';
+  if (type === 'error') return 'Error';
+  return 'Information';
 }
 
-function formatToastMessage(message: string, fallback: string) {
-  const cleaned = message?.trim();
+// Cleans and normalizes API error/success messages.
+function formatMessage(message: string, fallback: string) {
+  const text = message?.trim();
 
-  if (!cleaned) return fallback;
+  if (!text) return fallback;
 
-  const normalized = cleaned
-    .replace(/\s+/g, ' ')
-    .replace(/\b([A-Z]{2,})\b/g, ' $1 ')
-    .trim();
+  const normalized = text.replace(/\s+/g, ' ');
 
   if (/network error|failed to fetch|connect/i.test(normalized)) {
     return 'Connection issue. Please check your internet and try again.';
@@ -57,6 +52,7 @@ function formatToastMessage(message: string, fallback: string) {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
+// Creates a toast and notifies all subscribed listeners.
 function dispatchToast(
   message: string,
   type: ApiToastType = 'info',
@@ -64,29 +60,32 @@ function dispatchToast(
 ) {
   if (typeof window === 'undefined') return;
 
+  const fallback =
+    type === 'success'
+      ? 'Operation completed successfully.'
+      : 'Request failed.';
+
   const toast: ApiToast = {
     id: Date.now() + Math.random(),
-    title: title || getToastTitle(type),
-    message: formatToastMessage(
-      message,
-      type === 'success'
-        ? 'Operation completed successfully.'
-        : 'Request failed.'
-    ),
+    title: title ?? getToastTitle(type),
+    message: formatMessage(message, fallback),
     type,
   };
 
   listeners.forEach((listener) => listener(toast));
 }
 
+// Subscribes a component to toast updates.
 export function subscribeApiToast(listener: (toast: ApiToast) => void) {
   listeners.add(listener);
 
+  // Remove the listener when the component unmounts.
   return () => {
     listeners.delete(listener);
   };
 }
 
+// Allows the application to show a toast manually.
 export function showApiToast(
   message: string,
   type: ApiToastType = 'info',
@@ -95,40 +94,45 @@ export function showApiToast(
   dispatchToast(message, type, title);
 }
 
-let hasSetup = false;
+let interceptorsSetup = false;
 
 export function setupApiToastInterceptors(onUnauthorized?: () => void) {
-  if (hasSetup || typeof window === 'undefined') {
+  // Prevent registering the same interceptor multiple times.
+  if (interceptorsSetup || typeof window === 'undefined') {
     return;
   }
 
-  hasSetup = true;
+  interceptorsSetup = true;
 
   axios.interceptors.response.use(
+    // Handles successful HTTP responses.
     (response) => {
-      const showToast = response.config.showToast;
-
-      if (showToast) {
-        const payload = response.data;
-
-        const isFailure = payload?.success === false || Boolean(payload?.error);
-
-        const message =
-          payload?.message ||
-          payload?.successMessage ||
-          payload?.msg ||
-          (isFailure ? 'Request failed.' : 'Operation completed successfully.');
-
-        dispatchToast(message, isFailure ? 'error' : 'success');
+      if (!response.config.showToast) {
+        return response;
       }
+
+      const data = response.data;
+
+      // Some APIs return HTTP 200 but still indicate an application-level failure.
+      const failed = data?.success === false || Boolean(data?.error);
+
+      const message =
+        data?.message ??
+        data?.successMessage ??
+        data?.msg ??
+        (failed ? 'Request failed.' : 'Operation completed successfully.');
+
+      dispatchToast(message, failed ? 'error' : 'success');
 
       return response;
     },
 
+    // Handles failed HTTP requests.
     (error) => {
       const showToast = error?.config?.showToast;
       const status = error?.response?.status;
 
+      // Handle expired or invalid sessions.
       if (status === 401) {
         if (showToast) {
           dispatchToast(
@@ -138,27 +142,27 @@ export function setupApiToastInterceptors(onUnauthorized?: () => void) {
           );
         }
 
-        if (onUnauthorized) {
-          onUnauthorized();
-        }
+        onUnauthorized?.();
 
         return Promise.reject(error);
       }
 
+      // Handle all other API errors.
       if (showToast) {
-        const payload = error?.response?.data;
+        const data = error?.response?.data;
 
         const message =
-          payload?.message ||
-          payload?.error ||
-          payload?.detail ||
-          payload?.msg ||
-          error?.message ||
+          data?.message ??
+          data?.error ??
+          data?.detail ??
+          data?.msg ??
+          error?.message ??
           'Request failed.';
 
         dispatchToast(message, 'error');
       }
 
+      // Keep the original error available to the caller.
       return Promise.reject(error);
     }
   );

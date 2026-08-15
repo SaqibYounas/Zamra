@@ -16,11 +16,6 @@ import { cachedRequest, CACHE_TAGS, revalidateTag } from './requestCache';
 import { fetchActiveSellingPrices } from './sellingPrices';
 import { fetchMonthlyProfit } from './monthlyProfit';
 
-/**
- * Daily production and the stock aggregates built from it. `fetchStockMetrics`
- * composes three endpoints; no single backend route returns that shape.
- */
-
 /** One raw stock row as returned by `GET /api/stock`. */
 interface StockRow {
   bottleType?: string | null;
@@ -69,10 +64,6 @@ export interface DailyStockInput {
   bottlePerPet: string;
 }
 
-/**
- * Bottles in one row. `totalBottles` wins when supplied; otherwise only 500ml
- * and 1.5L multiply by pet size, the rest count their quantity directly.
- */
 function countUnits(row: StockRow): number {
   const totalBottles = Number(row.totalBottles) || 0;
   if (totalBottles > 0) return totalBottles;
@@ -106,9 +97,6 @@ function buildStockMetrics(
   const todayStock = createBottleTypeRecord();
   const costs = createBottleTypeRecord();
   const profitToday = createBottleTypeRecord();
-
-  // Today's output can only be isolated if the rows say when they happened,
-  // otherwise "produced today" and "overall stock" are the same number.
   const today = toDayKey(new Date());
   let datedRows = 0;
 
@@ -164,10 +152,6 @@ async function fetchStockRows(
   );
 }
 
-/**
- * Dashboard metrics from three reads, each cached under its own tag rather than
- * as a whole. Secondary reads reuse the shared services, collapsing duplicates.
- */
 export async function fetchStockMetrics({ forceRefresh = false } = {}): Promise<
   StockMetrics | ServiceError
 > {
@@ -193,10 +177,6 @@ export async function fetchStockMetrics({ forceRefresh = false } = {}): Promise<
   return buildStockMetrics(rows, sellingPriceToday, monthlyProfitHistory);
 }
 
-/**
- * Records today's output for one bottle type; toasts the outcome.
- * revalidates: `stock`, `profit` — output changes counts and derived sales.
- */
 export async function saveDailyStock(
   data: DailyStockInput
 ): Promise<MutationOutcome> {

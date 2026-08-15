@@ -1,10 +1,5 @@
 import { BOTTLE_TYPES, type BottleType } from '../data/bottleTypes';
 
-/**
- * The monthly ledger: five metrics per bottle type, per day. The abbreviated
- * keys are the table's column headers, so they are canonical here.
- */
-
 /** Column order within each bottle-type group. */
 export const TIMELINE_METRICS = ['STK', 'PRC', 'PRD', 'CST', 'PRF'] as const;
 

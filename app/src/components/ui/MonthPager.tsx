@@ -2,12 +2,6 @@
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-/**
- * Previous / label / next stepper for month-scoped reports.
- *
- * The label is a live region so the month change is announced when navigating
- * by keyboard.
- */
 export function MonthPager({
   label,
   onPrev,

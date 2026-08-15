@@ -1,14 +1,5 @@
 import { badRequest, forwardPost } from '../_lib/backendClient';
 
-/**
- * Assistant queries.
- *
- * `POST` -> backend `/rag/query`
- *
- * The backend answers from the plant's own records, so this is forwarded with
- * the caller's session like every other route.
- */
-
 interface ChatbotRequestBody {
   message?: string;
 }

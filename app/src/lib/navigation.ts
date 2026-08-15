@@ -1,16 +1,6 @@
-/**
- * Single source of truth for the app's navigation. The sidebar, the mobile
- * drawer and the top-bar breadcrumb all read from this list, so adding a page
- * means editing exactly one array.
- *
- * NOTE: protected routes are enforced separately by the matcher in `proxy.ts`.
- * A new entry here that should require a login must also be added there.
- */
-
 export type NavItem = {
   href: string;
   label: string;
-  /** Short label for tight spaces (breadcrumb, collapsed rail tooltip). */
   short?: string;
   description: string;
   icon: NavIconName;

@@ -1,13 +1,5 @@
 @import 'tailwindcss';
 
-/* ==========================================================================
-   ZAMRA DESIGN SYSTEM
-   Single source of truth for colour, type, spacing, radii, shadows, motion.
-   Every token below is exposed to Tailwind as a real utility
-   (e.g. --color-brand-600 -> bg-brand-600 / text-brand-600 / border-brand-600)
-   so components never hardcode hex values.
-   ========================================================================== */
-
 @theme {
   /* ---------------------------------------------------------------- type -- */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -168,21 +160,6 @@
   }
 }
 
-/* ==========================================================================
-   DARK THEME
-   Only the semantic tokens are redefined — every utility and primitive above
-   reads them through `var()`, so the whole app flips without a single
-   `dark:` variant in a component.
-   ==========================================================================
-
-   `data-theme` is set on <html> before first paint by the inline script in the
-   root layout (see app/src/lib/theme.ts), which resolves the stored preference
-   or falls back to the OS setting. That is why one attribute selector is enough
-   here: the attribute is always present, so there is no `prefers-color-scheme`
-   duplicate of this block to keep in sync.
-
-   These rules sit outside `@layer` on purpose: unlayered declarations outrank
-   the layered `:root` block Tailwind generates from `@theme`. */
 [data-theme='dark'] {
   /* Makes native controls, scrollbars and form widgets render dark too. */
   color-scheme: dark;

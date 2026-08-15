@@ -1,12 +1,5 @@
 import { badRequest, forwardGet, forwardPost } from '../_lib/backendClient';
 
-/**
- * Cost prices — what one bottle costs the plant to produce.
- *
- * `GET`  -> backend `/price`        : the active cost price per bottle type
- * `POST` -> backend `/price/create` : record a new cost price
- */
-
 interface CostPriceRequestBody {
   type?: string;
   price?: string;

@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { Compass, Droplets, LayoutDashboard } from 'lucide-react';
 import { NAV_SECTIONS } from './src/lib/navigation';
 
-/** Server component — nothing here is interactive beyond links. */
 export default function NotFoundPage() {
   const suggestions = NAV_SECTIONS.flatMap((section) => section.items).slice(
     0,
