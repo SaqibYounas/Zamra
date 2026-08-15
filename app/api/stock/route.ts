@@ -1,15 +1,6 @@
 import { badRequest, forwardGet, forwardPost } from '../_lib/backendClient';
-
-/**
- * Daily production records.
- *
- * `GET`  -> backend `/daily-stock`        : all recorded stock rows
- * `POST` -> backend `/daily-stock/create` : record today's output
- */
-
 interface DailyStockRequestBody {
   bottleType?: string;
-  /** Pets, bottles or refills, depending on the bottle type. */
   totalPet?: string;
   bottlePerPet?: string;
 }

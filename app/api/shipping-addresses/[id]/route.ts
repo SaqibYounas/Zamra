@@ -5,11 +5,6 @@ import {
   forwardPut,
 } from '../../_lib/backendClient';
 
-/**
- * A single delivery destination. Both paths are empty placeholders: the backend
- * does not publish shipping-address update/delete endpoints yet.
- */
-
 /** TODO: backend base path for updating an address, e.g. `/shipping-address`. */
 const UPDATE_BASE = '';
 

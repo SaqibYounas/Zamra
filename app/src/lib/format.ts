@@ -1,9 +1,3 @@
-/**
- * Centralised formatters. Every "Rs 1,234" / "12 units" / date string in the
- * UI goes through here so number and currency presentation stays identical
- * across pages, tables, charts, tooltips and PDFs.
- */
-
 const CURRENCY_PREFIX = 'Rs';
 
 const numberFormatter = new Intl.NumberFormat('en-PK', {

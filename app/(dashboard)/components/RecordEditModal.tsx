@@ -28,19 +28,11 @@ interface RecordEditModalProps<T extends Record<string, unknown>> {
   description?: string;
   fields: EditableField<T>[];
   values: T | null;
-  /**
-   * Identity of the record being edited. Changing it remounts the form, so the
-   * inputs reset without an effect writing state on open.
-   */
   recordKey: string | number;
   onClose: () => void;
   onSubmit: (values: T) => Promise<string | null>;
 }
 
-/**
- * Edit dialog for one record. `onSubmit` resolves with a message to keep the
- * dialog open and show it, or `null` once the record has been saved.
- */
 export default function RecordEditModal<T extends Record<string, unknown>>({
   open,
   title,
@@ -98,10 +90,6 @@ export default function RecordEditModal<T extends Record<string, unknown>>({
   );
 }
 
-/**
- * The fields themselves. Mounted fresh per record — see `recordKey` — so the
- * draft starts from `initialValues` with no reset logic.
- */
 function RecordEditFields<T extends Record<string, unknown>>({
   fields,
   initialValues,

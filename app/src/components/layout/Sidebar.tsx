@@ -38,10 +38,8 @@ const ICONS: Record<NavIconName, React.ElementType> = {
 };
 
 type SidebarProps = {
-  /** Desktop rail collapsed to icons only. */
   collapsed: boolean;
   onToggleCollapsed: () => void;
-  /** Mobile off-canvas drawer state. */
   mobileOpen: boolean;
   onCloseMobile: () => void;
 };
@@ -65,15 +63,7 @@ export default function Sidebar({
     } catch (error) {
       console.error(error);
     } finally {
-      /*
-       * Drop every cached response before leaving. The cache is per tab, and the
-       * next person to sign in reuses that tab — cached rows are the previous
-       * account's data.
-       */
       clearRequestCache();
-
-      // The session cookie is httpOnly, so only the server can clear it. Leave
-      // regardless of the response so a failed call cannot trap the user in.
       showApiToast(
         'You have been logged out successfully.',
         'success',

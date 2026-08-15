@@ -3,11 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isServiceError, type ServiceError } from '../services/serviceResult';
 
-/**
- * Loads data from a service. `loading` means nothing to show yet (render a
- * skeleton); `refreshing` means refetching the same data (keep it on screen).
- */
-
 export interface AsyncData<T> {
   data: T | null;
   /** A message ready to display, never a raw error object. */
@@ -44,10 +39,6 @@ export function useAsyncData<T>(
   const [refreshing, setRefreshing] = useState(false);
   const [settled, setSettled] = useState<Settled<T> | null>(null);
 
-  /**
-   * Set by `refresh()`, consumed by the next run only. A one-shot flag, not
-   * "attempt > 0", which would bypass the cache for every later fetch.
-   */
   const forceNextRef = useRef(false);
 
   const isCurrent = settled?.key === key;
@@ -56,14 +47,11 @@ export function useAsyncData<T>(
     let active = true;
 
     async function run() {
-      // `refresh()` asks for current figures, so that run bypasses the cache;
-      // parameter changes still read through it.
       const forceRefresh = forceNextRef.current;
       forceNextRef.current = false;
 
       const result = await loadRef.current({ forceRefresh });
 
-      // A newer request (or an unmount) has superseded this one.
       if (!active) return;
 
       setSettled(
@@ -99,8 +87,6 @@ export function useAsyncData<T>(
   return {
     data: isCurrent ? settled.data : null,
     error: isCurrent ? settled.error : null,
-    // Derived rather than stored: a key change reports loading immediately,
-    // with no state update to sequence.
     loading: !isCurrent,
     refreshing,
     refresh,

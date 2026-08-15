@@ -5,10 +5,6 @@ import Link from 'next/link';
 import { AlertTriangle, Droplets, Home, RefreshCw } from 'lucide-react';
 import Button from './src/components/ui/Button';
 
-/**
- * Root error boundary. Rendered outside the dashboard shell, so it carries its
- * own brand mark and full-page layout.
- */
 export default function ErrorPage({
   error,
   reset,

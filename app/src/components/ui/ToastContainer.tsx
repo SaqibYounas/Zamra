@@ -40,8 +40,6 @@ export function ToastContainer() {
   }, []);
 
   useEffect(() => {
-    // Captured for the cleanup below, which must not read `.current` after the
-    // component has moved on.
     const pending = timers.current;
 
     const unsubscribe = subscribeApiToast((toast) => {
@@ -62,8 +60,6 @@ export function ToastContainer() {
 
   return (
     <div
-      // Always mounted so assistive tech observes the live region rather than
-      // having it appear at the same moment as its first message.
       aria-live="polite"
       aria-atomic="false"
       className="pointer-events-none fixed inset-x-3 top-3 z-[200] flex flex-col gap-2 sm:inset-x-auto sm:right-4 sm:top-4 sm:w-[24rem]"

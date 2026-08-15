@@ -13,11 +13,6 @@ import {
   type CacheProfile,
 } from './requestCache';
 
-/**
- * Customer-facing rate per bottle, linked to the cost price it was based on so
- * the backend can report margin. Backed by `/api/selling-prices`.
- */
-
 export interface SellingPriceInput {
   /** Whole rupees, as typed into the form. */
   sellingPrice: string;
@@ -25,10 +20,6 @@ export interface SellingPriceInput {
   priceManagementId: number;
 }
 
-/**
- * Sets the active rate for one bottle type; toasts the outcome.
- * revalidates: `selling-prices`, `stock` — metrics value units at this rate.
- */
 export async function saveSellingPrice(
   data: SellingPriceInput
 ): Promise<MutationOutcome> {
@@ -45,10 +36,6 @@ export async function saveSellingPrice(
   }
 }
 
-/**
- * The active rate for each bottle type.
- * cached: `medium` (2 min); three dashboard callers share one request.
- */
 export async function fetchActiveSellingPrices({
   profile = 'medium' as CacheProfile,
   forceRefresh = false,

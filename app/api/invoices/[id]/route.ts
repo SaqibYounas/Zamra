@@ -6,12 +6,6 @@ import {
   forwardPut,
 } from '../../_lib/backendClient';
 
-/**
- * A single invoice. All three paths are empty placeholders: the backend exposes
- * invoice creation only so far.
- */
-
-/** TODO: backend base path for reading one invoice, e.g. `/invoice`. */
 const READ_BASE = '';
 
 /** TODO: backend base path for updating an invoice, e.g. `/invoice`. */

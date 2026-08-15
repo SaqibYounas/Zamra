@@ -1,10 +1,5 @@
 import type { ReactNode } from 'react';
 
-/**
- * Every page opens with this block, which keeps the information hierarchy
- * identical across routes: eyebrow -> title -> supporting line, with actions
- * pinned to the right on wide screens and stacked underneath on mobile.
- */
 export function PageHeader({
   eyebrow,
   title,
@@ -17,7 +12,6 @@ export function PageHeader({
   title: string;
   description?: string;
   actions?: ReactNode;
-  /** Secondary context, e.g. "Updated today" pills. */
   meta?: ReactNode;
   className?: string;
 }) {
@@ -56,10 +50,6 @@ export function PageHeader({
   );
 }
 
-/**
- * Page shell: consistent max width, gutters and vertical rhythm for every
- * dashboard route.
- */
 export function PageContainer({
   children,
   className = '',
@@ -67,7 +57,6 @@ export function PageContainer({
 }: {
   children: ReactNode;
   className?: string;
-  /** `narrow` for single-column forms, `wide` for data-heavy pages. */
   width?: 'narrow' | 'form' | 'wide';
 }) {
   const widths = {

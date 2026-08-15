@@ -149,8 +149,6 @@ export default function MetricChart({
       {
         label: heading,
         data: chartData,
-        // Bottle-wise charts colour each bar by size to match the rest of the
-        // app; the day series stays single-colour so the trend reads cleanly.
         backgroundColor: isDaily
           ? config.color
           : BOTTLE_TYPES.map((_, index) => seriesColor(index)),

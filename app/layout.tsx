@@ -52,18 +52,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
-      // The theme script below sets `data-theme` and `color-scheme` on this
-      // element before React hydrates, which React would otherwise report as a
-      // server/client attribute mismatch.
       suppressHydrationWarning
     >
       <head>
-        {/*
-          Blocking on purpose, and deliberately before anything renders: it
-          applies the stored (or OS) theme so the first paint is already
-          correct. Moving it later, or making it async, reintroduces the
-          light-to-dark flash.
-        */}
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
 

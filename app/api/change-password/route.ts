@@ -1,11 +1,5 @@
 import { badRequest, forwardPost } from '../_lib/backendClient';
 
-/**
- * Password change for the signed-in admin.
- *
- * `POST` -> backend `/auth/update`
- */
-
 interface ChangePasswordRequestBody {
   oldPassword?: string;
   newPassword?: string;

@@ -7,10 +7,6 @@ import { TopBar } from '../src/components/layout/TopBar';
 import { ChatbotWidget } from '../src/components/chatbot/ChatbotWidget';
 import { sidebarCollapsed } from '../src/lib/preferences';
 
-/**
- * Dashboard shell: fixed navigation rail + scrolling content column. Client-side
- * only because it owns the rail/drawer state; the pages it wraps need not be.
- */
 export default function DashboardLayout({
   children,
 }: {
@@ -18,9 +14,6 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Read the persisted rail preference with an explicit server snapshot, so the
-  // prerendered markup and the first client render always agree.
   const collapsed = useSyncExternalStore(
     sidebarCollapsed.subscribe,
     sidebarCollapsed.get,
@@ -30,8 +23,6 @@ export default function DashboardLayout({
   const toggleCollapsed = useCallback(() => sidebarCollapsed.toggle(), []);
   const closeMobile = useCallback(() => setMobileOpen(false), []);
 
-  // Escape closes the drawer, and the page behind it must not scroll while it
-  // is open. Route changes close it too — the cleanup runs on navigation.
   useEffect(() => {
     if (!mobileOpen) return;
 

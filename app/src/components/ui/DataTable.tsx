@@ -7,17 +7,12 @@ import { EmptyState, ErrorState } from './StatePlaceholders';
 import { SkeletonTable } from './Skeleton';
 
 export type DataTableColumn<T> = {
-  /** Key into the row, also used as the React key for the cell. */
   key: keyof T & string;
   label: string;
   align?: 'left' | 'right' | 'center';
-  /** Custom cell renderer. Falls back to the raw value as text. */
   render?: (row: T) => ReactNode;
-  /** Tailwind width hint, e.g. `w-24`. */
   width?: string;
-  /** Hide this column from the mobile card layout to reduce noise. */
   hideOnMobile?: boolean;
-  /** Excluded from the search index (e.g. numeric ids). */
   notSearchable?: boolean;
 };
 
@@ -31,25 +26,14 @@ type DataTableProps<T> = {
   onRetry?: () => void;
   searchable?: boolean;
   searchPlaceholder?: string;
-  /** Shown when there are no rows at all (as opposed to no search matches). */
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
-  /** Rendered above the table, right-aligned next to the search box. */
   toolbar?: ReactNode;
-  /** Row-level action buttons rendered in a trailing column. */
   rowActions?: (row: T) => ReactNode;
   className?: string;
 };
 
-/**
- * The app's table. One implementation handles search, pagination, loading,
- * error, empty and mobile layouts so no page has to rebuild that logic.
- *
- * Below `md` the table is replaced by a stacked card list: on a phone, a wide
- * grid either overflows or shrinks text to nothing, while label/value pairs
- * stay readable.
- */
 export function DataTable<T>({
   columns,
   rows,
@@ -86,9 +70,6 @@ export function DataTable<T>({
   }, [rows, query, columns]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-
-  // Clamped on read rather than synced through an effect, so filtering or a
-  // refetch that shrinks the result set can never leave us on a dead page.
   const page = Math.min(requestedPage, totalPages);
 
   const pageRows = useMemo(() => {
@@ -263,7 +244,6 @@ export function DataTable<T>({
   );
 }
 
-/** Renders empty API values as an em dash instead of "null"/"undefined". */
 function formatFallback(value: unknown): ReactNode {
   if (value === null || value === undefined || value === '') return '—';
   return String(value);

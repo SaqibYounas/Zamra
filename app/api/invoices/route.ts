@@ -5,12 +5,6 @@ import {
   forwardPost,
 } from '../_lib/backendClient';
 
-/**
- * Invoice creation and history. `POST` -> backend `/invoice/create`; the list
- * path below is an empty placeholder until the backend publishes one.
- */
-
-/** TODO: backend path listing saved invoices, e.g. `/invoice/list`. */
 const LIST_PATH = '';
 
 export async function GET() {

@@ -35,7 +35,6 @@ export function Badge({
 }: {
   children: ReactNode;
   tone?: BadgeTone;
-  /** Status dot — use for live/derived states rather than static labels. */
   dot?: boolean;
   icon?: ReactNode;
   className?: string;

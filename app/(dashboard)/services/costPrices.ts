@@ -14,11 +14,6 @@ import {
   type CacheProfile,
 } from './requestCache';
 
-/**
- * Production cost per bottle. Backed by `/api/prices`, which proxies the
- * backend's price-management endpoints.
- */
-
 export interface CostPriceInput {
   type: BottleType;
   /** Whole rupees, as typed into the form. */
@@ -27,10 +22,6 @@ export interface CostPriceInput {
   otherExpense: string;
 }
 
-/**
- * Records a new cost price for one bottle type; toasts the outcome.
- * revalidates: `cost-prices`, `stock` — cost totals multiply units by price.
- */
 export async function saveCostPrice(
   data: CostPriceInput
 ): Promise<MutationOutcome> {
@@ -45,10 +36,6 @@ export async function saveCostPrice(
   }
 }
 
-/**
- * The active cost price for each bottle type.
- * cached: `medium` (2 min) under `cost-prices`; every write invalidates it.
- */
 export async function fetchActiveCostPrices({
   profile = 'medium' as CacheProfile,
   forceRefresh = false,

@@ -6,10 +6,6 @@ import { ChevronRight, Droplets, Menu } from 'lucide-react';
 import { findNavItem } from '../../lib/navigation';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
-/**
- * Sticky top bar for the dashboard shell: mobile menu trigger, a breadcrumb
- * derived from the shared nav config, and today's date.
- */
 export function TopBar({ onOpenMobile }: { onOpenMobile: () => void }) {
   const pathname = usePathname();
   const current = findNavItem(pathname);
@@ -62,9 +58,6 @@ export function TopBar({ onOpenMobile }: { onOpenMobile: () => void }) {
           ) : null}
         </ol>
       </nav>
-
-      {/* The server formats this in its own timezone, the browser in the
-          viewer's — the mismatch is expected and resolves after hydration. */}
       <time
         dateTime={todayISO}
         suppressHydrationWarning
@@ -79,7 +72,7 @@ export function TopBar({ onOpenMobile }: { onOpenMobile: () => void }) {
         className="flex size-9 shrink-0 items-center justify-center rounded-full bg-marine-900 text-2xs font-semibold text-brand-200"
         title="Signed in as administrator"
       >
-        AD
+        Sufyan
       </span>
     </header>
   );

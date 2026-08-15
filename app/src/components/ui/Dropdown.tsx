@@ -13,7 +13,6 @@ import { AlertCircle, Check, ChevronDown, Loader2 } from 'lucide-react';
 type Option = {
   label: string;
   value: string;
-  /** Optional right-aligned secondary text, e.g. a price or a city. */
   meta?: string;
 };
 
@@ -35,10 +34,6 @@ type DropdownProps = {
   className?: string;
 };
 
-/**
- * Select control built on Headless UI's Listbox, so keyboard interaction
- * (type-ahead, arrows, Home/End, Escape) and ARIA wiring come for free.
- */
 export default function Dropdown({
   label,
   placeholder,

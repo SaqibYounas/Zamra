@@ -1,8 +1,3 @@
-/**
- * The invoice document while being edited — the form's own model, not the API
- * contract; `services/invoices` maps it onto the backend payload.
- */
-
 export interface CompanyInfo {
   name: string;
   address: string;

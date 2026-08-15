@@ -3,11 +3,6 @@
 import { useId, useState, type ReactNode } from 'react';
 import { Info } from 'lucide-react';
 
-/**
- * Lightweight tooltip. Shown on hover *and* focus, and wired with
- * `aria-describedby` so the text is available to assistive tech rather than
- * being hover-only decoration.
- */
 export function Tooltip({
   content,
   children,

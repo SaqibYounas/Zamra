@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { toServiceError, type MutationOutcome } from './serviceResult';
 
-/** Business details recorded for the plant and printed on invoices. */
 export interface CompanyInfoInput {
   companyName: string;
   ownerName: string;
@@ -11,7 +10,6 @@ export interface CompanyInfoInput {
   email: string;
 }
 
-/** Saves the company profile. Toasts the outcome. */
 export async function saveCompanyInfo(
   data: CompanyInfoInput
 ): Promise<MutationOutcome> {

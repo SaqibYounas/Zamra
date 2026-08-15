@@ -37,10 +37,6 @@ interface TextFieldProps {
   readOnly?: boolean;
 }
 
-/**
- * The app's text input. Label, control, validation message and help text are
- * wired together with ids so screen readers announce them as one field.
- */
 export default function TextField({
   label,
   value,

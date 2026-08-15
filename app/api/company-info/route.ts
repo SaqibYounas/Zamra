@@ -1,14 +1,5 @@
 import { badRequest, forwardPost } from '../_lib/backendClient';
 
-/**
- * The plant's own business details, printed on invoices.
- *
- * `POST` -> backend `/company/register`
- *
- * The backend exposes no read endpoint, so the form always starts empty rather
- * than pre-filled.
- */
-
 interface CompanyInfoRequestBody {
   companyName?: string;
   ownerName?: string;
@@ -33,7 +24,6 @@ export async function POST(request: Request) {
     return badRequest('Please complete every company field.');
   }
 
-  // The backend uses shorter field names than this app's form.
   return forwardPost(
     '/company/register',
     { name: companyName, owner: ownerName, city, contact, address, email },

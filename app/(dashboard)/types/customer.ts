@@ -1,9 +1,3 @@
-/**
- * Customer and delivery records. Read-only in this app: the backend creates them
- * when an invoice is submitted.
- */
-
-/** A saved billing profile from `GET /api/customers`. */
 export interface Customer {
   id: number;
   companyName: string;

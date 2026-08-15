@@ -17,11 +17,6 @@ import {
   type CacheProfile,
 } from './requestCache';
 
-/**
- * Invoice submission, history and editing. Creating one also creates the
- * customer and shipping records, which is why those are read-only elsewhere.
- */
-
 interface InvoiceLineInput {
   itemCode: string;
   description: string;
@@ -70,10 +65,6 @@ export interface CreateInvoiceInput {
   items: InvoiceLineInput[];
 }
 
-/**
- * Saves an invoice; toasts the outcome. `success` comes from the HTTP status,
- * since the backend body may omit it. revalidates: all four write-affected tags.
- */
 export async function createInvoice(
   data: CreateInvoiceInput
 ): Promise<MutationOutcome> {
@@ -99,10 +90,6 @@ export async function createInvoice(
   }
 }
 
-/**
- * Saved invoices, newest first as the backend orders them.
- * cached: `short` (30s) under `invoices`; every invoice write invalidates it.
- */
 export async function fetchInvoices({
   profile = 'short' as CacheProfile,
   forceRefresh = false,
@@ -120,10 +107,6 @@ export async function fetchInvoices({
   );
 }
 
-/**
- * One saved invoice in full.
- * cached: `short` (30s) under `invoices`, keyed by id.
- */
 export async function fetchInvoiceById(
   id: string,
   { profile = 'short' as CacheProfile, forceRefresh = false } = {}
@@ -158,10 +141,6 @@ export async function fetchInvoiceById(
   );
 }
 
-/**
- * Edits a saved invoice; toasts the outcome. revalidates: `invoices` plus the
- * figures an invoice feeds — `profit` and `stock`.
- */
 export async function updateInvoice(
   id: string,
   data: InvoiceUpdateInput
@@ -179,10 +158,6 @@ export async function updateInvoice(
   }
 }
 
-/**
- * Removes a saved invoice; toasts the outcome.
- * revalidates: `invoices`, `profit`, `stock` — the sale is no longer counted.
- */
 export async function deleteInvoice(id: string): Promise<MutationOutcome> {
   try {
     const response = await axios.delete(`/api/invoices/${id}`, {

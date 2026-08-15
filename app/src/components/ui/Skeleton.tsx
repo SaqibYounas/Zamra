@@ -1,8 +1,3 @@
-/**
- * Loading placeholders. These mirror the shape of the real content so the
- * layout doesn't jump when data lands.
- */
-
 export function Skeleton({
   className = '',
   style,
@@ -60,7 +55,6 @@ export function SkeletonChart({ className = 'h-72' }: { className?: string }) {
   return (
     <div className={`flex items-end gap-2 ${className}`} aria-hidden>
       {bars.map((height, index) => (
-        // Varied heights read as a chart rather than one grey block.
         <Skeleton
           key={index}
           className="flex-1 rounded-t-md"
