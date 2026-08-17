@@ -15,7 +15,8 @@ export type NavIconName =
   | 'invoice'
   | 'invoices'
   | 'company'
-  | 'password';
+  | 'password'
+  | 'badge-percent';
 
 export type NavSection = {
   title: string;
@@ -41,6 +42,7 @@ export const NAV_SECTIONS: NavSection[] = [
       },
     ],
   },
+
   {
     title: 'Operations',
     items: [
@@ -62,8 +64,15 @@ export const NAV_SECTIONS: NavSection[] = [
         description: 'Customer-facing rate per bottle',
         icon: 'tag',
       },
+      {
+        href: '/today-prices',
+        label: 'Today Prices',
+        description: 'Today price per bottle',
+        icon: 'badge-percent',
+      },
     ],
   },
+
   {
     title: 'Billing',
     items: [
@@ -78,10 +87,11 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Invoice History',
         short: 'Invoices',
         description: 'Saved invoices, with preview and editing',
-        icon: 'invoice',
+        icon: 'invoices',
       },
     ],
   },
+
   {
     title: 'Settings',
     items: [

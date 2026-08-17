@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import axios from 'axios';
 import {
+  BadgePercent,
   Building2,
   ChevronsLeft,
   ChevronsRight,
@@ -35,6 +36,7 @@ const ICONS: Record<NavIconName, React.ElementType> = {
   invoices: FileText,
   company: Building2,
   password: KeyRound,
+  'badge-percent': BadgePercent,
 };
 
 type SidebarProps = {
