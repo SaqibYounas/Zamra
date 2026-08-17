@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { Geist, Geist_Mono } from 'next/font/google';
+
 import './globals.css';
 import { ClientProviders } from './src/components/providers/ClientProviders';
 import { themeInitScript } from './src/lib/theme';
@@ -25,7 +27,10 @@ export const metadata: Metadata = {
     'Monitor, manage, and optimize your water plant operations in one unified platform.',
   applicationName: 'Zamra Water Plant',
   authors: [{ name: 'Sufyan Malik' }],
-  icons: { icon: '/Logo.jpg', apple: '/Logo.jpg' },
+  icons: {
+    icon: '/Logo.jpg',
+    apple: '/Logo.jpg',
+  },
   openGraph: {
     title: 'Zamra Water Plant Admin',
     description:
@@ -40,8 +45,14 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f7fb' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a1622' },
+    {
+      media: '(prefers-color-scheme: light)',
+      color: '#f4f7fb',
+    },
+    {
+      media: '(prefers-color-scheme: dark)',
+      color: '#0a1622',
+    },
   ],
 };
 
@@ -55,7 +66,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script
+          id="theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: themeInitScript,
+          }}
+        />
       </head>
 
       <body className="min-h-full bg-canvas font-sans text-ink">

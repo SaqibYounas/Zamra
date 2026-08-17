@@ -13,13 +13,8 @@ import { useAsyncData } from '../hooks/useAsyncData';
 import { fetchActiveCostPrices } from '../services/costPrices';
 import { fetchActiveSellingPrices } from '../services/sellingPrices';
 import { buildRateSummaries } from '../utils/pricing';
-import RateBoard from './components/RateBoard';
 import SellingPriceForm from './components/SellingPriceForm';
 
-/**
- * Selling price — the customer-facing rate per bottle. The board above the form
- * shows the cost each rate is measured against, so the margin is visible first.
- */
 export default function SellingPricePage() {
   const costs = useAsyncData(fetchActiveCostPrices, {
     key: 'cost-prices',
@@ -30,9 +25,6 @@ export default function SellingPricePage() {
     key: 'selling-prices',
     fallbackMessage: 'Current selling prices could not be loaded.',
   });
-
-  // The `?? []` fallbacks stay inside the memo: creating them in the render body
-  // would make a new array identity every render and defeat it.
   const summaries = useMemo(
     () => buildRateSummaries(costs.data ?? [], rates.data ?? []),
     [costs.data, rates.data]
@@ -67,15 +59,6 @@ export default function SellingPricePage() {
         prices={costs.data ?? []}
         summaries={summaries}
         onSaved={refreshAll}
-      />
-
-      <RateBoard
-        summaries={summaries}
-        loading={costs.loading || rates.loading}
-        // Cost prices are the backbone: without them no rate can be saved, so
-        // only that failure is treated as a page-level error.
-        error={costs.error}
-        onRetry={refreshAll}
       />
     </PageContainer>
   );
