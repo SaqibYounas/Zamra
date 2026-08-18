@@ -57,7 +57,19 @@ const decimalOnly = (value: string) => value.replace(/[^0-9.]/g, '');
 export default function InvoiceEditForm({ invoice, onSaved, onCancel }: Props) {
   const [invoiceNo, setInvoiceNo] = useState(invoice.invoiceNo ?? '');
   const [date, setDate] = useState(invoice.date ?? '');
-  const [customer, setCustomer] = useState(invoice.customer ?? '');
+  const [customer, setCustomer] = useState<string>(() => {
+    const customerValue = invoice.customer;
+    if (typeof customerValue === 'string') return customerValue;
+    if (typeof customerValue === 'object' && customerValue !== null) {
+      return 'name' in customerValue && typeof customerValue.name === 'string'
+        ? customerValue.name
+        : 'customerName' in customerValue &&
+            typeof customerValue.customerName === 'string'
+          ? customerValue.customerName
+          : '';
+    }
+    return '';
+  });
   const [status, setStatus] = useState<InvoiceStatus>(
     invoice.status ?? 'Pending'
   );
@@ -187,7 +199,7 @@ export default function InvoiceEditForm({ invoice, onSaved, onCancel }: Props) {
       })),
     };
 
-    const response = await updateInvoice(invoice.id, payload);
+    const response = await updateInvoice(String(invoice.id), payload);
 
     setSaving(false);
 
