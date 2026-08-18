@@ -1,26 +1,23 @@
 import {
   badRequest,
-  endpointNotConfigured,
   forwardDelete,
   forwardGet,
   forwardPut,
 } from '../../_lib/backendClient';
 
-const READ_BASE = '';
-
-/** TODO: backend base path for updating an invoice, e.g. `/invoice`. */
-const UPDATE_BASE = '';
-
-/** TODO: backend base path for deleting an invoice, e.g. `/invoice`. */
-const DELETE_BASE = '';
+const READ_BASE = '/invoice';
+const UPDATE_BASE = '/invoice';
+const DELETE_BASE = '/invoice';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  if (!id) return badRequest('An invoice id is required.');
-  if (!READ_BASE) return endpointNotConfigured('invoice detail');
+
+  if (!id) {
+    return badRequest('An invoice id is required.');
+  }
 
   return forwardGet(`${READ_BASE}/${id}`, 'Fetch invoice');
 }
@@ -30,13 +27,17 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  if (!id) return badRequest('An invoice id is required.');
-  if (!UPDATE_BASE) return endpointNotConfigured('update invoice');
+
+  if (!id) {
+    return badRequest('An invoice id is required.');
+  }
 
   const body = await request.json();
 
   return forwardPut(`${UPDATE_BASE}/${id}`, body, 'Update invoice', {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }
 
@@ -45,8 +46,10 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  if (!id) return badRequest('An invoice id is required.');
-  if (!DELETE_BASE) return endpointNotConfigured('delete invoice');
+
+  if (!id) {
+    return badRequest('An invoice id is required.');
+  }
 
   return forwardDelete(`${DELETE_BASE}/${id}`, 'Delete invoice');
 }

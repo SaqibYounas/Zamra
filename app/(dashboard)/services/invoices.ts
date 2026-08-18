@@ -106,7 +106,6 @@ export async function fetchInvoices({
     { key: 'invoices', tags: [CACHE_TAGS.invoices], profile, forceRefresh }
   );
 }
-
 export async function fetchInvoiceById(
   id: string,
   { profile = 'short' as CacheProfile, forceRefresh = false } = {}

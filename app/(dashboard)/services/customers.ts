@@ -94,10 +94,6 @@ export async function deleteCustomer(id: number): Promise<MutationOutcome> {
   }
 }
 
-/**
- * Edits a delivery destination; toasts the outcome.
- * revalidates: `shipping-addresses`.
- */
 export async function updateShippingAddress(
   id: number,
   data: ShippingAddressInput
@@ -115,10 +111,6 @@ export async function updateShippingAddress(
   }
 }
 
-/**
- * Removes a delivery destination; toasts the outcome.
- * revalidates: `shipping-addresses`.
- */
 export async function deleteShippingAddress(
   id: number
 ): Promise<MutationOutcome> {
