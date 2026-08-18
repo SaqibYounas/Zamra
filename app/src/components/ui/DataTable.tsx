@@ -54,30 +54,85 @@ export function DataTable<T>({
   const [requestedPage, setPage] = useState(1);
   const [query, setQuery] = useState('');
 
+  /**
+   * Convert any table value into a safe searchable string.
+   *
+   * Handles:
+   * - string
+   * - number
+   * - boolean
+   * - null / undefined
+   * - arrays
+   * - objects
+   */
+  const valueToSearchString = (value: unknown): string => {
+    if (value === null || value === undefined) {
+      return '';
+    }
+
+    if (typeof value === 'string') {
+      return value;
+    }
+
+    if (
+      typeof value === 'number' ||
+      typeof value === 'boolean' ||
+      typeof value === 'bigint'
+    ) {
+      return String(value);
+    }
+
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => valueToSearchString(item)).join(' ');
+    }
+
+    if (typeof value === 'object') {
+      try {
+        return Object.values(value as Record<string, unknown>)
+          .map((item) => valueToSearchString(item))
+          .join(' ');
+      } catch {
+        return '';
+      }
+    }
+
+    return '';
+  };
+
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
-    if (!term) return rows;
+
+    if (!term) {
+      return rows;
+    }
 
     const searchKeys = columns.filter((column) => !column.notSearchable);
 
     return rows.filter((row) =>
-      searchKeys.some((column) =>
-        String(row[column.key] ?? '')
-          .toLowerCase()
-          .includes(term)
-      )
+      searchKeys.some((column) => {
+        const value = row[column.key];
+
+        return valueToSearchString(value).toLowerCase().includes(term);
+      })
     );
   }, [rows, query, columns]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
   const page = Math.min(requestedPage, totalPages);
 
   const pageRows = useMemo(() => {
     const start = (page - 1) * pageSize;
+
     return filtered.slice(start, start + pageSize);
   }, [filtered, page, pageSize]);
 
   const rangeStart = filtered.length === 0 ? 0 : (page - 1) * pageSize + 1;
+
   const rangeEnd = Math.min(page * pageSize, filtered.length);
 
   const alignClass = (align: DataTableColumn<T>['align']) =>
@@ -120,6 +175,7 @@ export function DataTable<T>({
           ) : (
             <span />
           )}
+
           {toolbar ? (
             <div className="flex flex-wrap items-center gap-2">{toolbar}</div>
           ) : null}
@@ -143,7 +199,9 @@ export function DataTable<T>({
         </div>
       ) : (
         <>
-          {/* Table layout — md and up */}
+          {/* =========================
+              TABLE — DESKTOP
+          ========================== */}
           <div className="scroll-x hidden max-h-[32rem] overflow-y-auto rounded-card border border-line md:block">
             <table className="data-table">
               <thead>
@@ -152,11 +210,14 @@ export function DataTable<T>({
                     <th
                       key={column.key}
                       scope="col"
-                      className={`${alignClass(column.align)} ${column.width ?? ''}`}
+                      className={`${alignClass(
+                        column.align
+                      )} ${column.width ?? ''}`}
                     >
                       {column.label}
                     </th>
                   ))}
+
                   {rowActions ? (
                     <th scope="col" className="text-right" data-actions-col>
                       Actions
@@ -164,6 +225,7 @@ export function DataTable<T>({
                   ) : null}
                 </tr>
               </thead>
+
               <tbody>
                 {pageRows.map((row) => (
                   <tr key={getRowId(row)}>
@@ -174,6 +236,7 @@ export function DataTable<T>({
                           : formatFallback(row[column.key])}
                       </td>
                     ))}
+
                     {rowActions ? (
                       <td className="text-right" data-actions-col>
                         <div className="flex justify-end gap-1.5">
@@ -187,7 +250,9 @@ export function DataTable<T>({
             </table>
           </div>
 
-          {/* Card layout — below md */}
+          {/* =========================
+              CARDS — MOBILE
+          ========================== */}
           <ul className="flex flex-col gap-2 md:hidden">
             {pageRows.map((row) => {
               const [primary, ...rest] = columns.filter(
@@ -213,6 +278,7 @@ export function DataTable<T>({
                         <dt className="w-28 shrink-0 text-2xs font-semibold uppercase tracking-wide text-ink-muted">
                           {column.label}
                         </dt>
+
                         <dd className="min-w-0 flex-1 break-words text-xs text-ink-soft">
                           {column.render
                             ? column.render(row)
@@ -244,7 +310,65 @@ export function DataTable<T>({
   );
 }
 
+/**
+ * Safely converts a table value into something React can render.
+ *
+ * IMPORTANT:
+ * React cannot render a plain object:
+ *
+ * ❌ <span>{customerObject}</span>
+ *
+ * So objects are converted into a readable string.
+ */
 function formatFallback(value: unknown): ReactNode {
-  if (value === null || value === undefined || value === '') return '—';
-  return String(value);
+  if (value === null || value === undefined || value === '') {
+    return '—';
+  }
+
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  ) {
+    return String(value);
+  }
+
+  if (value instanceof Date) {
+    return value.toLocaleDateString();
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => formatFallback(item)).join(', ');
+  }
+
+  if (typeof value === 'object') {
+    const object = value as Record<string, unknown>;
+
+    // Customer-specific friendly display
+    if (typeof object.companyName === 'string') {
+      return object.companyName;
+    }
+
+    if (typeof object.attentionPoc === 'string') {
+      return object.attentionPoc;
+    }
+
+    // Generic object fallback
+    try {
+      return (
+        Object.values(object)
+          .filter(
+            (item) =>
+              item !== null && item !== undefined && typeof item !== 'object'
+          )
+          .map((item) => String(item))
+          .join(' · ') || '—'
+      );
+    } catch {
+      return '—';
+    }
+  }
+
+  return '—';
 }

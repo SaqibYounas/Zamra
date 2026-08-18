@@ -1,15 +1,8 @@
-import {
-  badRequest,
-  endpointNotConfigured,
-  forwardGet,
-  forwardPost,
-} from '../_lib/backendClient';
+import { badRequest, forwardGet, forwardPost } from '../_lib/backendClient';
 
-const LIST_PATH = '';
+const LIST_PATH = '/invoices';
 
 export async function GET() {
-  if (!LIST_PATH) return endpointNotConfigured('invoice list');
-
   return forwardGet(LIST_PATH, 'Fetch invoices');
 }
 
@@ -43,6 +36,8 @@ export async function POST(request: Request) {
   }
 
   return forwardPost('/invoice/create', body, 'Create invoice', {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
   });
 }

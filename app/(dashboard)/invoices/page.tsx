@@ -8,24 +8,27 @@ import {
   PageContainer,
   PageHeader,
 } from '@/app/src/components/layout/PageShell';
+
 import { Card, CardBody, CardHeader } from '@/app/src/components/ui/Card';
+
 import {
   DataTable,
   type DataTableColumn,
 } from '@/app/src/components/ui/DataTable';
+
 import { Badge } from '@/app/src/components/ui/Badge';
+
 import Button, { IconButton } from '@/app/src/components/ui/Button';
+
 import { formatDate, formatMoneyExact } from '@/app/src/lib/format';
 
 import { useAsyncData } from '../hooks/useAsyncData';
 import { fetchInvoices } from '../services/invoices';
-import type { InvoiceSummary } from '../types/invoice';
+
+import type { InvoiceSummary, InvoiceStatus } from '../types/invoice';
+
 import { STATUS_TONES } from './components/statusTone';
 
-/**
- * Invoice history. Rows come from the invoice service; selecting one opens its
- * detail page, where it can be edited or removed.
- */
 export default function InvoiceHistoryPage() {
   const router = useRouter();
 
@@ -40,6 +43,7 @@ export default function InvoiceHistoryPage() {
     {
       key: 'invoiceNo',
       label: 'Invoice number',
+
       render: (row) => (
         <Link
           href={`/invoices/${row.id}`}
@@ -49,45 +53,70 @@ export default function InvoiceHistoryPage() {
         </Link>
       ),
     },
+
     {
       key: 'customer',
       label: 'Customer',
-      render: (row) => (
-        <span
-          className="block max-w-[16rem] truncate"
-          title={row.customer || undefined}
-        >
-          {row.customer || '—'}
-        </span>
-      ),
+
+      render: (row) => {
+        const customer =
+          row.customer && typeof row.customer === 'object'
+            ? row.customer
+            : null;
+
+        const customerName =
+          customer?.companyName ||
+          customer?.attentionPoc ||
+          customer?.email ||
+          '—';
+
+        return (
+          <span className="block max-w-[16rem] truncate" title={customerName}>
+            {customerName}
+          </span>
+        );
+      },
     },
+
     {
       key: 'date',
       label: 'Date',
+
       render: (row) => (
         <span className="whitespace-nowrap">{formatDate(row.date)}</span>
       ),
     },
+
     {
       key: 'amount',
       label: 'Amount',
       align: 'right',
       notSearchable: true,
+
       render: (row) => (
         <span className="tabular whitespace-nowrap font-semibold text-ink">
           {formatMoneyExact(row.amount)}
         </span>
       ),
     },
+
     {
       key: 'status',
       label: 'Status',
       align: 'right',
-      render: (row) => (
-        <Badge tone={STATUS_TONES[row.status] ?? 'neutral'} dot>
-          {row.status ?? 'Unknown'}
-        </Badge>
-      ),
+
+      render: (row) => {
+        const status = row.status as InvoiceStatus | null | undefined;
+
+        const tone =
+          status && STATUS_TONES[status] ? STATUS_TONES[status] : 'neutral';
+
+        return (
+          <Badge tone={tone} dot>
+            {status ?? 'Unknown'}
+          </Badge>
+        );
+      },
     },
   ];
 
@@ -109,6 +138,7 @@ export default function InvoiceHistoryPage() {
               onClick={invoices.refresh}
               icon={<RefreshCw className="size-3.5" />}
             />
+
             <Button
               type="button"
               label="New invoice"
@@ -165,6 +195,7 @@ export default function InvoiceHistoryPage() {
                   icon={<Eye className="size-3.5" />}
                   onClick={() => router.push(`/invoices/${row.id}`)}
                 />
+
                 <IconButton
                   variant="secondary"
                   size="sm"

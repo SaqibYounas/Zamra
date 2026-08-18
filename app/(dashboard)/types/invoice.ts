@@ -75,15 +75,6 @@ export interface InvoiceData {
 export type InvoiceStatus = 'Paid' | 'Pending' | 'Unpaid';
 
 /** One row of the invoice history table. */
-export interface InvoiceSummary {
-  id: string;
-  invoiceNo: string;
-  /** ISO date (`yyyy-mm-dd`). */
-  date: string;
-  customer: string;
-  amount: number;
-  status: InvoiceStatus;
-}
 
 /** One line of a saved invoice, as the backend returns it. */
 export interface InvoiceLineRecord {
@@ -154,3 +145,19 @@ export type ObjectSectionKey =
   | 'shipTo'
   | 'logisticInfo'
   | 'payment';
+
+export interface InvoiceCustomer {
+  id: number;
+  companyName: string;
+  attentionPoc: string;
+  email: string;
+}
+
+export interface InvoiceSummary {
+  id: number;
+  invoiceNo: string;
+  customer: InvoiceCustomer | null;
+  date: string;
+  amount: number;
+  status: InvoiceStatus | null;
+}
